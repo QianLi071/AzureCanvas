@@ -6,7 +6,7 @@ let width, height;
 let splashParticles = [];
 
 function initSplashParticles() {
-    const count = 200;
+    const count = 300;
     splashParticles = [];
     for (let i = 0; i < count; i++) {
         splashParticles.push({
@@ -22,10 +22,11 @@ function initSplashParticles() {
     }
 }
 
+// TODO Keep the direction of moving stars the same
 function drawSplash() {
     if (!width || !height) return;
     ctxSplash.clearRect(0, 0, width, height);
-    const time = Date.now() / 1000;
+    const time = Date.now() / 500;
     splashParticles.forEach(p => {
         p.x = p.baseX + Math.sin(time * p.speed + p.angle) * 0.2;
         p.y = p.baseY + Math.cos(time * p.speed * 0.7 + p.angle) * 0.2;
@@ -37,7 +38,7 @@ function drawSplash() {
         ctxSplash.arc(x, y, p.size * (1 + 0.2 * Math.sin(time*3 + p.angle)), 0, 2*Math.PI);
         ctxSplash.fill();
         ctxSplash.shadowColor = '#5cd5fa';
-        ctxSplash.shadowBlur = 50;
+        ctxSplash.shadowBlur = 150;
         ctxSplash.fill();
         ctxSplash.shadowBlur = 0;
     });

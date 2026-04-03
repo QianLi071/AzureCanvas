@@ -3,8 +3,8 @@ const turbineWrapper = document.querySelector('.turbine-wrapper');
 
 // 叶片配置
 const bladeConfig = {
-    count: 80, // 同时存在的叶片数量
-    speed: 0.008, // 旋转速度
+    count: 180, // 同时存在的叶片数量
+    speed: 0.005, // 旋转速度
     growthRate: 0.5, // 生长速度
     colors: ['#5d0caf', '#7329c0', '#823cc4', '#9254da',
             '#a268e1', '#bb8eec', '#d6b4f1', '#ead6ff'],
@@ -20,7 +20,7 @@ let time = 0;
 // 生成漩涡轨迹点
 function getSpiralPosition(index, total, radius) {
     const angle = (index / total) * Math.PI * 4;
-    const spiralRadius = radius * (index / total);
+    const spiralRadius = radius * (1 - index / total);
     const x = Math.cos(angle) * spiralRadius;
     const y = Math.sin(angle) * spiralRadius;
     return { x, y, angle };
@@ -51,7 +51,7 @@ function createBlade() {
         maxSize: size * 1.5,
         currentSize: 0,
         position: 0, // 0-1之间的位置
-        speed: bladeConfig.speed * (0.8 + Math.random() * 0.4),
+        speed: bladeConfig.speed * (Math.random() + 0.4),
         opacity: 0
     };
 }
@@ -70,7 +70,7 @@ function animateVortex() {
         blade.position += blade.speed;
 
         // 计算漩涡轨迹位置
-        const spiral = getSpiralPosition(index, bladeConfig.count, 400);
+        const spiral = getSpiralPosition(index, bladeConfig.count, 350);
         const x = spiral.x;
         const y = spiral.y;
         const angle = spiral.angle + time * 40;
