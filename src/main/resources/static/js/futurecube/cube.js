@@ -88,12 +88,12 @@ function initCube() {
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
 
-    // rgbeLoader.load('../textures/hdr/spruit_sunrise_1k.hdr', (texture) => {
-    //     const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-    //     scene.environment = envMap;
-    //     texture.dispose();
-    //     pmremGenerator.dispose();
-    // });
+    rgbeLoader.load('../textures/hdr/spruit_sunrise_1k.hdr', (texture) => {
+        const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+        scene.environment = envMap;
+        texture.dispose();
+        pmremGenerator.dispose();
+    });
 
     // 添加高质量光照
     const ambientLight = new THREE.AmbientLight(new THREE.Color('#78eaff'), 0.6);
@@ -179,7 +179,7 @@ function initCube() {
     });
 
     cube = new THREE.Mesh(cubeGeometry, transmissionMaterial);
-    //cube.material = transmissionMaterial;
+    cube.material = transmissionMaterial;
 
     scene.add(cube);
 
@@ -227,8 +227,10 @@ function initCube() {
     loader.setDRACOLoader(dracoLoader);
 
     const isCubeSubdir = window.location.pathname.includes('/cube/');
-    const modelPath = isCubeSubdir ? '../models/earth-transformed.glb' : 'models/earth-transformed.glb';
-    
+    //const modelPath = isCubeSubdir ? '../models/earth-transformed.glb' : 'models/earth-transformed.glb';
+    const modelPath = isCubeSubdir ? '../models/islands/isleA.glb' : 'models/islands/isleA.glb';
+
+
     loader.load(modelPath, (gltf) => {
         earth = gltf.scene;
         earth.renderOrder = 0;
