@@ -226,6 +226,25 @@ const radialBlurPass = new ShaderPass(RadialBlurShader);
 composer.addPass(radialBlurPass);
 
 /**
+ * --- 任务 2: 入场衔接动画 ---
+ */
+// 初始让 portal 材质全白且不透明
+portalMat.opacity = 1;
+portalMat.color.setRGB(10, 10, 10); // 极亮
+
+// 页面加载完成后，从白屏淡出到深邃的隧道
+window.addEventListener('load', () => {
+    gsap.to(portalMat.color, {
+        r: 1, g: 1, b: 1,
+        duration: 2,
+        ease: "power2.out"
+    });
+    // 如果你希望刚进来时有一声水花，也可以在这里触发
+    // splashSound.play(); 
+});
+
+
+/**
  * --- 6. 交互逻辑 ---
  */
 let scrollProgress = 0;
