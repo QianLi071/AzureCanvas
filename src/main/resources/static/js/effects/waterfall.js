@@ -53,6 +53,22 @@
         animate();
     }
 
+// [任务 2] 添加进入瀑布的交互
+window.addEventListener('mousedown', () => {
+    // 1. 视觉反馈：利用 GSAP 让相机向瀑布中心缩进
+    gsap.to(camera, {
+        zoom: 5, // [可调参数] 缩放倍数
+        duration: 1.5,
+        ease: "power2.in",
+        onUpdate: () => camera.updateProjectionMatrix(),
+        onComplete: () => {
+            // 2. 跳转到瀑布内页面
+            window.location.href = './inner-portal.html';
+        }
+    });
+});
+
+
     // 创建山洞背景
     function createCave() {
         const caveGeometry = new THREE.PlaneGeometry(30, 20);
