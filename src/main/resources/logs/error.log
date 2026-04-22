@@ -1,0 +1,3 @@
+2026/04/21 16:15:13 [error] 35164#44320: *1 CreateFile() "E:\X19\Development\Web\AzureCanvas\nginx-1.30.0/html/favicon.ico" failed (2: The system cannot find the file specified), client: 127.0.0.1, server: localhost, request: "GET /favicon.ico HTTP/1.1", host: "localhost", referrer: "http://localhost/"
+2026/04/21 16:19:06 [emerg] 45784#37496: invalid number of arguments in "alias" directive in E:\X19\Development\Web\AzureCanvas\nginx-1.30.0/conf/nginx.conf:59
+2026/04/21 16:19:33 [emerg] 39100#33692: invalid number of arguments in "alias" directive in E:\X19\Development\Web\AzureCanvas\nginx-1.30.0/conf/nginx.conf:59

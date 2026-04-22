@@ -1,0 +1,8 @@
+GET	/api/users/me/items?status=available&page=1&limit=10	获取当前登录用户发布的二手商品
+需要返回的格式,：
+
+[
+  { "itemId": "uuid-string",
+    "title": "My Old Phone", ...
+  }, ...
+]

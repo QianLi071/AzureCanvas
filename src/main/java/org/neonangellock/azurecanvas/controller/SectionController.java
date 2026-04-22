@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/sections")
@@ -21,12 +23,12 @@ public class SectionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Section> getSectionById(@PathVariable Integer id) {
+    public ResponseEntity<?> getSectionById(@PathVariable UUID id) {
         Section section = sectionService.findById(id);
         if (section == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(section);
+        return ResponseEntity.ok(Map.of("data",section));
     }
 
     @PostMapping
@@ -35,7 +37,7 @@ public class SectionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Section> updateSection(@PathVariable Integer id, @RequestBody Section section) {
+    public ResponseEntity<Section> updateSection(@PathVariable UUID id, @RequestBody Section section) {
         Section existingSection = sectionService.findById(id);
         if (existingSection == null) {
             return ResponseEntity.notFound().build();
@@ -45,7 +47,7 @@ public class SectionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSection(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteSection(@PathVariable UUID id) {
         sectionService.deleteById(id);
         return ResponseEntity.ok().build();
     }

@@ -1,31 +1,29 @@
-/**
- * 瀑布传送门 - 完整特效（唯一文件）
- * 
- * 本文件包含瀑布传送门的全部功能，无需其他 JS 文件配合：
- * 
- * ✅ 瀑布外侧点击提示（"点击瀑布，进入传送门"）
- * ✅ 全屏漩涡动画（螺旋色带 + 粒子，深蓝水色背景）
- * ✅ 隧道滚动穿越（相机移动 + 辉光增强 + 径向模糊）
- * ✅ 隧道内滚动提示（中文 + 英文 + 浮动倒三角）
- * ✅ 音频特效（瀑布声 + 隧道声 + 传送爆发音）
- * ✅ 终点变白 + 自动跳转（可配置目标页面）
- * 
- * 其他相关文件（integrated-portal.js / waterfall.js / portal.js）
- * 均为开发过程中的旧版本，可移入备份文件夹。
- * 
- * 依赖：Three.js, GSAP, EffectComposer 
- * 
- * 作者：glow
- * 
- */
-
-
+// /**
+//  * 瀑布传送门 - 完整特效（唯一文件）
+//  *
+//  * 本文件包含瀑布传送门的全部功能，无需其他 JS 文件配合：
+//  *
+//  * ✅ 瀑布外侧点击提示（"点击瀑布，进入传送门"）
+//  * ✅ 全屏漩涡动画（螺旋色带 + 粒子，深蓝水色背景）
+//  * ✅ 隧道滚动穿越（相机移动 + 辉光增强 + 径向模糊）
+//  * ✅ 隧道内滚动提示（中文 + 英文 + 浮动倒三角）
+//  * ✅ 音频特效（瀑布声 + 隧道声 + 传送爆发音）
+//  * ✅ 终点变白 + 自动跳转（可配置目标页面）
+//  *
+//  * 其他相关文件（integrated-portal.js / waterfall.js / portal.js）
+//  * 均为开发过程中的旧版本，可移入备份文件夹。
+//  *
+//  * 依赖：Three.js, GSAP, EffectComposer
+//  *
+//  * 作者：glow
+//  *
+//  */
 import * as THREE from 'three';
 import { gsap } from 'gsap';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 // ========== 点击提示 + 滚动提示 + 全屏漩涡动画 ==========
 let vortexPlaying = false;
@@ -656,7 +654,9 @@ function setupWaterfallTransition() {
                             // 显示滚动提示
                             showScrollHint();
                             // 额外白光消散
-                            createWhiteFlash(() => {});
+                            createWhiteFlash(() => {
+
+                            });
                             isTransitioning = false;
                         });
                     });
@@ -947,42 +947,42 @@ window.addEventListener('wheel', (e) => {
 
             if (progress >= 0.99) {
     // 停止所有持续性音效
-    if (tunnelSound.isPlaying) tunnelSound.stop();
-    if (splashSound.isPlaying) splashSound.stop();
-    
-    // 画面彻底变白
-    portalMat.opacity = 1; 
-    const whiteOut = THREE.MathUtils.mapLinear(progress, 0.99, 1.0, 5, 15);
-    portalMat.color.setRGB(whiteOut, whiteOut, whiteOut);
-    
-    // ========== 传送跳转（只执行一次，防止重复触发）==========
-    if (!window._hasRedirected) {
-        window._hasRedirected = true;
-        
-        setTimeout(() => {
-            // ================================================
-            // 跳转目标配置（根据需求修改下方任意一行）
-            // ================================================
-            
-            // 情况1：跳转到 HTML 页面
-            window.location.href = '/islands.html';
-            
-            // 情况2：跳转到外部 URL
-            // window.location.href = 'https://example.com';
-            
-            // 情况3：跳转到另一个 JS 特效页面（需要先创建该 HTML）
-            // window.location.href = '/effects/rainbow-portal.html';
-            
-            // 情况4：不跳转，只执行某个函数（需取消上面 href 行）
-            // if (typeof someEffectFunction === 'function') someEffectFunction();
-            
-            // 情况5：在新标签页打开
-            // window.open('/target-page.html', '_blank');
-            
-            // ================================================
-        }, 800);  // 白屏停留时间（毫秒），可调：500-1200
-    }
-}
+                if (tunnelSound.isPlaying) tunnelSound.stop();
+                if (splashSound.isPlaying) splashSound.stop();
+
+                // 画面彻底变白
+                portalMat.opacity = 1;
+                const whiteOut = THREE.MathUtils.mapLinear(progress, 0.99, 1.0, 5, 15);
+                portalMat.color.setRGB(whiteOut, whiteOut, whiteOut);
+
+                // ========== 传送跳转（只执行一次，防止重复触发）==========
+                if (!window._hasRedirected) {
+                    window._hasRedirected = true;
+
+                    setTimeout(() => {
+                        // ================================================
+                        // 跳转目标配置（根据需求修改下方任意一行）
+                        // ================================================
+
+                        // 情况1：跳转到 HTML 页面
+                        window.location.href = 'islands/index.html';
+
+                        // 情况2：跳转到外部 URL
+                        // window.location.href = 'https://example.com';
+
+                        // 情况3：跳转到另一个 JS 特效页面（需要先创建该 HTML）
+                        // window.location.href = '/effects/rainbow-portal.html';
+
+                        // 情况4：不跳转，只执行某个函数（需取消上面 href 行）
+                        // if (typeof someEffectFunction === 'function') someEffectFunction();
+
+                        // 情况5：在新标签页打开
+                        // window.open('/target-page.html', '_blank');
+
+                        // ================================================
+                    }, 800);  // 白屏停留时间（毫秒），可调：500-1200
+                }
+            }
         }
     });
 

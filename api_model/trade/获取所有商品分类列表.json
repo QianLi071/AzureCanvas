@@ -1,0 +1,11 @@
+GET	/api/market/categories	获取所有商品分类列表
+需要返回的格式,：
+[
+  { "categoryId": "uuid-string",
+    "name": "Electronics"
+  },
+  {
+    "categoryId": "uuid-string",
+    "name": "Furniture"
+  }, ...
+]

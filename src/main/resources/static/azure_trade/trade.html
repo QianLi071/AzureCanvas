@@ -50,11 +50,16 @@
             <div class="flex items-center space-x-4 shrink-0">
                 
                 <a href="../index.html" class="text-sm text-gray-500 hover:text-purple-600">返回主页</a>
+
+                <button onclick="openPublish()" class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-1.5 px-4 rounded-full shadow-md transition transform hover:scale-105 flex items-center space-x-1 mr-4">
+                    <span class="text-lg leading-none">+</span>
+                    <span class="text-sm">商品上架</span>
+                </button>
                 <!-- 用户头像 + 下拉面板 -->
                 <div class="relative" id="user-menu-wrapper">
                     <button id="user-avatar-btn" class="flex items-center space-x-2 hover:opacity-80 transition">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold shadow">A</div>
-                        <span class="text-sm text-gray-700 font-medium hidden sm:inline">Azure同学</span>
+                        <div id="header-avatar" class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold shadow">A</div>
+                        <span id="header-username" class="text-sm text-gray-700 font-medium hidden sm:inline">Azure同学</span>
                         <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" id="avatar-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <!-- 下拉面板 -->
@@ -62,33 +67,44 @@
                         <!-- 用户信息区 -->
                         <a href="profile.html" class="block px-5 pt-5 pb-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer">
                             <div class="flex items-center space-x-3">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl font-bold shadow-md">A</div>
+                                <div id="dropdown-avatar" class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl font-bold shadow-md">A</div>
                                 <div>
-                                    <p class="text-base font-bold text-gray-800">Azure同学</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">0 粉丝 &nbsp;|&nbsp; 1 关注</p>
+                                    <p id="dropdown-username" class="text-base font-bold text-gray-800">Azure同学</p>
+                                    <p class="text-xs text-gray-400 mt-0.5"><span id="dropdown-followers">0</span> 粉丝 &nbsp;|&nbsp; <span id="dropdown-following">0</span> 关注</p>
                                 </div>
                             </div>
                         </a>
                         <!-- 菜单项 -->
                         <div class="py-2">
+                            <a href="mypublish.html" class="flex items-center justify-between px-5 py-3 hover:bg-purple-50 transition">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-lg">🏷️</span>
+                                    <span class="text-sm text-gray-700">我发布的</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span id="dropdown-posts" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                            </a>
+
                             <a href="purchases.html" class="flex items-center justify-between px-5 py-3 hover:bg-purple-50 transition">
                                 <div class="flex items-center space-x-3">
                                     <span class="text-lg">📦</span>
                                     <span class="text-sm text-gray-700">我买到的</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">131</span>
+                                    <span id="dropdown-buy" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                                     <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 </div>
                             </a>
-                            
+
                             <a href="sales.html" class="flex items-center justify-between px-5 py-3 hover:bg-purple-50 transition">
                                 <div class="flex items-center space-x-3">
                                     <span class="text-lg">💰</span>
                                     <span class="text-sm text-gray-700">我卖出的</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">12</span>
+                                    <span id="dropdown-sell" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                                     <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 </div>
                             </a>
@@ -98,7 +114,7 @@
                                     <span class="text-sm text-gray-700">我的收藏</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">5</span>
+                                    <span id="dropdown-fav" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                                     <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 </div>
                             </a>
@@ -465,30 +481,35 @@
                 </div>
                 <!-- 中：2x3 商品推荐网格 -->
                 <div id="card-grid" class="flex-1 grid grid-cols-2 gap-3">
-                    </div>
-            </div> <aside class="sticky top-24 self-start w-20 shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100 z-40">
-                <a href="javascript:void(0)" onclick="openPublish()" class="flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700 text-white py-4 transition">
-                    <span class="text-xl mb-1">➕</span>
-                    <span class="text-[11px] font-bold">发闲置</span>
-                </a>
+                </div>
+            </div>
+            <aside class="sticky top-24 self-start w-20 shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100 z-40">
                 <a href="messages.html" class="flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
                     <span class="text-xl mb-1">💬</span>
                     <span class="text-[11px] font-medium">信息</span>
-                </a>
-                <a href="purchases.html" class="flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
-                    <span class="text-xl mb-1">📦</span>
-                    <span class="text-[11px] font-medium">订单</span>
-                </a>
-                <a href="favorites.html" class="flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
-                    <span class="text-xl mb-1">⭐</span>
-                    <span class="text-[11px] font-medium">收藏</span>
                 </a>
                 <a href="mypublish.html" class="flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
                     <span class="text-xl mb-1">🏷️</span>
                     <span class="text-[11px] font-medium">发布</span>
                 </a>
+                <a href="purchases.html" class="relative flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
+                    <span class="text-xl mb-1">📦</span>
+                    <span class="text-[11px] font-medium">订单</span>
+                    <span id="badge-buy" class="absolute top-2 right-2 bg-purple-100 text-purple-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </a>
+                <a href="sales.html" class="relative flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
+                    <span class="text-xl mb-1">💰</span>
+                    <span class="text-[11px] font-medium">卖出</span>
+                    <span id="badge-sell" class="absolute top-2 right-2 bg-purple-100 text-purple-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </a>
+                <a href="favorites.html" class="relative flex flex-col items-center justify-center hover:bg-purple-50 text-gray-600 hover:text-purple-600 py-4 transition">
+                    <span class="text-xl mb-1">⭐</span>
+                    <span class="text-[11px] font-medium">收藏</span>
+                    <span id="badge-fav" class="absolute top-2 right-2 bg-purple-100 text-purple-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </a>
             </aside>
-
+        </div>
+            </div>
         </div>
 
         <!-- ===== 猜你喜欢 推荐流 ===== -->
@@ -534,120 +555,117 @@
         <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
             <!-- 顶栏 -->
             <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100 shrink-0">
-                <h2 class="text-xl font-black text-gray-900">发闲置</h2>
+                <h2 class="text-xl font-black text-gray-900">商品上架</h2>
                 <button onclick="closePublish()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <!-- 表单内容（可滚动） -->
-            <form id="publish-form" class="px-8 py-6 space-y-8 overflow-y-auto flex-1">
+            <form id="publishForm" class="px-8 py-6 space-y-8 overflow-y-auto flex-1">
+    
+    <div class="space-y-5">
+        <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">核心信息</h3>
+        
+        <div>
+            <label for="itemTitle" class="block text-sm text-gray-600 mb-2">商品名称 <span class="text-red-500">*</span></label>
+            <input type="text" id="itemTitle" name="title" required placeholder="请填写商品标题，如：iPad Pro 11寸 2022款" 
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none transition">
+        </div>
 
-                <!-- 基础信息 -->
-                <div>
-                    <h3 class="text-base font-bold text-gray-900 mb-4">基础信息</h3>
-                    <!-- 宝贝图片 -->
-                    <div class="mb-5">
-                        <label class="block text-sm text-gray-600 mb-2">宝贝图片 <span class="text-red-500">*</span></label>
-                        <label class="w-24 h-24 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition">
-                            <input type="file" accept="image/*" multiple class="hidden" id="publish-images">
-                            <span class="text-gray-400 text-2xl leading-none">+</span>
-                            <span class="text-gray-400 text-xs mt-1">添加首图</span>
-                        </label>
-                        <div id="image-preview" class="flex gap-2 mt-2 flex-wrap"></div>
-                    </div>
-                    <!-- 宝贝描述 -->
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-2">宝贝描述 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <textarea id="publish-desc" rows="5" maxlength="1500" placeholder="描述一下宝贝的品牌型号、货品来源..." class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"></textarea>
-                            <span class="absolute bottom-2 right-3 text-xs text-gray-400"><span id="desc-count">0</span>/1500</span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-3">属性规格 &nbsp; 上传主图/填写内容后将为你智能识别属性</p>
+        <div>
+            <label for="itemCategory" class="block text-sm text-gray-600 mb-2">商品类型 <span class="text-red-500">*</span></label>
+            <select id="itemCategory" name="category" required 
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none bg-white">
+                <option value="">请选择分类</option>
+                <option value="手机/数码/电脑">手机/数码/电脑</option>
+                <option value="教材/考研/资料">教材/考研/资料</option>
+                <option value="服饰/箱包/运动">服饰/箱包/运动</option>
+                <option value="游戏/卡券/潮玩">游戏/卡券/潮玩</option>
+                <option value="家具/家电/日用">家具/家电/日用</option>
+                <option value="美妆/护肤/个护">美妆/护肤/个护</option>
+                <option value="乐器/文具/手工">乐器/文具/手工</option>
+                <option value="代步/租赁/其他">代步/租赁/其他</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="itemDescription" class="block text-sm text-gray-600 mb-2">商品描述 <span class="text-red-500">*</span></label>
+            <textarea id="itemDescription" name="description" rows="4" placeholder="描述一下宝贝的来源、成色细节、转让原因..." 
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none resize-none transition"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm text-gray-600 mb-2">宝贝图片</label>
+            <div class="flex flex-wrap gap-3">
+                <label class="w-24 h-24 rounded-lg bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-purple-50 hover:border-purple-200 transition">
+                    <input type="file" id="itemImages" name="images" accept="image/*" multiple class="hidden">
+                    <span class="text-gray-400 text-2xl">+</span>
+                    <span class="text-[10px] text-gray-400 mt-1">添加图片</span>
+                </label>
+                <div id="image-preview" class="flex flex-wrap gap-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-5">
+        <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">定价与交易</h3>
+        
+        <div>
+            <label for="itemPrice" class="block text-sm text-gray-600 mb-2">商品定价 (元) <span class="text-red-500">*</span></label>
+            <input type="number" id="itemPrice" name="price" step="0.01" required placeholder="0.00" 
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+        </div>
+
+        <div>
+            <label for="itemCondition" class="block text-sm text-gray-600 mb-2">成色 (0-100全新) <span class="text-red-500">*</span></label>
+            <input type="number" id="itemCondition" name="condition" min="0" max="100" required placeholder="例如：95" 
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+        </div>
+
+        <div>
+            <label for="itemLocation" class="block text-sm text-gray-600 mb-2">交易地点</label>
+            <input type="text" id="itemLocation" name="address" placeholder="如：南区宿舍、图书馆正门" 
+                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+        </div>
+    </div>
+
+    <div class="space-y-5">
+        <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">服务选项</h3>
+        
+        <div class="flex flex-col space-y-4">
+            <label class="flex items-center justify-between cursor-pointer group">
+                <span class="text-sm text-gray-700 group-hover:text-purple-600 transition">是否急出</span>
+                <div class="relative">
+                    <input type="checkbox" id="isUrgent" name="isUrgent" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-purple-500 transition"></div>
+                    <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
                 </div>
+            </label>
 
-                <!-- 价格 -->
-                <div>
-                    <h3 class="text-base font-bold text-gray-900 mb-4">价格</h3>
-                    <div class="flex gap-6">
-                        <div class="flex-1">
-                            <label class="block text-sm text-gray-600 mb-2">价格 <span class="text-red-500">*</span></label>
-                            <div class="flex items-center border border-gray-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-purple-400">
-                                <span class="text-gray-400 text-sm mr-1">¥</span>
-                                <input type="number" step="0.01" min="0" placeholder="0.00" class="flex-1 text-sm outline-none bg-transparent">
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-sm text-gray-600 mb-2">原价</label>
-                            <div class="flex items-center border border-gray-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-purple-400">
-                                <span class="text-gray-400 text-sm mr-1">¥</span>
-                                <input type="number" step="0.01" min="0" placeholder="0.00" class="flex-1 text-sm outline-none bg-transparent">
-                            </div>
-                        </div>
-                    </div>
-
+            <label class="flex items-center justify-between cursor-pointer group">
+                <span class="text-sm text-gray-700 group-hover:text-purple-600 transition">是否包邮</span>
+                <div class="relative">
+                    <input type="checkbox" id="isShippingFree" name="isShippingFree" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-purple-500 transition"></div>
+                    <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
                 </div>
+            </label>
 
-                <!-- 发货设置 -->
-                <div>
-                    <h3 class="text-base font-bold text-gray-900 mb-4">发货设置</h3>
-                    <div class="flex items-center flex-wrap gap-x-6 gap-y-2">
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="shipping" value="free" checked class="w-4 h-4 accent-purple-600">
-                            <span class="text-sm text-gray-700">包邮</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="shipping" value="distance" class="w-4 h-4 accent-purple-600">
-                            <span class="text-sm text-gray-700">按距离计费</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="shipping" value="fixed" class="w-4 h-4 accent-purple-600">
-                            <span class="text-sm text-gray-700">一口价</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input type="radio" name="shipping" value="none" class="w-4 h-4 accent-purple-600">
-                            <span class="text-sm text-gray-700">无需邮寄</span>
-                        </label>
-                        <span class="text-gray-300">|</span>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <span class="text-sm text-gray-700">支持自提</span>
-                            <div class="relative">
-                                <input type="checkbox" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-200 rounded-full peer-checked:bg-purple-500 transition"></div>
-                                <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-                            </div>
-                        </label>
-                    </div>
-                    <!-- 宝贝所在地 -->
-                    <div class="mt-5">
-                        <label class="block text-sm text-gray-600 mb-2">宝贝所在地</label>
-                        <div class="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-2.5 cursor-pointer hover:border-purple-400 transition">
-                            <div class="flex items-center space-x-2 text-sm text-gray-700">
-                                <span>📍</span>
-                                <span>校园内</span>
-                            </div>
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        </div>
-                    </div>
+            <label class="flex items-center justify-between cursor-pointer group">
+                <span class="text-sm text-gray-700 group-hover:text-purple-600 transition">是否可验货</span>
+                <div class="relative">
+                    <input type="checkbox" id="canInspect" name="canInspect" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-purple-500 transition"></div>
+                    <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
                 </div>
+            </label>
+        </div>
+    </div>
 
-                <!-- 分类 -->
-                <div>
-                    <h3 class="text-base font-bold text-gray-900 mb-4">分类</h3>
-                    <select class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 text-gray-700">
-                        <option value="">请选择分类</option>
-                        <option>手机/数码/电脑</option>
-                        <option>服饰/箱包/运动</option>
-                        <option>游戏/卡券/潮玩</option>
-                        <option>教材/考研/资料</option>
-                        <option>家具/家电/日用</option>
-                        <option>美妆/护肤/个护</option>
-                        <option>乐器/文具/手工</option>
-                        <option>代步/租赁/其他</option>
-                    </select>
-                </div>
-
-                <!-- 提交按钮 -->
-                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition text-base">确认发布</button>
-            </form>
+    <div class="pt-4 pb-2">
+        <button type="submit" id="submitItemBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl transition shadow-lg transform active:scale-[0.98]">
+            确认上架
+        </button>
+    </div>
+    </form>
         </div>
     </div>
 
@@ -656,9 +674,64 @@
 
     <script src="../js/app/seeds.js"></script>
     <script src="../js/app/trade.js"></script>
+    <script src="../js/notifications.js"></script>
+    <script>
+        // Publish Item Modal Logic
+        document.getElementById('publishForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../js/effects/mouse-ripple.js"></script>
+            const title = document.getElementById('itemTitle').value;
+            const category = document.getElementById('itemCategory').value;
+            const description = document.getElementById('itemDescription').value;
+            const price = parseFloat(document.getElementById('itemPrice').value);
+            const condition = parseInt(document.getElementById('itemCondition').value);
+            const location = document.getElementById('itemLocation').value;
+            const isUrgent = document.getElementById('isUrgent').checked;
+            const isShippingFree = document.getElementById('isShippingFree').checked;
+            const canInspect = document.getElementById('canInspect').checked;
+            // For images, you would typically upload them separately or use FormData
+            // For now, we'll send an empty array or placeholder if the API expects it.
+
+            if (!title || !category || !description || isNaN(price) || isNaN(condition)) {
+                window.notify.show('请填写所有必填项！', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/market/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-XSRF-TOKEN': window.getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        category: category,
+                        description: description,
+                        price: price,
+                        condition: condition, // Assuming backend handles this
+                        location: location,
+                        isUrgent: isUrgent, // Assuming backend handles this
+                        isShippingFree: isShippingFree, // Assuming backend handles this
+                        canInspect: canInspect, // Assuming backend handles this
+                        images: [] // Placeholder for images
+                    })
+                });
+
+                if (response.ok) {
+                    window.notify.show('商品上架成功！', 'success');
+                    closePublish();
+                    // Optionally clear form or refresh item list
+                    document.getElementById('publishForm').reset();
+                } else {
+                    const errorData = await response.json();
+                    window.notify.show(`上架失败: ${errorData.message || response.statusText}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting item:', error);
+                window.notify.show('网络错误，上架失败。', 'error');
+            }
+        });
+    </script>
 </body>
-
 </html>

@@ -1,0 +1,17 @@
+GET	/api/market/items?category=electronics&sortBy=price&order=asc&page=1&limit=10&search=laptop (可选参数：分类、排序、搜索、分页)	获取所有二手商品列表:
+
+[
+  { "itemId": "uuid-string",
+    "title": "Used Laptop",
+    "description": "Good condition...",
+    "price": 500.00,
+    "sellerId": "uuid-string",
+    "createdAt": "timestamp",
+
+    "status": "available",
+    "images": ["http://...", "http://..."],
+    "category": "electronics",
+    "views": 120
+  },
+  ...
+]

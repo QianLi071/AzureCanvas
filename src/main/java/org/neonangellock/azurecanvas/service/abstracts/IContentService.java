@@ -1,12 +1,11 @@
 package org.neonangellock.azurecanvas.service.abstracts;
 
-import org.neonangellock.azurecanvas.model.Section;
-
 import java.util.List;
+import java.util.UUID;
 
 public interface IContentService <T> {
-    T findById(Integer id);
+    T findById(UUID id);
     List<T> findAll();
     T save(T section);
-    void deleteById(Integer id);
+    void deleteById(UUID id);
 }

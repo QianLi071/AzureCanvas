@@ -1,0 +1,27 @@
+POST	/api/storymaps	创建新的校园故事地图：
+示例请求体：
+{
+  "title": "New Story Map",
+  "description": "This is a new map.",
+  "coverImageUrl": "http://...",
+  "locations": [
+    {
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "title": "Location 1",
+      "description": "Details...",
+      "imageUrl": "http://..."
+    }
+  , ...
+  ]
+}
+需要返回的格式：
+{
+  "storyMapId": "uuid-string",
+  "title": "New Story Map",
+  "description": "This is a new map.",
+  "authorId": "uuid-string",
+  "createdAt": "timestamp",
+  "coverImageUrl": "http://...",
+  "locations": [ ... ]
+}

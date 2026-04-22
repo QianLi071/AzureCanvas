@@ -3,6 +3,7 @@ package org.neonangellock.azurecanvas.model.storymap;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "story_maps")
+@ToString
 public class StoryMap {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

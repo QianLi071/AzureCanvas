@@ -1,0 +1,22 @@
+POST	/api/market/items	发布新的二手商品:
+示例请求体：
+{
+  "title": "Desk Chair",
+  "description": "Comfortable and sturdy.",
+  "price": 50.00,
+  "category": "furniture",
+  "images": ["http://chair1.jpg", "http://chair2.jpg"]
+}
+需要返回的格式：
+{
+  "itemId": "uuid-string",
+  "title": "Desk Chair",
+  "description": "Comfortable and sturdy.",
+  "price": 50.00,
+  "sellerId": "uuid-string",
+  "createdAt": "timestamp",
+  "status": "available",
+  "images": ["http://chair1.jpg", "http://chair2.jpg"],
+  "category": "furniture",
+  "views": 0
+}

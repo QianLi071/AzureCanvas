@@ -32,20 +32,34 @@
                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="trade-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                         <div id="trade-sub" class="ml-6 space-y-0.5">
-                            <a href="mypublish.html" class="block px-4 py-2 bg-purple-50 text-purple-600 font-bold rounded-lg transition">我发布的</a>
-                            <a href="sales.html" class="block px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">我卖出的</a>
-                            <a href="purchases.html" class="block px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">我买到的</a>
+                            <a href="mypublish.html" class="flex items-center justify-between px-4 py-2 bg-purple-50 text-purple-600 font-bold rounded-lg transition">
+                                <span>我发布的</span>
+                                <span id="sidebar-publish-count" class="text-xs text-purple-600 font-bold bg-purple-100 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="sales.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>我卖出的</span>
+                                <span id="sidebar-sell-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="purchases.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>我买到的</span>
+                                <span id="sidebar-buy-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
                         </div>
                     </div>
-                    <a href="favorites.html" class="flex items-center space-x-3 px-4 py-2.5 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                        <span>⭐</span><span>我的收藏</span>
+                    <a href="favorites.html" class="flex items-center justify-between px-4 py-2.5 text-gray-600 hover:bg-gray-50 rounded-lg transition">
+                        <div class="flex items-center space-x-3"><span>⭐</span><span>我的收藏</span></div>
+                        <span id="sidebar-fav-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                     </a>
                 </nav>
-                <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="mt-6 pt-4 border-t border-gray-100 space-y-2">
                     <a href="trade.html" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition font-medium text-sm">
                         <span>&larr;</span>
                         <span>返回大厅</span>
                     </a>
+                    <button id="logout-btn" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl transition font-medium text-sm">
+                        <span>🚪</span>
+                        <span>退出登录</span>
+                    </button>
                 </div>
             </div>
         </aside>
@@ -159,9 +173,37 @@ toggle.addEventListener('click', function() {
     sub.style.display = hidden ? '' : 'none';
     arrow.classList.toggle('rotate-180', hidden);
 });
-</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../js/effects/mouse-ripple.js"></script>
-</body>
 
+// 退出登录
+var logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', async function () {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch (e) {}
+        window.location.href = '/login?redirect=/trade';
+    });
+}
+
+// 侧边栏气泡数字
+(function() {
+    var profile = {};
+    try { profile = JSON.parse(localStorage.getItem('userProfile') || '{}'); } catch(e) {}
+    var published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+    var sold = JSON.parse(localStorage.getItem('soldItems') || '[]');
+    var bought = JSON.parse(localStorage.getItem('boughtItems') || '[]');
+
+    var counts = {
+        'sidebar-publish-count': profile.posts || published.length,
+        'sidebar-sell-count': profile.sell || sold.length,
+        'sidebar-buy-count': profile.buy || bought.length,
+        'sidebar-fav-count': profile.favorites || JSON.parse(localStorage.getItem('favoriteItems') || '[]').length
+    };
+    Object.keys(counts).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = counts[id];
+    });
+})();
+</script>
+</body>
 </html>

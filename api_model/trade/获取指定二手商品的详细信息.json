@@ -1,0 +1,17 @@
+GET	/api/market/items/{itemId}	获取指定二手商品的详细信息:
+需要返回的格式：
+{
+  "itemId": "uuid-string",
+  "title": "Used Laptop",
+  "description": "Good condition...",
+  "price": 500.00,
+  "sellerId": "uuid-string",
+  "sellerUsername": "john_doe",
+  "sellerAvatarUrl": "http://...",
+  "createdAt": "timestamp",
+  "status": "available",
+  "images": ["http://...", "http://..."],
+  "category": "electronics",
+  "views": 120,
+  "location": "Building B"
+}

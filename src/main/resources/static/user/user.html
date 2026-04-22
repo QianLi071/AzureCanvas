@@ -440,7 +440,7 @@
                         }
                         window.location.href = errorData.redirect;
                     } else {
-                        window.location.href = '../auth/authlogin.html?redirect=/user/user.html';
+                        window.location.href = '../login/index.html?redirect=/user/user.html';
                     }
                     return;
                 }
@@ -566,7 +566,7 @@
                 });
 
                 if (response.status === 401) {
-                    window.location.href = '../auth/authlogin.html?redirect=/user/user.html';
+                    window.location.href = '../login/index.html?redirect=/user/user.html';
                     return;
                 }
 

@@ -231,8 +231,72 @@ publishModal.addEventListener('click', function (e) {
     if (e.target === publishModal) closePublish();
 });
 
-publishForm.addEventListener('submit', function (e) {
+publishForm.addEventListener('submit', async function (e) {
     e.preventDefault();
+
+    var formData = new FormData(publishForm);
+    var imageFiles = document.getElementById('publish-images').files;
+
+    // 先将图片转为 dataURL 存入 localStorage（支持0~9张）
+    var imagePromises = Array.from(imageFiles).slice(0, 9).map(function (file) {
+        return new Promise(function (resolve) {
+            var reader = new FileReader();
+            reader.onload = function (ev) { resolve(ev.target.result); };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    var imageDataUrls = await Promise.all(imagePromises);
+
+    // 构建本地存储对象
+    var item = {
+        id: Date.now().toString(),
+        title: formData.get('title'),
+        category: formData.get('category'),
+        description: formData.get('description'),
+        price: parseFloat(formData.get('price')),
+        condition: formData.get('condition'),
+        address: formData.get('address'),
+        images: imageDataUrls,
+        isUrgent: !!publishForm.querySelector('[name="isUrgent"]').checked,
+        isShippingFree: !!publishForm.querySelector('[name="isShippingFree"]').checked,
+        canInspect: !!publishForm.querySelector('[name="canInspect"]').checked,
+        createdAt: new Date().toISOString(),
+        status: 'available'
+    };
+
+    // 无论 API 是否成功，都存入 localStorage
+    var published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+    published.unshift(item);
+    localStorage.setItem('publishedItems', JSON.stringify(published));
+    updateDropdownCounts();
+
+    // 尝试调用后端 API
+    var uploadData = new FormData();
+    uploadData.append('title', formData.get('title'));
+    uploadData.append('category', formData.get('category'));
+    uploadData.append('description', formData.get('description'));
+    uploadData.append('price', formData.get('price'));
+    Array.from(imageFiles).slice(0, 9).forEach(function (file) {
+        uploadData.append('images', file);
+    });
+
+    try {
+        var response = await fetch('/api/market/items', {
+            method: 'POST',
+            credentials: 'include',
+            body: uploadData
+        });
+
+        if (response.status === 401) {
+            showToast('请先登录');
+            window.location.href = '/login?redirect=/trade';
+            return;
+        }
+    } catch (err) {
+        console.warn('后端未连接，商品已保存到本地:', err);
+    }
+
     closePublish();
     showToast('发布成功！商品已上架');
 });
@@ -330,6 +394,93 @@ document.addEventListener('keydown', function (e) {
     });
 })();
 
+// ========== 实时统计数字 ==========
+function updateDropdownCounts() {
+    var published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+    var postsCount = published.length;
+
+    var dropdownPosts = document.getElementById('dropdown-posts');
+    if (dropdownPosts) dropdownPosts.textContent = postsCount;
+}
+
 // ========== 初始化渲染 ==========
 renderCards(cards);
 renderRecommend(null);
+updateDropdownCounts();
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/users/me', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const user = await response.json();
+
+            // 保存完整用户数据到 localStorage（供 profile 等页面使用）
+            var existing = {};
+            try { existing = JSON.parse(localStorage.getItem('userProfile') || '{}'); } catch(e) {}
+            Object.keys(user).forEach(function(k) { existing[k] = user[k]; });
+            localStorage.setItem('userProfile', JSON.stringify(existing));
+
+            // 更新头像和用户名
+            const headerAvatar = document.getElementById('header-avatar');
+            const headerUsername = document.getElementById('header-username');
+            const dropdownAvatar = document.getElementById('dropdown-avatar');
+            const dropdownUsername = document.getElementById('dropdown-username');
+
+            const username = user.username || user.nickname || '用户';
+            const firstChar = username.charAt(0).toUpperCase();
+
+            if (headerUsername) headerUsername.textContent = username;
+            if (dropdownUsername) dropdownUsername.textContent = username;
+
+            if (user.avatar_url) {
+                if (headerAvatar) {
+                    headerAvatar.innerHTML = '<img src="' + user.avatar_url + '" class="w-9 h-9 rounded-full object-cover">';
+                    headerAvatar.className = 'w-9 h-9 rounded-full overflow-hidden shadow';
+                }
+                if (dropdownAvatar) {
+                    dropdownAvatar.innerHTML = '<img src="' + user.avatar_url + '" class="w-14 h-14 rounded-full object-cover">';
+                    dropdownAvatar.className = 'w-14 h-14 rounded-full overflow-hidden shadow-md';
+                }
+            } else {
+                if (headerAvatar) headerAvatar.textContent = firstChar;
+                if (dropdownAvatar) dropdownAvatar.textContent = firstChar;
+            }
+
+            // 更新侧边栏徽章
+            const badgeSell = document.getElementById('badge-sell');
+            const badgeBuy = document.getElementById('badge-buy');
+            const badgeFav = document.getElementById('badge-fav');
+
+            if (badgeSell) badgeSell.textContent = user.sell || 0;
+            if (badgeBuy) badgeBuy.textContent = user.buy || 0;
+            if (badgeFav) badgeFav.textContent = user.favorites || 0;
+
+            // 更新下拉面板：粉丝/关注
+            const dropdownFollowers = document.getElementById('dropdown-followers');
+            const dropdownFollowing = document.getElementById('dropdown-following');
+            if (dropdownFollowers) dropdownFollowers.textContent = user.followers || 0;
+            if (dropdownFollowing) dropdownFollowing.textContent = user.followings || 0;
+
+            // 更新下拉菜单：发布/买到/卖出/收藏数量
+            const dropdownPosts = document.getElementById('dropdown-posts');
+            const dropdownBuy = document.getElementById('dropdown-buy');
+            const dropdownSell = document.getElementById('dropdown-sell');
+            const dropdownFav = document.getElementById('dropdown-fav');
+            if (dropdownPosts) dropdownPosts.textContent = user.posts || 0;
+            if (dropdownBuy) dropdownBuy.textContent = user.buy || 0;
+            if (dropdownSell) dropdownSell.textContent = user.sell || 0;
+            if (dropdownFav) dropdownFav.textContent = user.favorites || 0;
+        } else {
+            if (response.status === 401) {
+                window.location.href = '/login?redirect=/trade';
+            }
+        }
+    } catch (error) {
+        console.error("获取用户信息失败:", error);
+    }
+});

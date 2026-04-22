@@ -13,6 +13,7 @@ public class WebMvcConfigurer implements org.springframework.web.servlet.config.
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "DELETE", "PUT", "OPTION")
                 .allowedHeaders("*")
+                .maxAge(3600)
                 .exposedHeaders("*");
     }
 }

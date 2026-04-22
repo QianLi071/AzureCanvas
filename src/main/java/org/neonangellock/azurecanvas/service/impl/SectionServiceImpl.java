@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class SectionServiceImpl extends AbstractQueryService implements SectionService {
@@ -18,7 +19,7 @@ public class SectionServiceImpl extends AbstractQueryService implements SectionS
     }
 
     @Override
-    public Section findById(Integer id) {
+    public Section findById(UUID id) {
         return entityManager.find(Section.class, id);
     }
 
@@ -39,7 +40,7 @@ public class SectionServiceImpl extends AbstractQueryService implements SectionS
     }
 
     @Override
-    public void deleteById(Integer id) {
+    public void deleteById(UUID id) {
         Section section = entityManager.find(Section.class, id);
         if (section != null) {
             entityManager.remove(section);
@@ -49,7 +50,7 @@ public class SectionServiceImpl extends AbstractQueryService implements SectionS
     @Override
     public List<Section> findSectionsByUser(User user) {
         Query query = entityManager.createQuery("SELECT s FROM Section s, Post p where p.section.id = s.id and p.user.id = :user_id");
-        query.setParameter("user_id", user.getId());
+        query.setParameter("user_id", user.getUserId());
         return query.getResultList();
     }
 }

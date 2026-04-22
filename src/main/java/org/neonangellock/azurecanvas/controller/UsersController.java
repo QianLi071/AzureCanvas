@@ -19,11 +19,11 @@ public class UsersController {
     private UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@CookieValue(name = "user_id", required = false) Integer userId) {
+    public ResponseEntity<?> getCurrentUser(@CookieValue(name = "user_id", required = false) UUID userId) {
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "NOT_LOGGED_IN");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
@@ -31,16 +31,15 @@ public class UsersController {
         if (user == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "USER_NOT_FOUND");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         Map<String, Object> userData = new HashMap<>();
-        userData.put("id", user.getId());
+        userData.put("id", user.getUserId());
         userData.put("username", user.getUsername());
         userData.put("email", user.getEmail());
-        userData.put("phone", user.getPhone());
-        userData.put("avatar", user.getAvatar());
+        userData.put("avatar", user.getAvatarUrl());
         userData.put("role", user.getRole().name());
         userData.put("isRobot", user.isRobot());
         userData.put("createdAt", user.getCreatedAt());
@@ -53,12 +52,12 @@ public class UsersController {
 
     @PutMapping("/me")
     public ResponseEntity<?> updateCurrentUser(
-            @CookieValue(name = "user_id", required = false) Integer userId,
+            @CookieValue(name = "user_id", required = false) UUID userId,
             @RequestBody Map<String, String> updates) {
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "NOT_LOGGED_IN");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
@@ -66,30 +65,27 @@ public class UsersController {
         if (user == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "USER_NOT_FOUND");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if (updates.containsKey("email")) {
             user.setEmail(updates.get("email"));
         }
-        if (updates.containsKey("phone")) {
-            user.setPhone(updates.get("phone"));
-        }
         if (updates.containsKey("avatar")) {
-            user.setAvatar(updates.get("avatar"));
+            user.setAvatarUrl(updates.get("avatar"));
         }
         if (updates.containsKey("bio")) {
+            user.setBio(updates.get("bio"));
         }
 
         userService.save(user);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
+        response.put("id", user.getUserId());
         response.put("username", user.getUsername());
         response.put("email", user.getEmail());
-        response.put("phone", user.getPhone());
-        response.put("avatar", user.getAvatar());
+        response.put("avatar", user.getAvatarUrl());
         response.put("role", user.getRole().name());
         response.put("isRobot", user.isRobot());
         response.put("createdAt", user.getCreatedAt());
@@ -106,7 +102,7 @@ public class UsersController {
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "NOT_LOGGED_IN");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
@@ -131,12 +127,12 @@ public class UsersController {
 
     @PostMapping("/{userId}/follow")
     public ResponseEntity<?> followUser(
-            @CookieValue(name = "user_id", required = false) Integer currentUserId,
-            @PathVariable Integer userId) {
+            @CookieValue(name = "user_id", required = false) UUID currentUserId,
+            @PathVariable UUID userId) {
         if (currentUserId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "NOT_LOGGED_IN");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
@@ -149,7 +145,7 @@ public class UsersController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(Map.of("message", "成功关注用户"));
+        return ResponseEntity.ok(Map.of("success", true,"message", "成功关注用户"));
     }
 
     @DeleteMapping("/{userId}/follow")
@@ -159,10 +155,10 @@ public class UsersController {
         if (currentUserId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "NOT_LOGGED_IN");
-            response.put("redirect", "../auth/authlogin.html?redirect=/user/user.html");
+            response.put("redirect", "../login/index.html?redirect=/user/user.html");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        return ResponseEntity.ok(Map.of("message", "成功取消关注用户"));
+        return ResponseEntity.ok(Map.of("success", true ,"message", "成功取消关注用户"));
     }
 }

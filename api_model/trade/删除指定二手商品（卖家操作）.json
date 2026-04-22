@@ -1,0 +1,6 @@
+DELETE	/api/market/items/{itemId}	删除指定二手商品（卖家操作）
+需要返回的格式：
+{
+  "success": true,
+  "message": "Item deleted successfully."
+}

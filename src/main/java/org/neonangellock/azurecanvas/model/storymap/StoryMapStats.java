@@ -33,8 +33,10 @@ public class StoryMapStats {
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
     @Column(name = "likescount", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private int likesCount; // 点赞数
+    private int likesCount;
 
     @Column(name = "viewscount", nullable = false, columnDefinition = "INT DEFAULT 0")
     private int viewsCount;
+    @Column(name = "commentcount", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private int commentCount;
 }

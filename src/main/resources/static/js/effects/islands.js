@@ -12,7 +12,9 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     let craneGroup = new THREE.Group();
     let cloudGroup = new THREE.Group();
     let scrollTimeout;
-    let targetCamPos = new THREE.Vector3(30, 20, 30);
+    let targetCamPos = new THREE.Vector3(-60, 20, -60);
+    let currentLookAt = new THREE.Vector3(0, 0, 0); // 新增：当前相机注视点
+    let targetLookAt = new THREE.Vector3(0, 0, 0);  // 新增：目标相机注视点
 
     // 配置
     const CONFIG = {
@@ -21,20 +23,26 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                 name: 'IsleA', 
                 path: '../models/Islands/IsleA.glb', 
                 link: '../treehole/treehole.html',
-                scale: 2 // 微调缩放
+                pos: [30, 0, 30],
+                scale: 1.3
+            },
+            {
+                name: 'IsleC',
+                path: '../models/Islands/IsleC.glb',
+                link: '../storymap/compusmap.html',
+                pos: [35, -10, -35],
+
+                scale: 0.75
             },
             { 
                 name: 'IsleB', 
                 path: '../models/Islands/Isle B.glb', 
                 link: '../azure_trade/trade.html',
-                scale: 1.0
+                pos: [-35, -10, -35],
+                offset_y: 180,
+                scale: 0.7
             }
-        ],
-        spiral: {
-            radius: 15,
-            heightStep: 5,
-            angleStep: Math.PI / 3 // 螺旋角度
-        }
+        ]
     };
 
     function init() {
@@ -45,8 +53,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         scene.fog = new THREE.FogExp2(0xeef6ff, 0.012);
 
         // 相机
-        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(30, 20, 30);
+        camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(-60, 60, -60);
 
         // 渲染器 - 高清设置
         renderer = new THREE.WebGLRenderer({ 
@@ -134,7 +142,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
     function createCranes() {
         scene.add(craneGroup);
-        const craneCount = 40; // 增加数量以覆盖全空间
+        const craneCount = 240; // 增加数量以覆盖全空间
         
         const geometry = new THREE.BufferGeometry();
         const vertices = new Float32Array([
@@ -169,7 +177,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         
         // 固定直线方向
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 0.05 + 0.05;
+        const speed = Math.random() * 0.05 + 0.15;
         crane.userData.velocity = new THREE.Vector3(
             Math.cos(angle) * speed,
             Math.cos(angle) * speed, // 极轻微的上下漂移
@@ -181,16 +189,16 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     // 创建带面的云朵
     function createCloudLines() {
         scene.add(cloudGroup);
-        const cloudCount = 25;
+        const cloudCount = 50;
         
         for(let i = 0; i < cloudCount; i++) {
             const group = new THREE.Group();
-            const segments = 3 + Math.floor(Math.random() * 3);
+            const segments = 3 + Math.floor(Math.random() * 4);
             const cloudColor = 0xffffff;
             
             let currentX = 0;
             for(let j = 0; j < segments; j++) {
-                const w = 4 + Math.random() * 4;
+                const w = 0.5 + Math.random() * 4;
                 const h = 0.5 + Math.random() * 0.5;
                 const geo = new THREE.PlaneGeometry(w, h);
                 const mat = new THREE.MeshBasicMaterial({
@@ -201,8 +209,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                 });
                 const plane = new THREE.Mesh(geo, mat);
                 plane.position.x = currentX + w/2;
-                plane.position.y = (Math.random() - 0.5) * 0.5;
-                plane.rotation.z = (Math.random() - 0.5) * 0.1; // 极小弧度，避免大幅弯折
+                plane.position.y = (Math.sin(j) - 0.5) * 0.5;
+                plane.rotation.z = (Math.sin(j) - 0.5) * 0.1; // 极小弧度，避免大幅弯折
                 
                 group.add(plane);
                 currentX += w * 0.8; // 稍微重叠
@@ -229,27 +237,21 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             loader.load(config.path, (gltf) => {
                 const model = gltf.scene;
                 
-                const box = new THREE.Box3().setFromObject(model);
-                const center = box.getCenter(new THREE.Vector3());
-                model.position.sub(center); // 内部对中
-
-                // const size = box.getSize(new THREE.Vector3());
-                // const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 0.5*config.scale;
+                // 设置缩放
+                const scale = 0.5 * config.scale;
                 model.scale.set(scale, scale, scale);
 
-                // 螺旋布局
-                const angle = index * CONFIG.spiral.angleStep;
-                const radius = CONFIG.spiral.radius;
-                const finalPos = new THREE.Vector3(
-                    Math.cos(angle) * radius,
-                    -index * CONFIG.spiral.heightStep,
-                    Math.sin(angle) * radius
-                );
+                // 岛屿位置直接使用配置中的 pos
+                const finalPos = new THREE.Vector3(config.pos[0], config.pos[1], config.pos[2]);
                 
                 const wrapper = new THREE.Group();
                 wrapper.add(model);
                 wrapper.position.copy(finalPos);
+                
+                // 计算该岛屿相对于中心的方向向量和初始角度
+                const dir = finalPos.clone().setY(0).normalize();
+                const angle = Math.atan2(dir.x, dir.z);
+
                 wrapper.userData = { 
                     index: index, 
                     link: config.link,
@@ -257,7 +259,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                     angle: angle
                 };
 
-                // 材质优化：增加饱和度，减少金属感
+                // 材质优化
                 model.traverse(child => {
                     if(child.isMesh) {
                         child.castShadow = true;
@@ -265,7 +267,6 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                         if(child.material) {
                             child.material.roughness = 0.7;
                             child.material.metalness = 0.1;
-                            // 确保颜色明亮
                             if(child.material.color) {
                                 child.material.color.multiplyScalar(1.2);
                             }
@@ -284,57 +285,74 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         });
     }
 
+    function shift_lookAt_position(index){
+        let lookAt_Y = 0;
+        if (index === 0){
+            lookAt_Y = 5;
+        }
+        else if(index === 1){
+            lookAt_Y = 10;
+        }
+        else if(index === 2){
+            lookAt_Y = 7;
+        }
+        return lookAt_Y;
+    }
     function focusIsland(index, animated = true) {
         if(!islands[index]) return;
         currentIndex = index;
         const target = islands[index];
-        const angle = target.userData.angle;
+        const pos = CONFIG.islands[index].pos;
         
-        // 核心：计算一致的相机位置（基于岛屿当前的螺旋角度）
-        const camDist = 25;
-        const camHeight = 10;
-        targetCamPos.set(
-            target.position.x + Math.cos(angle) * camDist,
-            target.position.y + camHeight,
-            target.position.z + Math.sin(angle) * camDist
-        );
+        // 核心：摄像机在正方形中心区域进行“内侧”旋转
+        const innerRadius = 15; 
+        const camHeight = 12;   
+        
+        const targetDir = new THREE.Vector3(pos[0], 0, pos[2]).normalize();
+        targetCamPos.copy(targetDir).multiplyScalar(innerRadius);
+        targetCamPos.y = camHeight;
+        
+        // 更新目标注视点
+        targetLookAt.copy(target.position);
+        let angle_pitch_offset = 0;
+        try {
+            angle_pitch_offset = shift_lookAt_position(index);
+        } catch (err) {
 
+        }
         if(animated) {
             isTransitioning = true;
             
-            // 计算中转点，实现“环绕”感
-            const midAngle = angle + 0.5; // 稍微偏转
-            const midPos = new THREE.Vector3(
-                target.position.x + Math.cos(midAngle) * (camDist + 5),
-                target.position.y + camHeight + 5, // 向上拉升
-                target.position.z + Math.sin(midAngle) * (camDist + 5)
-            );
-
             const tl = gsap.timeline({
                 onComplete: () => { isTransitioning = false; }
             });
 
-            // 优雅的曲线路径：先升后降，平滑加速
+            targetLookAt.y += angle_pitch_offset;
+
+            // 同时动画相机位置和注视点，实现“无死角”平滑过渡
             tl.to(camera.position, {
-                x: midPos.x,
-                y: midPos.y,
-                z: midPos.z,
-                duration: 0.8,
-                ease: "power2.in",
-                onUpdate: () => camera.lookAt(target.position)
-            })
-            .to(camera.position, {
                 x: targetCamPos.x,
                 y: targetCamPos.y,
                 z: targetCamPos.z,
-                duration: 1.0,
-                ease: "power2.out",
-                onUpdate: () => camera.lookAt(target.position)
+                duration: 1.8,
+                ease: "power3.inOut"
             });
+
+            tl.to(currentLookAt, {
+                x: targetLookAt.x,
+                y: targetLookAt.y,
+                z: targetLookAt.z,
+                duration: 1.8,
+                ease: "power2.inOut",
+                onUpdate: () => {
+                    camera.lookAt(currentLookAt);
+                }
+            }, "<"); // "<" 表示与上一个动画同时开始
             
         } else {
             camera.position.copy(targetCamPos);
-            camera.lookAt(target.position);
+            currentLookAt.copy(targetLookAt);
+            camera.lookAt(currentLookAt);
         }
     }
 
@@ -354,12 +372,12 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                     focusIsland(currentIndex - 1);
                 }
             }
-        }, 50);
+        }, 40);
     }
 
     function onMouseMove(e) {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        mouse.x = (e.clientX / window.innerWidth) * 4 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 4 + 1;
     }
 
     function onMouseDown(e) {
@@ -451,7 +469,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         // 岛屿微动浮动
         islands.forEach((island, i) => {
             if(island && !isTransitioning) {
-                island.position.y = island.userData.originalPos.y + Math.sin(elapsed * 0.8 + i) * 0.15;
+                island.position.y = island.userData.originalPos.y + Math.sin(elapsed * 0.8 + i) * 0.55;
             }
         });
 
@@ -461,10 +479,13 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             const targetY = targetCamPos.y - mouse.y * 2;
             const targetZ = targetCamPos.z;
             
-            camera.position.x += (targetX - camera.position.x) * 0.05;
-            camera.position.y += (targetY - camera.position.y) * 0.05;
-            camera.position.z += (targetZ - camera.position.z) * 0.05;
-            //camera.lookAt(islands[currentIndex].position);
+            camera.position.x += (targetX - camera.position.x) * 0.15;
+            camera.position.y += (targetY - camera.position.y) * 0.35;
+            camera.position.z += (targetZ - camera.position.z) * 0.15;
+
+            // 确保在闲置状态下也平滑注视目标
+            currentLookAt.lerp(targetLookAt, 0.05);
+            camera.lookAt(currentLookAt);
         }
 
         renderer.render(scene, camera);

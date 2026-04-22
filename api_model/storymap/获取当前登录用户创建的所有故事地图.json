@@ -1,0 +1,20 @@
+GET	/api/users/me/storymaps?page=1&limit=10	获取当前登录用户创建的所有故事地图
+需要返回格式：
+[
+  {
+    "storyMapId": string,
+    "title": string,
+    "description": string,
+    "authorID": uuid-string,
+    "createdAt": timestamp,
+    "updatedAt": timestamp,
+    "likes": int,
+    "comments" string,
+    "lat": double,
+    "lng": double,
+    "category": string,
+    "location": string,
+    "author" : string
+  },
+  ...
+]

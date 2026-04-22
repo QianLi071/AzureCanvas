@@ -1,0 +1,19 @@
+GET /api/storymaps?page=1&limit=10 需要返回格式：
+[
+  {
+    "storyMapId": string,
+    "title": string,
+    "description": string,
+    "authorID": uuid-string,
+    "createdAt": timestamp,
+    "updatedAt": timestamp,
+    "likes": int,
+    "comments" string,
+    "lat": double,
+    "lng": double,
+    "category": string,
+    "location": string,
+    "author" : string
+  },
+  ...
+]

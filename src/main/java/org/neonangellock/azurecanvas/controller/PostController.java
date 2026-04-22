@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -26,7 +27,7 @@ public class PostController {
     }
 
     @GetMapping("/section/{sectionId}")
-    public ResponseEntity<List<Post>> getPostsBySection(@PathVariable Integer sectionId) {
+    public ResponseEntity<List<Post>> getPostsBySection(@PathVariable UUID sectionId) {
         Section section = sectionService.findById(sectionId);
         if (section == null) {
             return ResponseEntity.badRequest().build();

@@ -14,7 +14,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { MeshTransmissionMaterial } from './MeshTransmissionMaterial.js';
 import './cube.interactions.js';
-import { initScrollEffect } from './cube.scroll.js';
+//import { initScrollEffect } from './cube.scroll.js';
 
 import { Preloader } from '../effects/preloader.js';
 
@@ -52,7 +52,6 @@ const isCubeSubdir = window.location.pathname.includes('/cube/');
 function initCube() {
     // 初始化预加载器动画
     Preloader.init();
-    initScrollEffect();
     // 获取容器
     const cubeContainer = document.getElementById('cube-container');
     if (!cubeContainer) return;

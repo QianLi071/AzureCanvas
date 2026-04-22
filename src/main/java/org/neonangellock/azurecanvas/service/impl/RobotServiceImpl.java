@@ -42,7 +42,7 @@ public class RobotServiceImpl extends AbstractQueryService implements RobotServi
         if (robotConfig.getId() == null) {
             User user = new User();
             user.setUsername("robot_" + System.currentTimeMillis());
-            user.setPassword("robot_password");
+            user.setPasswordHash("robot_password");
             user.setEmail("robot_" + System.currentTimeMillis() + "@example.com");
             user.setRole(User.Role.user);
             user.setRobot(true);

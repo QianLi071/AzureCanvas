@@ -33,21 +33,35 @@
                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="trade-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                         <div id="trade-sub" class="ml-6 space-y-0.5">
-                            <a href="mypublish.html" class="block px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">我发布的</a>
-                            <a href="sales.html" class="block px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">我卖出的</a>
-                            <a href="purchases.html" class="block px-4 py-2 bg-purple-50 text-purple-600 font-bold rounded-lg transition">我买到的</a>
+                            <a href="mypublish.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>我发布的</span>
+                                <span id="sidebar-publish-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="sales.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>我卖出的</span>
+                                <span id="sidebar-sell-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="purchases.html" class="flex items-center justify-between px-4 py-2 bg-purple-50 text-purple-600 font-bold rounded-lg transition">
+                                <span>我买到的</span>
+                                <span id="sidebar-buy-count" class="text-xs text-purple-600 font-bold bg-purple-100 px-2 py-0.5 rounded-full">0</span>
+                            </a>
                         </div>
                     </div>
                     
-                    <a href="favorites.html" class="flex items-center space-x-3 px-4 py-2.5 text-gray-600 hover:bg-gray-50 rounded-lg transition">
-                        <span>⭐</span><span>我的收藏</span>
+                    <a href="favorites.html" class="flex items-center justify-between px-4 py-2.5 text-gray-600 hover:bg-gray-50 rounded-lg transition">
+                        <div class="flex items-center space-x-3"><span>⭐</span><span>我的收藏</span></div>
+                        <span id="sidebar-fav-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                     </a>
                 </nav>
-                <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="mt-6 pt-4 border-t border-gray-100 space-y-2">
                     <a href="trade.html" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition font-medium text-sm">
                         <span>&larr;</span>
                         <span>返回大厅</span>
                     </a>
+                    <button id="logout-btn" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl transition font-medium text-sm">
+                        <span>🚪</span>
+                        <span>退出登录</span>
+                    </button>
                 </div>
             </div>
         </aside>
@@ -60,32 +74,32 @@
                         <span class="text-gray-400 mr-2">🔍</span>
                         <input type="text" placeholder="搜索订单商品" class="bg-transparent border-none outline-none w-full text-sm text-gray-700 placeholder-gray-400">
                     </div>
-                    <button class="text-gray-600 font-bold text-sm px-2 hover:text-orange-500 transition">搜索</button>
+                    <button class="text-gray-600 font-bold text-sm px-2 hover:text-purple-600 transition">搜索</button>
                 </div>
 
                 <div class="flex overflow-x-auto hide-scrollbar border-b border-gray-100 bg-white" id="order-tabs">
-                    <a href="javascript:;" data-target="all" class="order-tab flex-none px-5 py-3.5 text-sm font-bold text-orange-500 relative">
+                    <a href="javascript:;" data-target="all" class="order-tab flex-none px-5 py-3.5 text-sm font-bold text-purple-600 relative">
                         全部
-                        <div class="tab-indicator absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-500 rounded-full"></div>
+                        <div class="tab-indicator absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full"></div>
                     </a>
-                    <a href="javascript:;" data-target="unpaid" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-orange-500 transition">待付款</a>
-                    <a href="javascript:;" data-target="unshipped" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-orange-500 transition">待发货</a>
-                    <a href="javascript:;" data-target="unreceived" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-orange-500 transition">待收货</a>
-                    <a href="javascript:;" data-target="unreviewed" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-orange-500 transition">待评价</a>
-                    <a href="javascript:;" data-target="refund" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-orange-500 transition">退款/售后</a>
+                    <a href="javascript:;" data-target="unpaid" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">待付款</a>
+                    <a href="javascript:;" data-target="unshipped" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">待发货</a>
+                    <a href="javascript:;" data-target="unreceived" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">待收货</a>
+                    <a href="javascript:;" data-target="unreviewed" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">待评价</a>
+                    <a href="javascript:;" data-target="refund" class="order-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">退款/售后</a>
                 </div>
             </div>
 
             <div class="space-y-4" id="order-list">
 
-                <div class="order-card bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition border border-orange-200" data-status="unpaid">
+                <div class="order-card bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition border border-purple-200" data-status="unpaid">
                     <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center space-x-2 text-sm font-bold text-gray-800 hover:text-orange-500 cursor-pointer">
+                        <div class="flex items-center space-x-2 text-sm font-bold text-gray-800 hover:text-purple-600 cursor-pointer">
                             <span class="text-gray-400 text-lg">🏠</span>
                             <span>樱花数码铺</span>
                             <span class="text-gray-400 font-normal">›</span>
                         </div>
-                        <span class="text-orange-500 text-sm font-bold">等待买家付款</span>
+                        <span class="text-purple-600 text-sm font-bold">等待买家付款</span>
                     </div>
                     <div class="flex gap-4 mb-4">
                         <div class="w-24 h-24 bg-gray-50 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100">
@@ -93,7 +107,7 @@
                         </div>
                         <div class="flex-1 flex flex-col justify-between min-w-0 py-1">
                             <div class="flex justify-between items-start gap-4">
-                                <h3 class="text-sm md:text-base text-gray-800 leading-snug line-clamp-2 hover:text-orange-500 cursor-pointer transition">索尼 WH-1000XM4 降噪耳机 银色 九成新 带原包装</h3>
+                                <h3 class="text-sm md:text-base text-gray-800 leading-snug line-clamp-2 hover:text-purple-600 cursor-pointer transition">索尼 WH-1000XM4 降噪耳机 银色 九成新 带原包装</h3>
                                 <div class="text-right flex-shrink-0">
                                     <p class="text-sm font-bold text-gray-800">¥850.00</p>
                                     <p class="text-xs text-gray-400 mt-1">x1</p>
@@ -105,7 +119,7 @@
                         </div>
                     </div>
                     <div class="flex justify-between items-center pt-3 border-t border-gray-50 mb-4">
-                        <div class="text-[13px] text-orange-500 font-medium">
+                        <div class="text-[13px] text-purple-600 font-medium">
                             支付剩余 23小时55分
                         </div>
                         <div class="text-sm text-gray-800 font-medium">
@@ -115,18 +129,18 @@
                     <div class="flex justify-end gap-3">
                         <button class="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">联系卖家</button>
                         <button class="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">取消订单</button>
-                        <button class="px-6 py-1.5 bg-orange-500 text-white rounded-full text-sm font-bold hover:bg-orange-600 transition shadow-sm">付款</button>
+                        <button class="px-6 py-1.5 bg-purple-600 text-white rounded-full text-sm font-bold hover:bg-purple-700 transition shadow-sm">付款</button>
                     </div>
                 </div>
 
                 <div class="order-card bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition" data-status="unshipped">
                     <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center space-x-2 text-sm font-bold text-gray-800 hover:text-orange-500 cursor-pointer">
+                        <div class="flex items-center space-x-2 text-sm font-bold text-gray-800 hover:text-purple-600 cursor-pointer">
                             <span class="text-gray-400 text-lg">🏠</span>
                             <span>科大二手数码极客</span>
                             <span class="text-gray-400 font-normal">›</span>
                         </div>
-                        <span class="text-orange-500 text-sm font-bold">买家已付款</span>
+                        <span class="text-purple-600 text-sm font-bold">买家已付款</span>
                     </div>
                     <div class="flex gap-4 mb-4">
                         <div class="w-24 h-24 bg-gray-50 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100">
@@ -134,7 +148,7 @@
                         </div>
                         <div class="flex-1 flex flex-col justify-between min-w-0 py-1">
                             <div class="flex justify-between items-start gap-4">
-                                <h3 class="text-sm md:text-base text-gray-800 leading-snug line-clamp-2 hover:text-orange-500 cursor-pointer transition">罗技 G304 无线鼠标 九成新 带接收器</h3>
+                                <h3 class="text-sm md:text-base text-gray-800 leading-snug line-clamp-2 hover:text-purple-600 cursor-pointer transition">罗技 G304 无线鼠标 九成新 带接收器</h3>
                                 <div class="text-right flex-shrink-0">
                                     <p class="text-sm font-bold text-gray-800">¥120.00</p>
                                     <p class="text-xs text-gray-400 mt-1">x1</p>
@@ -144,7 +158,7 @@
                                 <span class="inline-block bg-gray-50 text-gray-500 text-[11px] px-2 py-1 rounded truncate">黑色; 顺丰包邮</span>
                             </div>
                             <div class="mt-2 flex items-center gap-1.5">
-                                <span class="text-[10px] text-orange-500 border border-orange-200 bg-orange-50 px-1 py-0.5 rounded">极速退款</span>
+                                <span class="text-[10px] text-purple-600 border border-purple-200 bg-purple-50 px-1 py-0.5 rounded">极速退款</span>
                                 <span class="text-[10px] text-gray-500 border border-gray-200 px-1 py-0.5 rounded">七天无理由退换</span>
                             </div>
                         </div>
@@ -155,13 +169,13 @@
                     <div class="flex justify-end gap-3">
                         <button class="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">修改地址</button>
                         <button class="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">联系卖家</button>
-                        <button class="px-5 py-1.5 bg-orange-500 text-white rounded-full text-sm font-bold hover:bg-orange-600 transition shadow-sm" onclick="alert('已向卖家发送发货提醒！')">提醒发货</button>
+                        <button class="px-5 py-1.5 bg-purple-600 text-white rounded-full text-sm font-bold hover:bg-purple-700 transition shadow-sm" onclick="alert('已向卖家发送发货提醒！')">提醒发货</button>
                     </div>
                 </div>
 
                 <div class="order-card bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition" data-status="unreviewed">
                     <div class="flex justify-between items-center mb-4">
-                        <div class="flex items-center space-x-2 text-sm font-bold text-gray-800 hover:text-orange-500 cursor-pointer">
+                        <div class="flex items-center space-x-2 text-sm font-bold text-gray-800 hover:text-purple-600 cursor-pointer">
                             <span class="text-gray-400 text-lg">🏠</span>
                             <span>小布布的小店</span>
                         </div>
@@ -183,7 +197,7 @@
                     </div>
                     <div class="flex justify-end gap-3">
                         <button class="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">删除订单</button>
-                        <button class="px-5 py-1.5 border border-orange-500 text-orange-500 rounded-full text-sm font-medium hover:bg-orange-50 transition">去评价</button>
+                        <button class="px-5 py-1.5 border border-purple-600 text-purple-600 rounded-full text-sm font-medium hover:bg-purple-50 transition">去评价</button>
                     </div>
                 </div>
 
@@ -201,7 +215,7 @@
         tab.addEventListener('click', function() {
             // 步骤1：清除所有Tab的选中状态
             tabs.forEach(function(t) {
-                t.classList.remove('font-bold', 'text-orange-500');
+                t.classList.remove('font-bold', 'text-purple-600');
                 t.classList.add('text-gray-600');
                 var indicator = t.querySelector('.tab-indicator');
                 if (indicator) indicator.remove();
@@ -209,9 +223,9 @@
 
             // 步骤2：激活当前点击的Tab
             tab.classList.remove('text-gray-600');
-            tab.classList.add('font-bold', 'text-orange-500');
+            tab.classList.add('font-bold', 'text-purple-600');
             var indicator = document.createElement('div');
-            indicator.className = 'tab-indicator absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-500 rounded-full';
+            indicator.className = 'tab-indicator absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full';
             tab.appendChild(indicator);
 
             // 步骤3：核心过滤逻辑
@@ -239,10 +253,38 @@
             arrow.classList.toggle('rotate-180', hidden);
         });
     }
+
+    // 3. 退出登录
+    var logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function () {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+            } catch (e) {}
+            window.location.href = '/login?redirect=/trade';
+        });
+    }
+
+    // 4. 侧边栏气泡数字
+    (function() {
+        var profile = {};
+        try { profile = JSON.parse(localStorage.getItem('userProfile') || '{}'); } catch(e) {}
+        var published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+        var sold = JSON.parse(localStorage.getItem('soldItems') || '[]');
+        var bought = JSON.parse(localStorage.getItem('boughtItems') || '[]');
+
+        var counts = {
+            'sidebar-publish-count': profile.posts || published.length,
+            'sidebar-sell-count': profile.sell || sold.length,
+            'sidebar-buy-count': profile.buy || bought.length,
+            'sidebar-fav-count': profile.favorites || JSON.parse(localStorage.getItem('favoriteItems') || '[]').length
+        };
+        Object.keys(counts).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = counts[id];
+        });
+    })();
 </script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../js/effects/mouse-ripple.js"></script>
 </body>
-
 </html>

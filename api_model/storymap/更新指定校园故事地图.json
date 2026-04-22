@@ -1,0 +1,21 @@
+PUT	/api/storymaps/{storyMapId}	更新指定校园故事地图:
+示例请求体：
+{
+  "title": "Updated Title",
+  "description": "Updated description."
+} (可选字段,仅发送要改的字段)
+
+需要返回的格式：
+{
+  "storyMapId": "uuid-string",
+  "title": "Updated Title",
+  "description": "Updated description",
+  "authorId": "uuid-string",
+  "createdAt": "timestamp",
+  "coverImageUrl": "http://...",
+  "location": {
+    "locationId": "uuid-string",
+    "lat": ...,
+    "lng": ...,
+  },
+}

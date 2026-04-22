@@ -36,46 +36,37 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody Map<String, String> registrationData) {
         String username = registrationData.get("username");
         String email = registrationData.get("email");
-        String phone = registrationData.get("phone");
         String password = registrationData.get("password");
 
         // 检查用户名是否已存在
         if (userService.findByUsername(username) != null) {
-            return ResponseEntity.badRequest().body("用户名已存在");
+            return ResponseEntity.badRequest().body(Map.of("success",false,"message","用户名已存在"));
         }
         // 检查邮箱是否已存在
         if (email != null && !email.isEmpty() && userService.findByEmail(email) != null) {
-            return ResponseEntity.badRequest().body("邮箱已被注册");
-        }
-        // 检查手机号是否已存在
-        if (phone != null && !phone.isEmpty() && userService.findByPhone(phone) != null) {
-            return ResponseEntity.badRequest().body("手机号已被注册");
+            return ResponseEntity.badRequest().body(Map.of("success",false,"message","邮箱已被注册"));
         }
 
         // 创建新用户
         User user = new User();
         user.setUsername(username);
         user.setEmail(email != null ? email : username + "@default.com");
-        user.setPhone(phone);
-        user.setPassword(password);
 
         // 注册用户
-        User registeredUser = userService.register(user);
+        User registeredUser = userService.register(user, password);
 
         // 返回用户信息
         Map<String, Object> response = new HashMap<>();
-        response.put("id", registeredUser.getId());
+        response.put("id", registeredUser.getUserId());
         response.put("username", registeredUser.getUsername());
         response.put("email", registeredUser.getEmail());
-        response.put("phone", registeredUser.getPhone());
         response.put("role", registeredUser.getRole());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("success",true,"message", "Register Successfully!","user",response));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        System.out.println("ls");
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials, HttpServletResponse httpResponse) {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
@@ -88,7 +79,7 @@ public class AuthController {
                 String token = jwtUtil.generateToken(userDetails);
 
                 // 创建用户ID Cookie
-                Cookie userIdCookie = new Cookie("user_id", String.valueOf(user.getId()));
+                Cookie userIdCookie = new Cookie("user_id", String.valueOf(user.getUserId()));
                 userIdCookie.setPath("/");
                 userIdCookie.setMaxAge(7 * 24 * 60 * 60); // 7天过期
                 userIdCookie.setHttpOnly(false);
@@ -99,11 +90,11 @@ public class AuthController {
                 response.put("token", token);
                 response.put("user", user);
 
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(Map.of("success",true,"user",response));
             }
-            return ResponseEntity.badRequest().body("用户名、邮箱或手机号不存在，或密码错误");
+            return ResponseEntity.badRequest().body(Map.of("success",false,"message","UserName or Password incorrect."));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("登录失败: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("success",false,"message",e.getMessage()));
         }
     }
 
@@ -114,6 +105,6 @@ public class AuthController {
         userIdCookie.setMaxAge(0);
         httpResponse.addCookie(userIdCookie);
 
-        return ResponseEntity.ok(Map.of("message", "成功退出登录"));
+        return ResponseEntity.ok(Map.of("success",true,"message", "成功退出登录"));
     }
 }

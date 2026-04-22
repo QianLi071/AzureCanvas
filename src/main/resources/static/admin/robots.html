@@ -111,7 +111,7 @@
                 console.warn('localStorage 不可用:', e);
             }
             if (!token) {
-                window.location.href = '../auth/authlogin.html';
+                window.location.href = '../login/index.html';
                 return false;
             }
             return true;
@@ -131,7 +131,7 @@
             const mergedOptions = { ...defaultOptions, ...options };
             const response = await fetch(url, mergedOptions);
             if (response.status === 401) {
-                window.location.href = '../auth/authlogin.html';
+                window.location.href = '../login/index.html';
                 return null;
             }
             return response;
@@ -424,7 +424,7 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('token');
-            window.location.href = '../auth/authlogin.html';
+            window.location.href = '../login/index.html';
         });
 
         window.onload = function () {

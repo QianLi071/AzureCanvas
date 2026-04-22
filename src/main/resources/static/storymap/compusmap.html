@@ -576,7 +576,7 @@
     
     <script>
         // ==================== 配置 ====================
-        const API_BASE_URL = 'http://localhost:8080/api';  // 请替换为实际后端地址
+        const API_BASE_URL = 'http://localhost:8088/api';  // 请替换为实际后端地址
         const MUST_CENTER = [22.1524, 113.5662];
         
         // ==================== 全局变量 ====================
@@ -1037,28 +1037,56 @@
             const lngOffset = (Math.random() - 0.5) * 0.003;
             
             const newStory = {
-                storyMapId: newId,
+                // storyMapId: newId,
                 title: title,
                 description: content,
                 category: category,
-                location: locationName || "校园",
+                // location: locationName || "校园",
+
                 lat: MUST_CENTER[0] + latOffset,
                 lng: MUST_CENTER[1] + lngOffset,
-                likes: 0,
-                comments: 0,
-                authorID: "current_user",
-                author: "当前用户",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                // likes: 0,
+                // comments: 0,
+                // authorID: "current_user",
+                // author: "当前用户",
+                // createdAt: new Date().toISOString(),
+                // updatedAt: new Date().toISOString()
             };
-            
+            submitStory(newStory);
+
             allStories.unshift(newStory);
             renderStoriesList();
             loadMarkers();
             
             showSuccessToast("✨ 故事发布成功！你的记忆被记录在了地图上~");
         }
-        
+        async function submitStory(story) {
+            const url = 'http://localhost:8088/api/storymaps'; // Replace with your API endpoint
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST', // HTTP method
+                    mode: "cors",
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json' // Sending JSON
+                    },
+                    body: JSON.stringify(story) // Convert JS object to JSON string
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const result = await response.json(); // Parse JSON response
+                if (!result.uuid){
+                    console.error('地图添加失败');
+                }
+            } catch (error) {
+                console.error('Error:', error.message);
+            }
+        }
+
         function showSuccessToast(message) {
             const toast = document.createElement('div');
             toast.innerHTML = `

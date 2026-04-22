@@ -15,6 +15,70 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
     let isInsidePortal = false;
     let scrollProgress = 0;
 
+    let vortexPlaying = false;
+    let clickHintDiv = null;
+    let scrollHintDiv = null;
+
+    function createClickHint() {
+        if (clickHintDiv) return;
+        clickHintDiv = document.createElement('div');
+        clickHintDiv.style.position = 'fixed';
+        clickHintDiv.style.bottom = '20%';
+        clickHintDiv.style.left = '0';
+        clickHintDiv.style.width = '100%';
+        clickHintDiv.style.textAlign = 'center';
+        clickHintDiv.style.zIndex = '9999';
+        clickHintDiv.style.pointerEvents = 'none';
+        clickHintDiv.style.fontFamily = 'Segoe UI, sans-serif';
+        clickHintDiv.style.opacity = '0';
+        clickHintDiv.style.transition = 'opacity 0.8s ease';
+        clickHintDiv.innerHTML = `
+        <div style="background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: inline-block; padding: 12px 28px; border-radius: 60px; color: white; font-size: 20px;">
+            ⚡ 点击瀑布，进入传送门 ⚡
+            <div style="font-size: 24px; margin-top: 8px; animation: floatArrow 1.2s infinite;">▼</div>
+        </div>
+        <style>@keyframes floatArrow{0%,100%{transform:translateY(0)}50%{transform:translateY(12px)}}</style>
+    `;
+        document.body.appendChild(clickHintDiv);
+        setTimeout(() => { if (clickHintDiv) clickHintDiv.style.opacity = '1'; }, 200);
+    }
+
+    function hideClickHint() {
+        if (clickHintDiv) {
+            clickHintDiv.style.opacity = '0';
+            setTimeout(() => { if (clickHintDiv) clickHintDiv.remove(); clickHintDiv = null; }, 500);
+        }
+    }
+
+    function showScrollHint() {
+        if (scrollHintDiv) return;
+        scrollHintDiv = document.createElement('div');
+        scrollHintDiv.style.position = 'fixed';
+        scrollHintDiv.style.bottom = '15%';
+        scrollHintDiv.style.left = '0';
+        scrollHintDiv.style.width = '100%';
+        scrollHintDiv.style.textAlign = 'center';
+        scrollHintDiv.style.zIndex = '9999';
+        scrollHintDiv.style.pointerEvents = 'none';
+        scrollHintDiv.style.fontFamily = 'Segoe UI, sans-serif';
+        scrollHintDiv.style.opacity = '0';
+        scrollHintDiv.style.transition = 'opacity 1s ease';
+        scrollHintDiv.innerHTML = `
+        <div><div style="font-size: 28px;">向下滚动，进入传送门</div><div style="font-size: 16px;">SCROLL TO ENTER</div></div>
+        <div style="font-size: 24px; animation: floatArrow 1.2s infinite;">▼</div>
+    `;
+        document.body.appendChild(scrollHintDiv);
+        setTimeout(() => { if (scrollHintDiv) scrollHintDiv.style.opacity = '1'; }, 100);
+
+        const hideOnScroll = () => {
+            if (scrollHintDiv) {
+                scrollHintDiv.style.opacity = '0';
+                setTimeout(() => { if (scrollHintDiv) scrollHintDiv.remove(); scrollHintDiv = null; }, 500);
+            }
+            window.removeEventListener('wheel', hideOnScroll);
+        };
+        window.addEventListener('wheel', hideOnScroll);
+    }
     // Audio setup
     let listener, audioLoader, waterfallSound, splashSound, lowPassFilter;
 

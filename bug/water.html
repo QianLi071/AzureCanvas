@@ -139,13 +139,13 @@
     </div>
 
     <script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.180.0/examples/jsm/"
+          }
+        }
+    </script>
 
     <script type="module">
         import * as THREE from 'three';
@@ -182,18 +182,18 @@
 
             // 水波着色器（原视频核心代码）
             const waveShader = gpuCompute.addShader('wave', `
-        uniform float time;
-        uniform vec2 mouse;
-        void main(){
-            vec2 uv = gl_FragCoord.xy/resolution.xy;
-            vec2 diff = uv - mouse;
-            float dist = length(diff);
+                uniform float time;
+                uniform vec2 mouse;
+                void main(){
+                    vec2 uv = gl_FragCoord.xy/resolution.xy;
+                    vec2 diff = uv - mouse;
+                    float dist = length(diff);
 
-            // 鼠标触碰生成强波纹
-            float wave = exp(-dist*12.0) * sin(dist*40.0 - time*8.0);
-            gl_FragColor = vec4(wave, 0.0, 0.0, 1.0);
-        }
-    `, heightMap);
+                    // 鼠标触碰生成强波纹
+                    float wave = exp(-dist*12.0) * sin(dist*40.0 - time*8.0);
+                    gl_FragColor = vec4(wave, 0.0, 0.0, 1.0);
+                }
+            `, heightMap);
 
             gpuCompute.setVariableDependencies(waveShader, [waveShader]);
             gpuCompute.init();
