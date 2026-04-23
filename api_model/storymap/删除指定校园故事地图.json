@@ -1,0 +1,6 @@
+DELETE	/api/storymaps/{storyMapId}	删除指定校园故事地图:
+需要返回的格式：
+{
+  "success": true,
+  "message": "Story map deleted successfully."
+}

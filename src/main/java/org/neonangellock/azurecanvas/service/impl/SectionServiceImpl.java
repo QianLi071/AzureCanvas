@@ -1,0 +1,56 @@
+package org.neonangellock.azurecanvas.service.impl;
+
+import org.neonangellock.azurecanvas.model.Section;
+import org.neonangellock.azurecanvas.model.User;
+import org.neonangellock.azurecanvas.service.AbstractQueryService;
+import org.neonangellock.azurecanvas.service.SectionService;
+import org.springframework.stereotype.Service;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class SectionServiceImpl extends AbstractQueryService implements SectionService {
+
+    protected SectionServiceImpl(EntityManager entityManager) {
+        super(entityManager);
+    }
+
+    @Override
+    public Section findById(UUID id) {
+        return entityManager.find(Section.class, id);
+    }
+
+    @Override
+    public List<Section> findAll() {
+        Query query = entityManager.createQuery("SELECT s FROM Section s ORDER BY s.orderNum ASC");
+        return query.getResultList();
+    }
+
+    @Override
+    public Section save(Section section) {
+        if (section.getId() == null) {
+            entityManager.persist(section);
+            return section;
+        } else {
+            return entityManager.merge(section);
+        }
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        Section section = entityManager.find(Section.class, id);
+        if (section != null) {
+            entityManager.remove(section);
+        }
+    }
+
+    @Override
+    public List<Section> findSectionsByUser(User user) {
+        Query query = entityManager.createQuery("SELECT s FROM Section s, Post p where p.section.id = s.id and p.user.id = :user_id");
+        query.setParameter("user_id", user.getUserId());
+        return query.getResultList();
+    }
+}

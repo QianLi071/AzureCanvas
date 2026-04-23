@@ -1,0 +1,15 @@
+GET	/api/storymaps/{storyMapId}	获取指定校园故事地图的详细信息:
+需要返回的格式：
+{
+  "storyMapId": "uuid-string",
+  "title": "Old Library's History",
+  "description": "A journey through time...",
+  "authorId": "uuid-string",
+  "createdAt": "timestamp",
+  "coverImageUrl": "http://...",
+  "location": {
+    "locationId": "uuid-string",
+    "lat": ...,
+    "lng": ...,
+  },
+}

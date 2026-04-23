@@ -1,0 +1,10 @@
+POST	/api/market/{sellerId}/contact	发起与卖家联系（例如：发送站内信或消息）
+示例请求体：
+{
+  "message": "Hi, I'm interested in the laptop. Is it still available?"
+}
+需要返回的格式,：
+{
+  "messageId": "uuid-string",
+  "sentAt": "timestamp"
+} (此端点可能需要与消息系统集成)

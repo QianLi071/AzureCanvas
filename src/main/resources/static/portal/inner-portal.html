@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>my-portal (Inside)</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="importmap">
+      {
+          "imports": {
+              "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+              "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+              "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+          }
+      }
+    </script>
+
+    <script type="module" src="../js/effects/portal-logic.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+
+</html>
