@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AZURECANVAS-树洞</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== 进入动画 ===== -->
+<div id="splashScreen" class="splash-screen">
+  <canvas id="galaxyCanvas"></canvas>
+  <div class="splash-content">
+    <div class="splash-title">MUST 树洞</div>
+    <div class="splash-sub">AzureCanvas</div>
+    <div class="splash-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- ===== 欢迎弹窗 ===== -->
+<div id="welcomeModal" class="modal-overlay">
+  <div class="welcome-card">
+    <div class="welcome-tree">🌳</div>
+    <h2 class="welcome-title">欢迎回到 MUST 树洞</h2>
+    <p class="welcome-sub">在这里，你可以匿名分享一切心声</p>
+    <button class="btn btn-primary welcome-btn" id="welcomeCloseBtn">进入树洞</button>
+  </div>
+</div>
+
+<!-- ===== 导航栏 ===== -->
+<nav class="navbar">
+  <div class="nav-logo">
+    <i class="fas fa-tree"></i> Azurecanvas-树洞
+    <span class="badge">MUST</span>
+  </div>
+
+  <!-- 搜索栏（居中） -->
+  <div class="nav-search-center">
+    <div class="nav-search">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="searchInput" placeholder="搜索帖子内容或作者…" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="nav-actions">
+    <!-- 发布按钮 → 跳转发布页 -->
+    <button class="btn btn-primary" id="newPostBtn" onclick="window.location.href='publish.html'">
+      <i class="fas fa-plus"></i> 发布
+    </button>
+
+    <!-- 右上角用户头像 -->
+    <div class="user-badge-wrap">
+      <button class="user-avatar-btn" id="userAvatarBtn" title="我的设置">我</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== 主布局 ===== -->
+<div class="app-layout">
+
+  <!-- 左侧分类栏 -->
+  <aside class="left-sidebar">
+    <!-- 内容分类 -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">分类</div>
+      <div class="sidebar-item active" data-category="all">
+        <i class="fas fa-home"></i> 全部
+      </div>
+      <div class="sidebar-item" data-category="study">
+        <i class="fas fa-book"></i> 学习
+      </div>
+      <div class="sidebar-item" data-category="life">
+        <i class="fas fa-coffee"></i> 生活
+      </div>
+      <div class="sidebar-item" data-category="emotion">
+        <i class="fas fa-heart"></i> 情感
+      </div>
+      <div class="sidebar-item" data-category="question">
+        <i class="fas fa-question-circle"></i> 求助
+      </div>
+      <div class="sidebar-item" data-category="share">
+        <i class="fas fa-share-alt"></i> 分享
+      </div>
+    </div>
+
+    <!-- 消息通知 -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">消息</div>
+      <div class="sidebar-item" id="notifyRepliesBtn">
+        <i class="fas fa-comment-dots"></i> 评论回复
+        <span class="sidebar-badge red-badge" id="replyBadge" style="display:none">0</span>
+      </div>
+      <div class="sidebar-item" id="notifyMsgBtn">
+        <i class="fas fa-envelope"></i> 私信消息
+        <span class="sidebar-badge red-badge" id="msgBadge" style="display:none">0</span>
+      </div>
+      <div class="sidebar-item" id="myFollowingBtn">
+        <i class="fas fa-user-check"></i> 我的关注
+      </div>
+      <div class="sidebar-item" id="myFavoritesBtn">
+        <i class="fas fa-bookmark"></i> 我的收藏
+        <span class="sidebar-badge red-badge" id="collectBadge" style="display:none">0</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+
+    <!-- 搜索结果提示条 -->
+    <div class="search-results-bar" id="searchResultsBar"></div>
+
+    <!-- ===== 主页视图 ===== -->
+    <div id="homeView">
+      <!-- GitHub 风格 home 输入栏 -->
+      <div class="home-input-bar" id="homeInputBar" onclick="window.location.href='publish.html'" style="cursor:pointer">
+        <div class="avatar-sm"><i class="fas fa-user"></i></div>
+        <span class="home-input-placeholder">有什么想说的？匿名分享…</span>
+        <button class="btn btn-sm agent-btn" onclick="event.stopPropagation();window.location.href='agent.html'">
+          <i class="fas fa-robot"></i> Agent
+        </button>
+        <button class="btn btn-sm" onclick="event.stopPropagation();window.location.href='publish.html'">发布</button>
+      </div>
+
+      <div class="feed-header">
+        <i class="fas fa-circle" style="font-size:0.45rem; color:#aaa; margin-right:4px;"></i>
+        实时涌动
+      </div>
+
+      <div id="postsFeedContainer"></div>
+      <div id="emptyFeedMsg" class="empty-tip" style="display:none">
+        <i class="far fa-comment-dots" style="font-size:2rem; display:block; margin-bottom:8px;"></i>
+        还没有树洞，发布第一条吧
+      </div>
+    </div>
+
+    <!-- ===== 帖子详情视图 ===== -->
+    <div id="detailView" class="detail-view">
+      <div class="back-btn" id="backBtn">
+        <i class="fas fa-arrow-left"></i> 返回
+      </div>
+      <div class="detail-card">
+        <!-- 帖子主体（作者、内容、图片） -->
+        <div class="detail-post-body" id="detailPostBody"></div>
+        <!-- 点赞/收藏操作栏 -->
+        <div class="detail-actions" id="detailActions"></div>
+        <!-- 评论区 -->
+        <div class="comment-section">
+          <div class="comment-section-title" id="commentCount">评论</div>
+          <div class="comment-input-row">
+            <!-- 回复提示标签 -->
+            <span class="reply-hint" id="replyHint" style="display:none"></span>
+            <textarea class="comment-input" id="commentInput" placeholder="写下你的评论… (Enter 发送，Esc 取消回复)" rows="1"></textarea>
+            <button class="btn btn-primary btn-sm" id="submitCommentBtn">发送</button>
+          </div>
+          <div id="commentsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 私信视图 ===== -->
+    <div id="messageView" class="message-view">
+      <!-- 私信顶栏 -->
+      <div class="msg-header">
+        <button class="back-btn" id="msgBackBtn" style="margin-bottom:0">
+          <i class="fas fa-arrow-left"></i> 返回
+        </button>
+        <div class="msg-target-info">
+          <div class="msg-avatar" id="msgTargetAvatar">匿</div>
+          <span id="msgTargetName">用户</span>
+        </div>
+      </div>
+
+      <!-- 消息列表 -->
+      <div class="msg-list" id="msgList">
+        <div class="msg-empty">发送第一条消息吧 👋</div>
+      </div>
+
+      <!-- 快捷回复面板（底部抽屉） -->
+      <div class="quick-reply-panel" id="quickReplyPanel"></div>
+
+      <!-- 表情包面板 -->
+      <div class="quick-reply-panel" id="msgEmojiPanel"></div>
+
+      <!-- 输入栏 -->
+      <div class="msg-input-bar">
+        <button class="tool-btn" id="msgEmojiBtn" title="表情包">
+          <i class="far fa-smile"></i>
+        </button>
+        <button class="tool-btn" id="msgQuickBtn" title="快捷回复">
+          <i class="fas fa-bolt"></i>
+        </button>
+        <textarea class="msg-input" id="msgInput" placeholder="发送消息…" rows="1"></textarea>
+        <button class="btn btn-primary btn-sm" id="msgSendBtn">发送</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 右侧栏 -->
+  <aside class="right-sidebar">
+    <!-- 热搜榜 -->
+    <div class="widget">
+      <div class="widget-title hot-title"><i class="fas fa-fire" style="color:#e05c00;margin-right:5px;"></i>热搜榜</div>
+      <div id="hotSearchList"></div>
+    </div>
+    <div class="widget">
+      <div class="widget-title">更新日志</div>
+      <div class="widget-item">
+        <div class="widget-item-meta">3 weeks ago · v1.4.2</div>
+        数据库更新 &amp; Bug修复
+      </div>
+      <div class="widget-item">
+        <div class="widget-item-meta">13 hours ago</div>
+        新增「低质量评论隐藏」选项
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ===== 脚本加载（顺序：数据层→渲染层→功能模块→入口）===== -->
+<script src="store.js"></script>
+<script src="render.js"></script>
+<script src="user.js"></script>
+<script src="message.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
