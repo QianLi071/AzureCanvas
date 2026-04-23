@@ -12,13 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-<<<<<<< HEAD
-import org.neonangellock.azurecanvas.model.es.EsItem;
-import org.neonangellock.azurecanvas.service.EsItemService;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
-=======
->>>>>>> cbc8afc9fcfc514fb98bed1eb0a9dae1e2018167
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -35,57 +28,11 @@ public class MarketController {
     @Autowired
     private UserService userService;
 
-<<<<<<< HEAD
-    @Autowired
-    private EsItemService esItemService;
-
-=======
->>>>>>> cbc8afc9fcfc514fb98bed1eb0a9dae1e2018167
     private User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userService.findByUsername(username);
     }
 
-<<<<<<< HEAD
-    @GetMapping("/search/es")
-    public ResponseEntity<List<Map<String, Object>>> searchItemsEs(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit) {
-        
-        SearchHits<EsItem> searchHits = esItemService.searchItems(keyword, page - 1, limit);
-        
-        List<Map<String, Object>> results = searchHits.getSearchHits().stream().map(hit -> {
-            EsItem item = hit.getContent();
-            Map<String, Object> map = new HashMap<>();
-            map.put("itemId", item.getId());
-            map.put("title", item.getTitle());
-            map.put("description", item.getDescription());
-            map.put("price", item.getPrice());
-            map.put("category", item.getCategory());
-            map.put("status", item.getStatus());
-            map.put("location", item.getLocation());
-            map.put("views", item.getViews());
-            map.put("quality", item.getQuality());
-            map.put("createdAt", item.getCreatedAt());
-            
-            // Get highlights
-            Map<String, List<String>> highlights = hit.getHighlightFields();
-            if (highlights.containsKey("title")) {
-                map.put("highlightTitle", highlights.get("title").get(0));
-            }
-            if (highlights.containsKey("description")) {
-                map.put("highlightDescription", highlights.get("description").get(0));
-            }
-            
-            return map;
-        }).collect(Collectors.toList());
-        
-        return ResponseEntity.ok(results);
-    }
-
-=======
->>>>>>> cbc8afc9fcfc514fb98bed1eb0a9dae1e2018167
     @GetMapping("/items")
     public ResponseEntity<List<ItemDTO>> getAllItems(
             @RequestParam(required = false) String category,

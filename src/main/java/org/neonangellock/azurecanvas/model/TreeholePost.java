@@ -8,11 +8,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-<<<<<<< HEAD
-=======
 @Setter
 @Getter
->>>>>>> cbc8afc9fcfc514fb98bed1eb0a9dae1e2018167
 @Entity
 @Table(name = "treehole_posts")
 public class TreeholePost {
@@ -50,33 +47,6 @@ public class TreeholePost {
     @Column(name = "updated_at")
     private Date updatedAt = new Date();
 
-<<<<<<< HEAD
-    // Manual Getters and Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-    public String getAuthorName() { return authorName; }
-    public void setAuthorName(String authorName) { this.authorName = authorName; }
-    public String getAuthorAvatar() { return authorAvatar; }
-    public void setAuthorAvatar(String authorAvatar) { this.authorAvatar = authorAvatar; }
-    public String getImages() { return images; }
-    public void setImages(String images) { this.images = images; }
-    public Integer getLikeCount() { return likeCount; }
-    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
-    public Integer getCommentCount() { return commentCount; }
-    public void setCommentCount(Integer commentCount) { this.commentCount = commentCount; }
-    public boolean isRobotPost() { return isRobotPost; }
-    public void setRobotPost(boolean robotPost) { isRobotPost = robotPost; }
-    public RobotConfig getRobot() { return robot; }
-    public void setRobot(RobotConfig robot) { this.robot = robot; }
-    public List<TreeholeComment> getComments() { return comments; }
-    public void setComments(List<TreeholeComment> comments) { this.comments = comments; }
-    public Date getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
-    public Date getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
-=======
     public boolean isRobotPost() {
         return isRobotPost;
     }
@@ -85,5 +55,4 @@ public class TreeholePost {
         isRobotPost = robotPost;
     }
 
->>>>>>> cbc8afc9fcfc514fb98bed1eb0a9dae1e2018167
 }
