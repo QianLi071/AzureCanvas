@@ -5,6 +5,8 @@ import {
     renderFragmentShader,
 } from "./shaders.js";
 
+import * as THREE from 'three';
+
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const simScene = new THREE.Scene();
