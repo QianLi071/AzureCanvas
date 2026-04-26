@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的文章 - AzureTrade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <nav class="bg-white shadow-sm h-14 flex items-center px-6 sticky top-0 z-50">
+        <div class="flex items-center space-x-2 text-purple-600 font-black text-xl">
+            <span>闲置</span><span class="text-purple-700">AzureTrade</span>
+        </div>
+        <div class="ml-auto flex items-center space-x-4">
+            <a href="profile.html" class="text-sm text-gray-500 hover:text-purple-600">← 返回主页</a>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto pt-6 px-4 pb-10">
+
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-xl font-black text-gray-900">📝 我的文章</h1>
+                <p class="text-xs text-gray-400 mt-1">管理你发布的所有文章投稿</p>
+            </div>
+            <button id="new-article-btn" class="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 transition shadow-lg">
+                ✏️ 写文章
+            </button>
+        </div>
+
+        <div class="flex gap-2 mb-4">
+            <button class="article-filter px-4 py-1.5 bg-purple-100 text-purple-700 border border-purple-200 rounded-full text-xs font-bold transition" data-filter="all">全部</button>
+            <button class="article-filter px-4 py-1.5 bg-white text-gray-600 border border-gray-200 rounded-full text-xs transition hover:bg-gray-50" data-filter="published">已发布</button>
+            <button class="article-filter px-4 py-1.5 bg-white text-gray-600 border border-gray-200 rounded-full text-xs transition hover:bg-gray-50" data-filter="draft">草稿</button>
+        </div>
+
+        <div id="article-list" class="space-y-4"></div>
+
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="text-5xl mb-4">📝</div>
+            <p class="text-gray-400 text-sm">你还没有投稿文章</p>
+            <p class="text-gray-300 text-xs mt-1">写一篇文章分享你的校园见闻吧~</p>
+        </div>
+    </div>
+
+    <!-- 写文章弹窗 -->
+    <div id="write-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+                <h2 class="text-lg font-black text-gray-900">✏️ 写文章</h2>
+                <button id="write-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="px-6 py-5 space-y-4 overflow-y-auto flex-1">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1.5">文章标题</label>
+                    <input type="text" id="article-title-input" placeholder="输入标题..." class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1.5">分类</label>
+                    <select id="article-category" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none transition">
+                        <option value="校园生活">校园生活</option>
+                        <option value="学习分享">学习分享</option>
+                        <option value="交易攻略">交易攻略</option>
+                        <option value="二手评测">二手评测</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1.5">正文内容</label>
+                    <textarea id="article-content-input" rows="10" placeholder="写下你想分享的内容..." class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none resize-none transition"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button id="save-draft-btn" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition">存为草稿</button>
+                    <button id="publish-article-btn" class="flex-1 py-3 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 transition shadow-lg">发布文章</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+var articles = JSON.parse(localStorage.getItem('myArticles') || '[]');
+
+// 示例数据（首次访问）
+if (articles.length === 0) {
+    articles = [
+        {
+            id: 'a1', title: '校园二手交易避坑指南：这5个技巧一定要知道',
+            category: '交易攻略', content: '作为一个在校园里交易了两年多的老手，总结了以下几点经验：第一，一定要当面验货；第二，价格过低的要小心；第三，优先选择信用分高的卖家...',
+            status: 'published', likes: 28, views: 356, comments: 12,
+            createdAt: '2026-04-20 14:30'
+        },
+        {
+            id: 'a2', title: '期末复习神器推荐：这些教辅资料真的有用',
+            category: '学习分享', content: '期末将至，推荐几本我觉得非常好用的教辅资料，尤其是高数和线代方面的...',
+            status: 'published', likes: 15, views: 198, comments: 6,
+            createdAt: '2026-04-15 10:00'
+        },
+        {
+            id: 'a3', title: '宿舍好物分享（未完成）',
+            category: '校园生活', content: '整理了一些宿舍里非常实用的小物件...',
+            status: 'draft', likes: 0, views: 0, comments: 0,
+            createdAt: '2026-04-22 18:15'
+        }
+    ];
+    localStorage.setItem('myArticles', JSON.stringify(articles));
+}
+
+var articleList = document.getElementById('article-list');
+var emptyState = document.getElementById('empty-state');
+var currentFilter = 'all';
+
+function renderArticles(filter) {
+    var filtered = articles;
+    if (filter === 'published') filtered = articles.filter(a => a.status === 'published');
+    if (filter === 'draft') filtered = articles.filter(a => a.status === 'draft');
+
+    articleList.innerHTML = '';
+    if (filtered.length === 0) {
+        articleList.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    articleList.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+
+    filtered.forEach(function(a) {
+        var statusBadge = a.status === 'published'
+            ? '<span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">已发布</span>'
+            : '<span class="text-[10px] bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full font-bold">草稿</span>';
+
+        var categoryColors = {
+            '校园生活': 'bg-blue-50 text-blue-600',
+            '学习分享': 'bg-green-50 text-green-600',
+            '交易攻略': 'bg-orange-50 text-orange-600',
+            '二手评测': 'bg-purple-50 text-purple-600',
+            '其他': 'bg-gray-50 text-gray-600'
+        };
+        var catClass = categoryColors[a.category] || 'bg-gray-50 text-gray-600';
+
+        var div = document.createElement('div');
+        div.className = 'bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition';
+        div.innerHTML =
+            '<div class="flex items-start justify-between gap-4">' +
+                '<div class="flex-1 min-w-0">' +
+                    '<div class="flex items-center gap-2 mb-2">' +
+                        statusBadge +
+                        '<span class="text-[10px] ' + catClass + ' px-2 py-0.5 rounded-full">' + a.category + '</span>' +
+                    '</div>' +
+                    '<h3 class="text-sm font-bold text-gray-900 mb-1.5 line-clamp-1">' + a.title + '</h3>' +
+                    '<p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">' + a.content + '</p>' +
+                    '<div class="flex items-center gap-4 mt-3 text-xs text-gray-400">' +
+                        '<span>📅 ' + a.createdAt + '</span>' +
+                        (a.status === 'published' ? '<span>👁 ' + a.views + ' 浏览</span><span>❤️ ' + a.likes + ' 赞</span><span>💬 ' + a.comments + ' 评论</span>' : '') +
+                    '</div>' +
+                '</div>' +
+                '<div class="flex flex-col gap-2 shrink-0">' +
+                    '<button class="edit-article-btn px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-xs font-medium hover:bg-purple-100 transition" data-id="' + a.id + '">编辑</button>' +
+                    '<button class="delete-article-btn px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-medium hover:bg-red-100 transition" data-id="' + a.id + '">删除</button>' +
+                '</div>' +
+            '</div>';
+        articleList.appendChild(div);
+    });
+
+    // 绑定删除事件
+    document.querySelectorAll('.delete-article-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = btn.dataset.id;
+            if (confirm('确定要删除这篇文章吗？')) {
+                articles = articles.filter(a => a.id !== id);
+                localStorage.setItem('myArticles', JSON.stringify(articles));
+                renderArticles(currentFilter);
+            }
+        });
+    });
+}
+
+// 筛选按钮
+document.querySelectorAll('.article-filter').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('.article-filter').forEach(function(b) {
+            b.className = 'article-filter px-4 py-1.5 bg-white text-gray-600 border border-gray-200 rounded-full text-xs transition hover:bg-gray-50';
+        });
+        btn.className = 'article-filter px-4 py-1.5 bg-purple-100 text-purple-700 border border-purple-200 rounded-full text-xs font-bold transition';
+        renderArticles(currentFilter);
+    });
+});
+
+// 写文章弹窗
+var writeModal = document.getElementById('write-modal');
+document.getElementById('new-article-btn').addEventListener('click', function() {
+    writeModal.classList.remove('hidden');
+    writeModal.classList.add('flex');
+    document.getElementById('article-title-input').value = '';
+    document.getElementById('article-content-input').value = '';
+});
+document.getElementById('write-close-btn').addEventListener('click', function() {
+    writeModal.classList.add('hidden');
+    writeModal.classList.remove('flex');
+});
+writeModal.addEventListener('click', function(e) {
+    if (e.target === writeModal) { writeModal.classList.add('hidden'); writeModal.classList.remove('flex'); }
+});
+
+function saveArticle(status) {
+    var title = document.getElementById('article-title-input').value.trim();
+    var content = document.getElementById('article-content-input').value.trim();
+    var category = document.getElementById('article-category').value;
+    if (!title) { alert('请输入文章标题'); return; }
+    if (!content) { alert('请输入文章内容'); return; }
+    var now = new Date();
+    var timeStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    articles.unshift({
+        id: 'a' + Date.now(), title: title, category: category, content: content,
+        status: status, likes: 0, views: 0, comments: 0, createdAt: timeStr
+    });
+    localStorage.setItem('myArticles', JSON.stringify(articles));
+    writeModal.classList.add('hidden');
+    writeModal.classList.remove('flex');
+    renderArticles(currentFilter);
+}
+
+document.getElementById('save-draft-btn').addEventListener('click', function() { saveArticle('draft'); });
+document.getElementById('publish-article-btn').addEventListener('click', function() { saveArticle('published'); });
+
+renderArticles('all');
+
+// 更新侧边栏计数
+var articleCount = articles.filter(a => a.status === 'published').length;
+try { localStorage.setItem('myArticleCount', articleCount); } catch(e) {}
+</script>
+
+</body>
+</html>
