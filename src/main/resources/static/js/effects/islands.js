@@ -1,24 +1,18 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { Preloader } from "./preloader.js";
 
-const loadingManager = new THREE.LoadingManager();
+(async function() {
+    console.log('Skyland script initialized');
 
-loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-    const progress = itemsLoaded / itemsTotal;
-    Preloader.update(progress, `Loading: ${url.split('/').pop()}`);
-};
+    // Ensure preloader is shown immediately
+    const preloaderNode = document.getElementById('preloader');
+    if (preloaderNode) {
+        preloaderNode.style.display = 'flex';
+        preloaderNode.style.opacity = '1';
+        console.log('[Preloader] Started: Visibility set to flex/1');
+    }
 
-loadingManager.onLoad = () => {
-    console.log('All assets loaded');
-    Preloader.update(1, "Preparing environment...");
-    setTimeout(() => {
-        Preloader.complete(() => {});
-    }, 200);
-};
-
-(function() {
     let scene, camera, renderer, clock;
     let islands = [];
     let currentIndex = 0;
@@ -30,12 +24,50 @@ loadingManager.onLoad = () => {
     let cloudGroup = new THREE.Group();
     let scrollTimeout;
     let targetCamPos = new THREE.Vector3(-60, 20, -60);
-    let currentLookAt = new THREE.Vector3(0, 0, 0); // 新增：当前相机注视点
-    let targetLookAt = new THREE.Vector3(0, 0, 0);  // 新增：目标相机注视点
+    let currentLookAt = new THREE.Vector3(0, 0, 0);
+    let targetLookAt = new THREE.Vector3(0, 0, 0);
 
+    // Audio related
+    let bgMusic, scrollSound;
+    const audioLoader = new THREE.AudioLoader();
+    const listener = new THREE.AudioListener();
+    let isMuted = localStorage.getItem('skyland_muted') === 'true';
     // 开场动画状态
     let introCameraState = { theta: 0, phi: Math.PI * 0.15, radius: 80, height: 60 };
     const INTRO_FIRST_ISLAND_POS = { x: 30, y: 5, z: 30 };
+    // Loading Manager for preloader
+    const loadingManager = new THREE.LoadingManager();
+    loadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+        console.log(`[Preloader] Loading started: ${url}`);
+    };
+    loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+        const progress = (itemsLoaded / itemsTotal) * 100;
+        const percentageNode = document.getElementById('loading-percentage');
+        const barNode = document.getElementById('progress-bar-fill');
+        if (percentageNode) percentageNode.innerText = `${Math.round(progress)}%`;
+        if (barNode) barNode.style.width = `${progress}%`;
+        console.log(`[Preloader] Progress: ${Math.round(progress)}% (${url})`);
+    };
+    loadingManager.onLoad = () => {
+        console.log('[Preloader] All resources loaded');
+        // Minimum 0.8s display as requested
+        const loadEndTime = Date.now();
+        const displayTime = loadEndTime - (window.performance.timing.navigationStart || loadEndTime);
+        const remainingTime = Math.max(800 - displayTime, 0);
+        
+        setTimeout(() => {
+            if (preloaderNode) {
+                console.log('[Preloader] Fading out...');
+                preloaderNode.style.transition = 'opacity 1s ease';
+                preloaderNode.style.opacity = '0';
+                setTimeout(() => {
+                    preloaderNode.style.display = 'none';
+                    console.log('[Preloader] Finished: display none');
+                }, 1000);
+            }
+            startIntroAnimation();
+        }, remainingTime);
+    };
 
     // 配置
     const CONFIG = {
@@ -125,6 +157,8 @@ loadingManager.onLoad = () => {
         createSky();
         createCranes();
         createCloudLines();
+        setupAudio();
+        createMuteButton();
 
         // 加载模型
         loadModels();
@@ -134,8 +168,89 @@ loadingManager.onLoad = () => {
         window.addEventListener('wheel', onWheel, { passive: false });
         window.addEventListener('mousedown', onMouseDown);
         window.addEventListener('mousemove', onMouseMove);
+        
+        // Handle visibility for background music
+        document.addEventListener('visibilitychange', () => {
+            if (bgMusic && bgMusic.buffer) {
+                if (document.hidden) {
+                    if (bgMusic.isPlaying) bgMusic.pause();
+                } else {
+                    if (!isMuted && !bgMusic.isPlaying) {
+                        if (listener.context.state === 'suspended') listener.context.resume();
+                        bgMusic.play();
+                    }
+                }
+            }
+        });
 
         animate();
+    }
+
+    function setupAudio() {
+        camera.add(listener);
+        bgMusic = new THREE.Audio(listener);
+        scrollSound = new THREE.Audio(listener);
+
+        audioLoader.load('../audios/skyland/skyland_loop.ogg', (buffer) => {
+            bgMusic.setBuffer(buffer);
+            bgMusic.setLoop(true);
+            bgMusic.setVolume(isMuted ? 0 : 0.3);
+            
+            // Interaction to start
+            const startMusic = () => {
+                if (listener.context.state === 'suspended') listener.context.resume();
+                if (!bgMusic.isPlaying && !isMuted) bgMusic.play();
+                window.removeEventListener('click', startMusic);
+                window.removeEventListener('touchstart', startMusic);
+            };
+            window.addEventListener('click', startMusic);
+            window.addEventListener('touchstart', startMusic);
+        });
+
+        audioLoader.load('../audios/skyland/scroll.ogg', (buffer) => {
+            scrollSound.setBuffer(buffer);
+            scrollSound.setLoop(false);
+            scrollSound.setVolume(0.4);
+        });
+
+        // Cleanup resources
+        window.addEventListener('beforeunload', () => {
+            if (bgMusic && bgMusic.isPlaying) bgMusic.stop();
+            if (scrollSound && scrollSound.isPlaying) scrollSound.stop();
+        });
+    }
+
+    function playScrollSound() {
+        if (isMuted || !scrollSound || !scrollSound.buffer) return;
+        // prevent overlapping instances: check if playing
+        if (scrollSound.isPlaying) {
+            return; // Don't restart if already playing
+        }
+        scrollSound.play().catch(e => console.warn('Scroll sound failed', e));
+    }
+
+    function createMuteButton() {
+        const btn = document.createElement('button');
+        btn.id = 'mute-btn';
+        btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:1000;background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);color:white;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.3s;';
+        btn.innerHTML = isMuted ? '🔇' : '🔊';
+        document.body.appendChild(btn);
+
+        btn.onclick = () => {
+            isMuted = !isMuted;
+            localStorage.setItem('skyland_muted', isMuted);
+            btn.innerHTML = isMuted ? '🔇' : '🔊';
+            if (bgMusic) {
+                if (isMuted) {
+                    bgMusic.setVolume(0);
+                    if (bgMusic.isPlaying) bgMusic.pause();
+                } else {
+                    bgMusic.setVolume(0.3);
+                    if (listener.context.state === 'suspended') listener.context.resume();
+                    bgMusic.play();
+                }
+            }
+        };
     }
 
     // 创建梦幻渐变背景
@@ -245,7 +360,7 @@ loadingManager.onLoad = () => {
                 group.add(plane);
                 currentX += w * 0.8; // 稍微重叠
             }
-
+            
             group.position.set(
                 (Math.random() - 0.5) * 200,
                 Math.random() * 40 + 10,
@@ -258,7 +373,7 @@ loadingManager.onLoad = () => {
     }
 
     function loadModels() {
-        const loader = new GLTFLoader();
+        const loader = new GLTFLoader(loadingManager);
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.1/');
         loader.setDRACOLoader(dracoLoader);
@@ -266,24 +381,24 @@ loadingManager.onLoad = () => {
         CONFIG.islands.forEach((config, index) => {
             loader.load(config.path, (gltf) => {
                 const model = gltf.scene;
-
+                
                 // 设置缩放
                 const scale = 0.5 * config.scale;
                 model.scale.set(scale, scale, scale);
 
                 // 岛屿位置直接使用配置中的 pos
                 const finalPos = new THREE.Vector3(config.pos[0], config.pos[1], config.pos[2]);
-
+                
                 const wrapper = new THREE.Group();
                 wrapper.add(model);
                 wrapper.position.copy(finalPos);
-
+                
                 // 计算该岛屿相对于中心的方向向量和初始角度
                 const dir = finalPos.clone().setY(0).normalize();
                 const angle = Math.atan2(dir.x, dir.z);
 
-                wrapper.userData = {
-                    index: index,
+                wrapper.userData = { 
+                    index: index, 
                     link: config.link,
                     originalPos: finalPos.clone(),
                     angle: angle
@@ -336,15 +451,15 @@ loadingManager.onLoad = () => {
         currentIndex = index;
         const target = islands[index];
         const pos = CONFIG.islands[index].pos;
-
+        
         // 核心：摄像机在正方形中心区域进行“内侧”旋转
-        const innerRadius = 15;
-        const camHeight = 12;
-
+        const innerRadius = 15; 
+        const camHeight = 12;   
+        
         const targetDir = new THREE.Vector3(pos[0], 0, pos[2]).normalize();
         targetCamPos.copy(targetDir).multiplyScalar(innerRadius);
         targetCamPos.y = camHeight;
-
+        
         // 更新目标注视点
         targetLookAt.copy(target.position);
         let angle_pitch_offset = 0;
@@ -381,7 +496,7 @@ loadingManager.onLoad = () => {
                     camera.lookAt(currentLookAt);
                 }
             }, "<"); // "<" 表示与上一个动画同时开始
-
+            
         } else {
             camera.position.copy(targetCamPos);
             currentLookAt.copy(targetLookAt);
@@ -397,19 +512,21 @@ loadingManager.onLoad = () => {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
             if(e.deltaY > 0) {
-                if(currentIndex < CONFIG.islands.length - 1) {
+                if(currentIndex < islands.length - 1) {
                     focusIsland(currentIndex + 1);
+                } else {
+                    focusIsland(0); // Loop back
                 }
             } else {
                 if(currentIndex > 0) {
                     focusIsland(currentIndex - 1);
+                } else {
+                    focusIsland(islands.length - 1); // Loop back
                 }
             }
-        }, 30);
+        }, 100);
     }
 
-
-    // 千万不要改
     function onMouseMove(e) {
         mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -427,7 +544,7 @@ loadingManager.onLoad = () => {
             while(selected.parent && !selected.userData.link) {
                 selected = selected.parent;
             }
-
+            
             if(selected.userData.link) {
                 triggerJumpTransition(selected);
             }
@@ -439,7 +556,7 @@ loadingManager.onLoad = () => {
         const link = island.userData.link;
 
         const tl = gsap.timeline();
-
+        
         // 1. 弹跳动画
         tl.to(island.position, {
             y: island.position.y + 1.5,
@@ -475,6 +592,16 @@ loadingManager.onLoad = () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    function startIntroAnimation() {
+        console.log('Starting intro animation');
+        const tl = gsap.timeline();
+        tl.to('.intro-line-welcome', { opacity: 1, y: 0, duration: 1.2, ease: 'power2.out' })
+          .to('.intro-line-title', { opacity: 1, y: 0, duration: 1.5, ease: 'power2.out' }, '-=0.5')
+          .to('#intro-overlay', { opacity: 0, duration: 1, delay: 1, onComplete: () => {
+              document.getElementById('intro-overlay').style.display = 'none';
+          }});
+    }
+
     function animate() {
         requestAnimationFrame(animate);
         const elapsed = clock.getElapsedTime();
@@ -504,19 +631,19 @@ loadingManager.onLoad = () => {
         // 岛屿微动浮动
         islands.forEach((island, i) => {
             if(island && !isTransitioning) {
-                island.position.y = island.userData.originalPos.y + Math.sin(elapsed * 0.8 + i) * 0.55;
+                island.position.y = island.userData.originalPos.y + Math.sin(elapsed * 0.8 + i) * 0.15;
             }
         });
 
-        // 相机轻微跟随鼠标 (缓动) - 开场动画期间跳过
-        if(!isTransitioning && !introPlaying && islands[currentIndex]) {
+        // 相机轻微跟随鼠标 (缓动)
+        if(!isTransitioning && islands[currentIndex]) {
             const targetX = targetCamPos.x + mouse.x * 2;
             const targetY = targetCamPos.y - mouse.y * 2;
             const targetZ = targetCamPos.z;
-
-            camera.position.x += (targetX - camera.position.x) * 0.15;
-            camera.position.y += (targetY - camera.position.y) * 0.35;
-            camera.position.z += (targetZ - camera.position.z) * 0.15;
+            
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (targetY - camera.position.y) * 0.05;
+            camera.position.z += (targetZ - camera.position.z) * 0.05;
 
             // 确保在闲置状态下也平滑注视目标
             currentLookAt.lerp(targetLookAt, 0.05);

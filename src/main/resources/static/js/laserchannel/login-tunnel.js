@@ -75,19 +75,98 @@ class LaserTunnel {
         };
     }
 
-    async setupAudio(){
+    async setupAudio() {
+        // Load within 200ms of DOMContentLoaded is handled by the timing of init call
         this.audioLoader.load('../audios/login/login_loop.ogg', (buffer) => {
             this.outsideSound.setBuffer(buffer);
             this.outsideSound.setLoop(true);
-            this.outsideSound.setVolume(1);
+            this.outsideSound.setVolume(0.25);
+            
+            // Handle autoplay policy
+            const startAudio = () => {
+                if (this.listener.context.state === 'suspended') {
+                    this.listener.context.resume();
+                }
+                if (!this.outsideSound.isPlaying) {
+                    this.outsideSound.play();
+                }
+                window.removeEventListener('mousedown', startAudio);
+                window.removeEventListener('keydown', startAudio);
+                window.removeEventListener('touchstart', startAudio);
+            };
+            window.addEventListener('mousedown', startAudio);
+            window.addEventListener('keydown', startAudio);
+            window.addEventListener('touchstart', startAudio);
         });
-        if (this.listener.context.state === 'suspended') {
-            this.listener.context.resume();
-        }
 
-        if (this.outsideSound.buffer && !this.outsideSound.isPlaying) {
-            this.outsideSound.play();
-        }
+        window.addEventListener('beforeunload', () => {
+            if (this.outsideSound.isPlaying) {
+                this.outsideSound.stop();
+            }
+            // Release resources
+            if (this.outsideSound.buffer) {
+                this.outsideSound.buffer = null;
+            }
+        });
+    }
+
+    async flyToExit(duration = 1200) {
+        if (!this.exitGroup) return;
+
+        return new Promise(resolve => {
+            // Ensure target is slightly behind the exit to "fly through" it
+            const targetZ = this.exitGroup.position.z - 20;
+            
+            // Create a fade overlay if not exists
+            let fadeOverlay = document.getElementById('fade-overlay');
+            if (!fadeOverlay) {
+                fadeOverlay = document.createElement('div');
+                fadeOverlay.id = 'fade-overlay';
+                fadeOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:9998;opacity:0;pointer-events:none;';
+                document.body.appendChild(fadeOverlay);
+            }
+
+            const tl = gsap.timeline({
+                onComplete: resolve
+            });
+
+            // Camera flight with smooth ease (power3.in) for 1.2s
+            tl.to(this.camera.position, {
+                z: targetZ,
+                duration: duration / 1000,
+                ease: 'power3.in'
+            });
+
+            // Dims camera light
+            tl.to(this.cameraLight, {
+                intensity: 0,
+                duration: duration / 1000,
+                ease: 'power2.in'
+            }, 0);
+
+            // Fade to black (0 -> 1)
+            tl.to(fadeOverlay, {
+                opacity: 1,
+                duration: duration / 1000,
+                ease: 'power2.in'
+            }, 0);
+
+            // Fade out audio and stop exactly when animation ends
+            if (this.outsideSound.isPlaying) {
+                const audioParams = { vol: this.outsideSound.getVolume() };
+                gsap.to(audioParams, {
+                    vol: 0,
+                    duration: duration / 1000,
+                    ease: 'power2.in',
+                    onUpdate: () => {
+                        this.outsideSound.setVolume(audioParams.vol);
+                    },
+                    onComplete: () => {
+                        this.outsideSound.stop();
+                    }
+                });
+            }
+        });
     }
 
     async loadEnvironment() {
