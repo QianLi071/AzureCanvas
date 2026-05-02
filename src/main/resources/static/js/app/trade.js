@@ -459,7 +459,7 @@ const submit_logic = function () {
         const canInspect = document.getElementById('canInspect').checked;
 
         if (!title || !category || !description || isNaN(price) || isNaN(condition)) {
-            window.notify.show('请填写所有必填项！', 'warning');
+            ('请填写所有必填项！', 'warning');
             return;
         }
 
@@ -484,7 +484,7 @@ const submit_logic = function () {
 
             if (!createRes.ok) {
                 var errData = await createRes.json().catch(function () { return {}; });
-                window.notify.show('创建商品失败: ' + (errData.message || createRes.statusText), 'error');
+                window.notify('创建商品失败: ' + (errData.message || createRes.statusText), 'error');
                 return;
             }
 
@@ -503,7 +503,7 @@ const submit_logic = function () {
                 });
 
                 if (!uploadRes.ok) {
-                    window.notify.show('商品已创建，但图片上传失败', 'warning');
+                    window.notify('商品已创建，但图片上传失败', 'warning');
                     closePublish();
                     selectedImageFiles = [];
                     document.getElementById('publish-form').reset();
@@ -520,18 +520,18 @@ const submit_logic = function () {
                 });
 
                 if (!bindRes.ok) {
-                    window.notify.show('商品已创建，但图片关联失败', 'warning');
+                    window.notify('商品已创建，但图片关联失败', 'warning');
                 }
             }
 
-            window.notify.show('商品上架成功！', 'success');
+            window.notify('商品上架成功！', 'success');
             closePublish();
             selectedImageFiles = [];
             document.getElementById('publish-form').reset();
 
         } catch (error) {
             console.error('Error submitting item:', error);
-            window.notify.show('网络错误，请检查连接', 'error');
+            window.notify('网络错误，请检查连接', 'error');
         }
     });
 }

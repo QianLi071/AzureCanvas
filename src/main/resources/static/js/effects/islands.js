@@ -662,13 +662,13 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         // 播放音效
         try {
             const introAudio = new Audio('../audios/skyland/intro.ogg');
-            introAudio.volume = 1;
+            introAudio.volume = 1.0;
             introAudio.play().catch(() => {});
 
             setTimeout(() => {
                 try {
                     const splashAudio = new Audio('../audios/skyland/island_splash.ogg');
-                    splashAudio.volume = 1;
+                    splashAudio.volume = 1.0;
                     splashAudio.play().catch(() => {});
                 } catch(e) {}
             }, 0);
@@ -696,20 +696,20 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         });
 
         // === 阶段1: "Welcome To..." 淡入上浮 (0s - 1.2s) ===
-        tl.to(welcomeEl, {
-            opacity: 1,
-            y: -20,
-            duration: 1.2,
-            ease: 'power3.out'
-        }, 0);
-
-        // === 阶段2: "Azure Skyland" 出现并推挤 (0.8s - 2.2s) ===
-        tl.to(titleEl, {
-            opacity: 1,
-            y: -10,
-            duration: 1,
-            ease: 'power3.out'
-        }, 0.8);
+        // tl.to(welcomeEl, {
+        //     opacity: 1,
+        //     y: -40,
+        //     duration: 1.2,
+        //     ease: 'power3.out'
+        // }, 0);
+        //
+        // // === 阶段2: "Azure Skyland" 出现并推挤 (0.8s - 2.2s) ===
+        // tl.to(titleEl, {
+        //     opacity: 1,
+        //     y: -30,
+        //     duration: 1,
+        //     ease: 'power3.out'
+        // }, 0.8);
 
         // 同步将 Welcome To 向上推挤
         // tl.to(welcomeEl, {
@@ -752,7 +752,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                 //camera.lookAt(targetLookAt);
                 // currentLookAt.copy(targetLookAt);
                 // camera.lookAt(currentLookAt);
-                focusIsland(1, true, 2.8);
+                focusIsland(1, true, 2.5);
             }
         }, 0);
     }

@@ -22,20 +22,20 @@ public class KnowledgeInitService {
         String docContent = "AzureCanvas 项目技术知识库（完整版）\n\n" +
                 "一、项目基础信息\n" +
                 "项目名称：AzureCanvas\n" +
-                "项目定位：面向创意交流、校园生活、二手闲置与情感倾诉的现代化综合创意分享论坛网站\n" +
+                "项目定位：面向创意交流、校园生活、二手闲置的现代化综合创意分享论坛网站\n" +
                 "核心价值：融合传统论坛实用能力与前沿视觉体验，打造轻量化、高颜值、高互动的线上社区\n" +
                 "架构模式：前后端分离架构，后端提供标准 RESTful API，前端独立渲染交互\n\n" +
                 "二、技术栈完整说明\n" +
                 "后端技术体系\n" +
-                "- 核心框架：Spring Boot 3.4.1（最新稳定版）\n" +
+                "- 核心框架：Spring Boot 4.0.5（最新稳定版）\n" +
                 "- 安全体系：Spring Security + JWT 无状态认证\n" +
-                "- 数据层：JPA ORM 框架 + H2 内存数据库（开发 / 测试环境）\n" +
+                "- 数据层：JPA ORM 框架 + Redis + MongoDB + MySQL 数据库（开发 / 测试环境）\n" +
                 "- 搜索能力：Elasticsearch 全文检索引擎\n" +
                 "- 构建工具：Maven 依赖管理与项目构建\n\n" +
                 "前端技术体系\n" +
-                "- 基础技术：HTML5 + CSS3 + 原生 JavaScript\n" +
+                "- 基础技术：HTML5 + CSS3 + 原生 JavaScript + Three.js\n" +
                 "- 视觉核心：Canvas 动态渲染\n" +
-                "- 体验增强：原生 CSS 滚动动画、JavaScript 交互动画\n" +
+                "- 体验增强：原生 CSS 滚动动画, CSS伪3D, Three.js 3D动画、JavaScript 交互动画\n" +
                 "- 设计风格：Aero 玻璃质感现代界面\n\n" +
                 "三、功能模块完整清单\n" +
                 "1. 用户系统\n" +

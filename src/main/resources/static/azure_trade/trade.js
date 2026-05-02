@@ -1,4 +1,7 @@
 // ========== 商品数据（2x3 紧凑卡片） ==========
+
+let loggedIn = false;
+
 var
  cards = [
     { id: '001', title: '教材捡漏',  desc: '正版教材低至1折',  price: '¥5',    original: '¥50',  emoji: '📚', cat: '教材/考研/资料', gradient: 'from-green-300 to-emerald-500'},
@@ -36,6 +39,7 @@ function showToast(msg) {
         toastEl.classList.remove('opacity-100', 'translate-y-0');
         toastEl.classList.add('opacity-0', '-translate-y-4');
     }, 2000);
+    window.notify.show.show(msg);
 }
 
 // ========== 渲染紧凑卡片（2x3网格 - 无数字版） ==========
@@ -232,75 +236,45 @@ publishModal.addEventListener('click', function (e) {
     if (e.target === publishModal) closePublish();
 });
 
-publishForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
+var selectedImageFiles = [];
 
-    var formData = new FormData(publishForm);
-    var imageFiles = document.getElementById('publish-images').files;
+(function () {
+    var fileInput = document.getElementById('publish-images');
+    var preview = document.getElementById('image-preview');
+    if (!fileInput || !preview) return;
 
-    // 先将图片转为 dataURL 存入 localStorage（支持0~9张）
-    var imagePromises = Array.from(imageFiles).slice(0, 9).map(function (file) {
-        return new Promise(function (resolve) {
+    fileInput.addEventListener('change', function () {
+        var newFiles = Array.from(fileInput.files);
+        selectedImageFiles = selectedImageFiles.concat(newFiles).slice(0, 9);
+
+        var dt = new DataTransfer();
+        selectedImageFiles.forEach(function (f) { dt.items.add(f); });
+        fileInput.files = dt.files;
+
+        preview.innerHTML = '';
+        selectedImageFiles.forEach(function (file, index) {
             var reader = new FileReader();
-            reader.onload = function (ev) { resolve(ev.target.result); };
+            reader.onload = function (e) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'w-20 h-20 rounded-lg bg-gray-100 overflow-hidden relative group';
+                wrapper.innerHTML =
+                    '<img src="' + e.target.result + '" class="w-full h-full object-cover">' +
+                    '<button type="button" data-index="' + index + '" class="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">&times;</button>';
+                preview.appendChild(wrapper);
+
+                wrapper.querySelector('button').addEventListener('click', function () {
+                    var idx = parseInt(this.getAttribute('data-index'));
+                    selectedImageFiles.splice(idx, 1);
+                    var dt2 = new DataTransfer();
+                    selectedImageFiles.forEach(function (f) { dt2.items.add(f); });
+                    fileInput.files = dt2.files;
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            };
             reader.readAsDataURL(file);
         });
     });
-
-    var imageDataUrls = await Promise.all(imagePromises);
-
-    // 构建本地存储对象
-    var item = {
-        id: Date.now().toString(),
-        title: formData.get('title'),
-        category: formData.get('category'),
-        description: formData.get('description'),
-        price: parseFloat(formData.get('price')),
-        condition: formData.get('condition'),
-        address: formData.get('address'),
-        images: imageDataUrls,
-        isUrgent: !!publishForm.querySelector('[name="isUrgent"]').checked,
-        isShippingFree: !!publishForm.querySelector('[name="isShippingFree"]').checked,
-        canInspect: !!publishForm.querySelector('[name="canInspect"]').checked,
-        createdAt: new Date().toISOString(),
-        status: 'available'
-    };
-
-    // 无论 API 是否成功，都存入 localStorage
-    var published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
-    published.unshift(item);
-    localStorage.setItem('publishedItems', JSON.stringify(published));
-    updateDropdownCounts();
-
-    // 尝试调用后端 API
-    var uploadData = new FormData();
-    uploadData.append('title', formData.get('title'));
-    uploadData.append('category', formData.get('category'));
-    uploadData.append('description', formData.get('description'));
-    uploadData.append('price', formData.get('price'));
-    Array.from(imageFiles).slice(0, 9).forEach(function (file) {
-        uploadData.append('images', file);
-    });
-
-    try {
-        var response = await fetch('/api/market/items', {
-            method: 'POST',
-            credentials: 'include',
-            body: uploadData
-        });
-
-        if (response.status === 401) {
-            showToast('请先登录');
-            window.location.href = '/login?redirect=/azure_trade/trade';
-            return;
-        }
-    } catch (err) {
-        console.warn('后端未连接，商品已保存到本地:', err);
-    }
-
-    closePublish();
-    showToast('发布成功！商品已上架');
-});
+})();
 
 // ========== 发布表单：描述字数统计 ==========
 (function () {
@@ -314,24 +288,24 @@ publishForm.addEventListener('submit', async function (e) {
 })();
 
 // ========== 发布表单：图片预览 ==========
-(function () {
-    var fileInput = document.getElementById('publish-images');
-    var preview = document.getElementById('image-preview');
-    if (!fileInput || !preview) return;
-    fileInput.addEventListener('change', function () {
-        preview.innerHTML = '';
-        Array.from(fileInput.files).slice(0, 9).forEach(function (file) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                var img = document.createElement('div');
-                img.className = 'w-20 h-20 rounded-lg bg-gray-100 overflow-hidden';
-                img.innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
-                preview.appendChild(img);
-            };
-            reader.readAsDataURL(file);
-        });
-    });
-})();
+// (function () {
+//     var fileInput = document.getElementById('publish-images');
+//     var preview = document.getElementById('image-preview');
+//     if (!fileInput || !preview) return;
+//     fileInput.addEventListener('change', function () {
+//         preview.innerHTML = '';
+//         Array.from(fileInput.files).slice(0, 9).forEach(function (file) {
+//             var reader = new FileReader();
+//             reader.onload = function (e) {
+//                 var img = document.createElement('div');
+//                 img.className = 'w-20 h-20 rounded-lg bg-gray-100 overflow-hidden';
+//                 img.innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+//                 preview.appendChild(img);
+//             };
+//             reader.readAsDataURL(file);
+//         });
+//     });
+// })();
 
 // 绑定所有「发布闲置」按钮
 document.querySelectorAll('button').forEach(function (btn) {
@@ -362,6 +336,9 @@ document.addEventListener('keydown', function (e) {
     if (!avatarBtn || !dropdown) return;
 
     avatarBtn.addEventListener('click', function (e) {
+        if (loggedIn){
+            window.location.href = '/login?redirect=/azure_trade/trade';
+        }
         e.stopPropagation();
         var isOpen = !dropdown.classList.contains('hidden');
         if (isOpen) {
@@ -448,7 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     dropdownAvatar.className = 'w-14 h-14 rounded-full overflow-hidden shadow-md';
                 }
             } else {
-                if (headerAvatar) headerAvatar.textContent = firstChar;
+                if (headerAvatar) headerAvatar.textContent = "登录";
                 if (dropdownAvatar) dropdownAvatar.textContent = firstChar;
             }
 
@@ -478,7 +455,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (dropdownFav) dropdownFav.textContent = user.favorites || 0;
         } else {
             if (response.status === 401) {
-                window.location.href = '/login?redirect=/azure_trade/trade';
+                loggedIn = false;
+                // window.location.href = '/login?redirect=/azure_trade/trade';
             }
         }
     } catch (error) {
@@ -487,15 +465,86 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
+// ========== 辅助函数：延迟与重试机制 ==========
+/** @typedef {Object} RetryOptions
+ * @property {number} [maxRetries] - 最大重试次数
+ * @property {number} [interval] - 重试间隔(ms)
+ */
+
+/**
+ * 延迟执行函数
+ * @param {number} ms - 延迟毫秒数
+ * @returns {Promise<void>}
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * 带重试机制的图片关联请求
+ * @param {string} itemId - 商品ID
+ * @param {string[]} imageUuids - 图片UUID列表
+ * @param {number} [maxRetries=3] - 最大重试次数
+ * @param {number} [interval=2000] - 重试间隔(ms)
+ * @returns {Promise<boolean>} 是否关联成功
+ */
+const associateImagesWithRetry = async (itemId, imageUuids, maxRetries = 3, interval = 2000) => {
+    let lastError = null;
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            if (i > 0) {
+                console.log(`[Retry] 正在进行第 ${i} 次图片关联重试...`);
+                await sleep(interval);
+            }
+            
+            const res = await fetch(`/api/market/item/${itemId}/images`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ images: imageUuids })
+            });
+            
+            if (res.ok) return true;
+            lastError = `HTTP ${res.status}`;
+        } catch (err) {
+            lastError = err.message;
+        }
+    }
+    throw new Error(`图片关联失败 (已重试 ${maxRetries} 次): ${lastError}`);
+};
+
 const submit_logic = function () {
-    // ⚠️ 建议先用 let form = document.getElementById('publish-form') 避免重复绑定
     const form = document.getElementById('publish-form');
-    // 如果已经绑定过，就不要再绑定了，防止你点一次上架发送两次请求
-    if (form.dataset.bound === "true") return; 
+    if (form.dataset.bound === "true") return;
     form.dataset.bound = "true";
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn.innerHTML;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // 1. 开启遮罩并禁用按钮
+        const overlay = document.createElement('div');
+        overlay.className = 'processing-overlay';
+        document.body.appendChild(overlay);
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        submitBtn.innerHTML = `
+            <span class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                处理中...
+            </span>
+        `;
+
+        function resetBtn() {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = originalBtnContent;
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }
 
         const title = document.getElementById('itemTitle').value;
         const category = document.getElementById('itemCategory').value;
@@ -503,8 +552,7 @@ const submit_logic = function () {
         const price = parseFloat(document.getElementById('itemPrice').value);
         const condition = parseInt(document.getElementById('itemCondition').value);
         const location = document.getElementById('itemLocation').value;
-        
-        // 👇 新增：获取隐藏的经纬度数据 👇
+
         const latVal = document.getElementById('itemLat').value;
         const lngVal = document.getElementById('itemLng').value;
         const lat = latVal ? parseFloat(latVal) : null;
@@ -515,48 +563,98 @@ const submit_logic = function () {
         const canInspect = document.getElementById('canInspect').checked;
 
         if (!title || !category || !description || isNaN(price) || isNaN(condition)) {
-            window.notify && window.notify.show('请填写所有必填项！', 'warning');
+            window.notify && window.notify.show.show('请填写所有必填项！', 'warning');
+            resetBtn();
             return;
         }
 
         try {
-            const response = await fetch('/api/market/items', {
+            let imageUuids = [];
+            // 1. 如果有图片，先上传图片获取 UUIDs
+            if (selectedImageFiles.length > 0) {
+                const imageData = new FormData();
+                selectedImageFiles.forEach(f => imageData.append('files', f));
+
+                const uploadRes = await fetch('/api/v1/images/upload', {
+                    method: 'POST',
+                    body: imageData
+                });
+
+                if (!uploadRes.ok) {
+                    throw new Error('图片上传失败，请重试');
+                }
+                imageUuids = await uploadRes.json();
+                window.notify && window.notify.show.show('图片上传成功!', 'success');
+            }
+
+            // 2. 创建商品
+            const itemRes = await fetch('/api/market/items', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({
-                    title: title,
-                    category: category,
-                    description: description,
-                    price: price,
-                    condition: condition, 
-                    location: location,
-                    lat: lat, // <--- 把纬度发给后端
-                    lng: lng, // <--- 把经度发给后端
-                    isUrgent: isUrgent, 
-                    isShippingFree: isShippingFree, 
-                    canInspect: canInspect, 
-                    images: [] 
+                    title, category, description, price, condition, location,
+                    lat, lng, isUrgent, isShippingFree, canInspect
                 })
             });
 
-            if (response.ok) {
-                console.log('商品上架成功！');
-                showToast('发布成功！商品已上架'); // 调用你顶部的 toast
-                closePublish();
-                form.reset();
-                // 清理地图坐标残留
-                document.getElementById('itemLat').value = '';
-                document.getElementById('itemLng').value = '';
-            } else {
-                const errorData = await response.json();
-                console.error(`上架失败: ${errorData.message || response.statusText}`);
-                showToast(`上架失败: ${errorData.message}`);
+            if (!itemRes.ok) {
+                const errorData = await itemRes.json().catch(() => ({}));
+                if (itemRes.status === 401) {
+                    showToast('请先登录');
+                    window.location.href = '/login?redirect=/azure_trade/trade';
+                    return;
+                }
+                throw new Error(errorData.message || '商品发布失败');
             }
+
+            const itemData = await itemRes.json();
+            const uploadedItemId = itemData.itemId;
+
+            // 🌟 核心需求：在创建商品与关联图片之间添加延迟机制 🌟
+            if (imageUuids.length > 0 && uploadedItemId) {
+                console.log('[Delay] 商品已创建，等待 1s 以确保后端数据同步...');
+                await sleep(1000); // 默认延迟 1s
+
+                try {
+                    // 使用带重试机制的关联函数
+                    await associateImagesWithRetry(uploadedItemId, imageUuids);
+                } catch (bindErr) {
+                    console.error('图片关联最终失败:', bindErr);
+                    // 提供手动重试或其他处理方式的提示
+                    window.notify && window.notify.show.show('商品已上架，但图片同步失败，请在详情页手动重试', 'warning');
+                }
+            }
+
+            // 成功处理
+            console.log('商品上架成功！');
+            showToast('发布成功！商品已上架');
+            closePublish();
+            form.reset();
+            
+            // 重置状态
+            document.getElementById('itemLat').value = '';
+            document.getElementById('itemLng').value = '';
+            selectedImageFiles = [];
+            const preview = document.getElementById('image-preview');
+            if (preview) preview.innerHTML = '';
+            
+            // 更新本地存储
+            const published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+            published.unshift({
+                id: uploadedItemId || Date.now().toString(),
+                title, category, description, price, condition, location,
+                createdAt: new Date().toISOString(),
+                status: 'available'
+            });
+            localStorage.setItem('publishedItems', JSON.stringify(published));
+            updateDropdownCounts();
+
         } catch (error) {
             console.error('Error submitting item:', error);
+            showToast(error.message || '上架失败，请重试');
+        } finally {
+            resetBtn();
         }
     });
 }

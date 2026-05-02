@@ -26,6 +26,27 @@
         /* 确保地图在弹窗里正常显示，不被遮挡 */
         #mini-map-container { border: 1px solid #e5e7eb; margin-top: 10px; border-radius: 8px; }
     </style>
+    <style>
+        /* 发布按钮加载动画样式 */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        /* 延迟期间禁止用户操作的遮罩 */
+        .processing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 9999;
+            cursor: wait;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
@@ -848,7 +869,13 @@
         });
     </script>
     <script src="../js/app/seeds.js"></script>
-    <script src="../js/app/trade.js"></script>
+    <script src="trade.js"></script>
+
+    <script type="module">
+        import {NotificationManager} from '../js/notifications.js'
+
+        window.notify.show = new NotificationManager();
+    </script>
     <script type="importmap">
         {
             "imports": {

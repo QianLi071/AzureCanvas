@@ -78,18 +78,36 @@ public class MarketServiceImpl extends AbstractQueryService implements IMarketSe
     @Override
     @Transactional
     public void addImages(List<String> urls, Item target){
+        if (urls == null || urls.isEmpty() || target == null) return;
 
-        for (String url : urls) {
-            UUID imageId = UUID.fromString(url);
-            String sql = "INSERT INTO item_images (image_id, item_id, image_url, uploaded_at) " +
-                         "VALUES (?, ?, ?, ?) " +
-                         "ON DUPLICATE KEY UPDATE image_url = VALUES(image_url), item_id = VALUES(item_id)";
-            Query query = entityManager.createNativeQuery(sql);
-            query.setParameter(1, 0);
-            query.setParameter(2, target.getItemId().toString());
-            query.setParameter(3, url);
-            query.setParameter(4, OffsetDateTime.now());
-            query.executeUpdate();
+        // 1. 去重处理，防止同一事务内重复操作同一 URL
+        List<String> uniqueUrls = urls.stream().distinct().toList();
+
+        for (String url : uniqueUrls) {
+            UUID imageId = null;
+            try {
+                imageId = UUID.fromString(url);
+            } catch (IllegalArgumentException ignored) {}
+
+            ItemImage itemImage = new ItemImage();
+//            if (imageId != null) {
+//                // 2. 显式检查数据库中是否已存在该图片，避免 UUID 冲突导致更新失败
+//                // 使用 findById 确保获取的是受托管状态或最新的实体
+//                itemImage = itemImageRepository.findById(imageId).orElse(new ItemImage());
+//                if (itemImage.getImageId() == null) {
+//                    itemImage.setImageId(imageId);
+//                }
+//            } else {
+//                itemImage = new ItemImage();
+//            }
+            itemImage.setImageId(imageId);
+            itemImage.setItem(target);
+            itemImage.setImageUrl(url);
+            itemImage.setUploadedAt(OffsetDateTime.now());
+            
+            // 3. 使用 saveAndFlush 强制同步到数据库，并在异常发生时立即暴露问题
+            // 配合 @Transactional 确保原子性
+            itemImageRepository.saveAndFlush(itemImage);
         }
     }
 

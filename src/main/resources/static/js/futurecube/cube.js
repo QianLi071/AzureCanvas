@@ -654,7 +654,7 @@ function triggerCubeTransition() {
 
     // 播放音效
     const audio = new Audio('audios/cube_entry.ogg');
-    audio.volume = 1.5;
+    audio.volume = 1.0;
     audio.play().catch(e => console.log('Audio play failed:', e));
 
     // 隐藏导航卡片

@@ -2,7 +2,7 @@
  * Gorgeous Bubble Notifications
  * Styles using Tailwind CSS classes with custom glassmorphism.
  */
-class NotificationManager {
+export class NotificationManager {
     constructor() {
         this.container = document.createElement('div');
         this.container.id = 'notification-container';
