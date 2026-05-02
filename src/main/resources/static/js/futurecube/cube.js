@@ -153,7 +153,7 @@ function initCube() {
 
     const cubeModelPath = isCubeSubdir ? '../models/FutureCube.glb' : 'models/FutureCube.glb';
 
-    transmissionMaterial = Object.assign(new MeshTransmissionMaterial(1), {
+    transmissionMaterial = Object.assign(new MeshTransmissionMaterial(8), {
         color: new THREE.Color('#ffffff'),
         clearcoat: 1,
         clearcoatRoughness: 0,

@@ -550,6 +550,9 @@
     charCount.textContent = textarea.value.length;
   };
 
+  // 辅助函数：延迟
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
   // 提交
   document.getElementById("submitPostBtn").addEventListener("click", async () => {
     const content = textarea.value.trim();
@@ -557,21 +560,22 @@
 
     const submitBtn = document.getElementById("submitPostBtn");
     submitBtn.disabled = true;
-    submitBtn.textContent = "发布中...";
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
 
     try {
-      let imageUrls = [];
+      let imageUuids = [];
       if (selectedImageFiles.length > 0) {
         const formData = new FormData();
         selectedImageFiles.forEach(f => formData.append("files", f));
         const uploadRes = await fetch("/api/v1/images/upload", { method: "POST", body: formData });
         if (!uploadRes.ok) throw new Error("图片上传失败");
-        imageUrls = await uploadRes.json();
+        imageUuids = await uploadRes.json();
       }
 
       const isAnon = document.getElementById("anonCheck").checked;
       const titleInput = document.getElementById("postTitle").value.trim();
 
+      // 1. 创建帖子
       const postRes = await fetch("/api/treeholes/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -580,15 +584,39 @@
           content,
           title: titleInput || null,
           category: selectedCategory,
-          images: imageUrls,
           isAnonymous: isAnon
         })
       });
 
       if (!postRes.ok) throw new Error("帖子发布失败");
+      const savedPost = await postRes.json();
+
+      // 2. 如果有图片，关联图片
+      if (imageUuids.length > 0 && savedPost.id) {
+        // 参考 trade.js 的延迟机制，确保后端索引同步
+        await sleep(1000);
+
+        const bindRes = await fetch(`/api/treeholes/posts/${savedPost.id}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ images: imageUuids })
+        });
+
+        if (!bindRes.ok) {
+          console.warn("图片关联失败，但帖子已发布");
+        } else {
+          // 关联成功，手动补充图片列表供首页展示
+          savedPost.imagesList = imageUuids.map(uuid => `/resources/${uuid}`);
+        }
+      }
 
       const toast = document.getElementById("toast");
       toast.classList.add("show");
+      
+      // 保存到 sessionStorage 供首页刷新显示（可选）
+      sessionStorage.setItem("th_new_post", JSON.stringify(savedPost));
+
       setTimeout(() => { window.location.href = "index.html"; }, 1200);
 
     } catch (err) {

@@ -26,7 +26,6 @@ window.Store = (function () {
       {
         id: "p1", author: "匿名小树", authorId: "u_tree",
         avatarLetter: "匿", timestamp: Date.now() - 3600000 * 5,
-        title: "",
         content: "有人知道图书馆三楼靠窗的座位现在需要预约吗？📚",
         category: "question", images: [], likes: 12, liked: false, collected: false,
         comments: [
@@ -37,7 +36,6 @@ window.Store = (function () {
       {
         id: "p2", author: "毕业倒计时", authorId: "u_grad",
         avatarLetter: "毕", timestamp: Date.now() - 86400000,
-        title: "",
         content: "今天拍毕业照，把四年的记忆留在这里🎓 谢谢树洞。",
         category: "emotion", images: [], likes: 45, liked: false, collected: true,
         comments: [
@@ -47,7 +45,6 @@ window.Store = (function () {
       {
         id: "p3", author: "食堂观察员", authorId: "u_food",
         avatarLetter: "食", timestamp: Date.now() - 7200000,
-        title: "",
         content: "二食堂新出的麻辣香锅绝了！🌶️ 但是排队有点长。",
         category: "life", images: [], likes: 28, liked: true, collected: false,
         comments: []
@@ -157,11 +154,11 @@ window.Store = (function () {
       const user = await res.json();
       const userId = user.userId || user.id;
       if (!userId) return [];
-      
+
       const followRes = await fetch(`/api/users/${userId}/following`, { credentials: "include" });
       if (!followRes.ok) return [];
       const followingList = await followRes.json();
-      
+
       // 更新本地关注集合
       follows = new Set(followingList.map(u => u.userId || u.id));
       save();
@@ -302,7 +299,7 @@ window.Store = (function () {
     if (query) {
       const q = query.toLowerCase();
       result = result.filter(p =>
-        p.content.toLowerCase().includes(q) || p.author.toLowerCase().includes(q)
+          p.content.toLowerCase().includes(q) || p.author.toLowerCase().includes(q)
       );
     }
     return result;
@@ -424,7 +421,6 @@ window.Store = (function () {
       p.timestamp = p.createdAt ? new Date(p.createdAt).getTime() : Date.now();
       // 重要：将API的likeCount映射到前端的likes字段
       p.likes = (p.likeCount !== undefined && p.likeCount !== null) ? p.likeCount : 0;
-      p.comments = (p.commentCount !== undefined && p.commentCount !== null) ? p.likeCount : 0;
       p.liked = false;
       p.collected = false;
       const idx = posts.findIndex(x => String(x.id) === String(postId));

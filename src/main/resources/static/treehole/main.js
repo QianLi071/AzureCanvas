@@ -1,17 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const response = fetch(`/api/treeholes/posts`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-
-  if (response.ok) {
-    for (let responseKey in response) {
-      console.log(responseKey);
-    }
-  }
   // ===== 0. 进入动画（仅首次访问显示）+ 欢迎弹窗 =====
   const splash = document.getElementById("splashScreen");
   const welcomeModal = document.getElementById("welcomeModal");
@@ -133,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== 1. 初始化数据层 =====
   Store.init();
-  
+
   // 从 API 加载关注列表
   Store.fetchFollowingFromApi().catch(() => {});
 
@@ -197,9 +184,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!el) return;
     const posts = Store.getFilteredPosts("all", "");
     const ranked = [...posts]
-      .map(p => ({ id: p.id, text: p.content.slice(0, 22), heat: (p.likes || 0) * 3 + (p.comments ? p.comments.length : 0) * 5 }))
-      .sort((a, b) => b.heat - a.heat)
-      .slice(0, 10);
+        .map(p => ({ id: p.id, text: p.content.slice(0, 22), heat: (p.likes || 0) * 3 + (p.comments ? p.comments.length : 0) * 5 }))
+        .sort((a, b) => b.heat - a.heat)
+        .slice(0, 10);
     const heatLabels = ["沸", "热", "热", "热", "热"];
     el.innerHTML = ranked.map((item, i) => `
       <div class="hot-item" data-id="${item.id}">
@@ -267,9 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const card = document.createElement("div");
     card.className = "post-card real-inject animated";
     card.dataset.id = post.id;
-    const imgHtml = post.images && post.images.length
-      ? `<div class="post-images">${post.images.map(u => `<img src="../resources/${u}" alt="">`).join("")}</div>`
-      : "";
+    const images = post.imagesList || post.images || [];
+    const imgHtml = images.length
+        ? `<div class="post-images">${images.map(u => `<img src="${u}" alt="">`).join("")}</div>`
+        : "";
     const isMe = post.authorId === Store.currentUser.id;
     card.innerHTML = `
       <div class="post-header">
@@ -432,8 +420,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const uid = btn.dataset.authorId;
         const following = await Store.toggleFollow(uid);
         btn.innerHTML = following
-          ? '<i class="fas fa-check"></i> 已关注'
-          : '<i class="fas fa-plus"></i> 关注';
+            ? '<i class="fas fa-check"></i> 已关注'
+            : '<i class="fas fa-plus"></i> 关注';
         btn.classList.toggle("following", following);
         // 同步气泡内按钮
         const card = btn.closest(".post-card");
@@ -459,8 +447,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const fbBtn = card.querySelector(".follow-btn-card");
           if (fbBtn) {
             fbBtn.innerHTML = following
-              ? '<i class="fas fa-check"></i> 已关注'
-              : '<i class="fas fa-plus"></i> 关注';
+                ? '<i class="fas fa-check"></i> 已关注'
+                : '<i class="fas fa-plus"></i> 关注';
             fbBtn.classList.toggle("following", following);
           }
         }

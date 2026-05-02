@@ -8,11 +8,7 @@ import org.neonangellock.azurecanvas.model.TreeholePost;
 import org.neonangellock.azurecanvas.model.User;
 import org.neonangellock.azurecanvas.model.es.EsTreeHole;
 import org.neonangellock.azurecanvas.responses.TreeholeResponse;
-import org.neonangellock.azurecanvas.service.EsTreeHoleService;
-import org.neonangellock.azurecanvas.service.IMarketService;
-import org.neonangellock.azurecanvas.service.IStoryMapService;
-import org.neonangellock.azurecanvas.service.UserService;
-import org.neonangellock.azurecanvas.service.TreeholeService;
+import org.neonangellock.azurecanvas.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +42,9 @@ public class TreeholeController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ImageService imageService;
+
 
     @GetMapping("/posts")
     public ResponseEntity<List<Map<String, Object>>> getAllPosts() {
@@ -64,16 +63,7 @@ public class TreeholeController {
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (TreeholePost post : posts) {
             Map<String, Object> m = mapper.convertValue(post, Map.class);
-            String imagesStr = post.getImages();
-            if (imagesStr != null && !imagesStr.isEmpty()) {
-                try {
-                    m.put("imagesList", mapper.readValue(imagesStr, List.class));
-                } catch (Exception e) {
-                    m.put("imagesList", List.of(imagesStr));
-                }
-            } else {
-                m.put("imagesList", List.of());
-            }
+            m.put("imagesList", imageService.findByTreeholePost(post));
             if (post.getUserId() != null) {
                 User u = userService.findById(post.getUserId());
                 if (u != null) {
@@ -115,16 +105,7 @@ public class TreeholeController {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> result = mapper.convertValue(post, Map.class);
 
-        String imagesStr = post.getImages();
-        if (imagesStr != null && !imagesStr.isEmpty()) {
-            try {
-                result.put("imagesList", mapper.readValue(imagesStr, List.class));
-            } catch (Exception e) {
-                result.put("imagesList", List.of(imagesStr));
-            }
-        } else {
-            result.put("imagesList", List.of());
-        }
+        result.put("imagesList", imageService.findByTreeholePost(post));
 
         if (post.getUserId() != null) {
             User u = userService.findById(post.getUserId());
@@ -193,10 +174,7 @@ public class TreeholeController {
         if (category != null) {
             post.setCategory((String) category);
         }
-        Object images = request.get("images");
-        if (images != null) {
-            post.setImages(images instanceof List ? new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(images) : images.toString());
-        }
+        
         Object isAnon = request.get("isAnonymous");
         UUID userId = null;
         if (Boolean.FALSE.equals(isAnon)) {
@@ -207,7 +185,18 @@ public class TreeholeController {
             }
         }
         post.setUserId(userId);
+        
         return ResponseEntity.ok(treeholeService.savePost(post));
+    }
+
+    @PostMapping("/posts/{id}/images")
+    public ResponseEntity<?> associateImages(@PathVariable Integer id, @RequestBody Map<String, Object> request) {
+        Object images = request.get("images");
+        if (images instanceof List) {
+            List<String> imageUrls = (List<String>) images;
+            treeholeService.addImages(imageUrls, id);
+        }
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     @DeleteMapping("/posts/{id}")
@@ -316,7 +305,12 @@ public class TreeholeController {
 
                         response.setContent(content);
                         response.setCategory(category);
-                        response.setImages(List.of());
+                        
+                        // 从数据库查询图片
+                        TreeholePost tempPost = new TreeholePost();
+                        tempPost.setId(Integer.parseInt(treeHole.getId()));
+                        response.setImages(imageService.findByTreeholePost(tempPost));
+                        
                         response.setLikes(0);
                         response.setLiked(false);
                         response.setCollected(false);

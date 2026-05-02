@@ -27,18 +27,11 @@ window.Render = (function () {
   /** 渲染用户头像：有 avatarUrl 则用图片，否则粉紫渐变+首字母 */
   function renderAvatar(avatarUrl, avatarLetter, extraClass) {
     const letter = avatarLetter || "匿";
-    const cls = extraClass || "";
+    const cls = extraClass ? " " + extraClass : "";
     if (avatarUrl) {
-      return `<img src="${avatarUrl}" alt="" class="${cls}" style="border-radius:50%;object-fit:cover;${getAvatarSizeStyle(cls)}" onerror="this.style.display='none'">`;
+      return `<img src="${avatarUrl}" alt="" class="avatar-img${cls}" onerror="this.outerHTML='<div class=\\'avatar${cls}\\'>${escapeHtml(letter)}</div>'">`;
     }
-    return `<div class="${cls}" style="border-radius:50%;background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 50%,#fad0c4 100%);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.2);${getAvatarSizeStyle(cls)};display:flex;align-items:center;justify-content:center;font-weight:600;">${escapeHtml(letter)}</div>`;
-  }
-
-  function getAvatarSizeStyle(cls) {
-    if (cls.includes("detail-avatar")) return "width:56px;height:56px;font-size:1.3rem;";
-    if (cls.includes("ap-avatar")) return "width:48px;height:48px;font-size:1.2rem;";
-    if (cls.includes("comment-avatar")) return "width:32px;height:32px;font-size:0.8rem;";
-    return "width:42px;height:42px;font-size:0.95rem;";
+    return `<div class="avatar avatar-gradient${cls}">${escapeHtml(letter)}</div>`;
   }
 
   /** 高亮关键字 */
@@ -82,9 +75,9 @@ window.Render = (function () {
     if (emptyEl) emptyEl.style.display = "none";
 
     container.innerHTML = posts.map(post => {
-      const imgHtml = post.images && post.images.length
-        ? `<div class="post-images">${post.images.map(u => `<img src="${u}" alt="">`).join("")}</div>`
-        : "";
+      const imgHtml = post.imagesList && post.imagesList.length
+          ? `<div class="post-images">${post.imagesList.map(u => `<img src="${u}" alt="">`).join("")}</div>`
+          : "";
       const commentCount = post.comments ? post.comments.length : 0;
       const isMe = post.authorId === Store.currentUser.id;
       const following = Store.isFollowing(post.authorId);
@@ -158,19 +151,20 @@ window.Render = (function () {
    * @param {Function} onFollowClick - 关注/私信按钮回调
    */
   function renderDetailPost(bodyEl, actionsEl, post, onFollowClick) {
-    const imgHtml = post.images && post.images.length
-      ? `<div class="post-images">${post.images.map(u => `<img src="${u}" alt="">`).join("")}</div>`
-      : "";
+    const images = post.imagesList || post.images || [];
+    const imgHtml = images.length
+        ? `<div class="post-images">${images.map(u => `<img src="${u}" alt="">`).join("")}</div>`
+        : "";
 
     const isMe = post.authorId === Store.currentUser.id;
     const following = Store.isFollowing(post.authorId);
 
     // 关注/私信按钮（自己的帖子不显示）
     const followBtn = isMe ? "" : following
-      ? `<button class="btn btn-sm" id="detailMsgBtn" data-author-id="${post.authorId}" data-author="${escapeHtml(post.author)}" data-avatar="${escapeHtml(post.avatarLetter || "匿")}">
+        ? `<button class="btn btn-sm" id="detailMsgBtn" data-author-id="${post.authorId}" data-author="${escapeHtml(post.author)}" data-avatar="${escapeHtml(post.avatarLetter || "匿")}">
            <i class="far fa-comment-dots"></i> 私信
          </button>`
-      : `<button class="btn btn-sm" id="detailFollowBtn" data-author-id="${post.authorId}">
+        : `<button class="btn btn-sm" id="detailFollowBtn" data-author-id="${post.authorId}">
            <i class="fas fa-plus"></i> 关注
          </button>`;
 
@@ -211,8 +205,8 @@ window.Render = (function () {
     // 绑定关注按钮
     const followBtnEl = document.getElementById("detailFollowBtn");
     if (followBtnEl) {
-      followBtnEl.addEventListener("click", async () => {
-        await Store.toggleFollow(post.authorId);
+      followBtnEl.addEventListener("click", () => {
+        Store.toggleFollow(post.authorId);
         renderDetailPost(bodyEl, actionsEl, Store.getPost(post.id), onFollowClick);
         updateNotifBadges();
       });
@@ -229,8 +223,8 @@ window.Render = (function () {
     // 点击头像也可关注
     const avatarEl = document.getElementById("detailAvatar");
     if (avatarEl && !isMe) {
-      avatarEl.addEventListener("click", async () => {
-        await Store.toggleFollow(post.authorId);
+      avatarEl.addEventListener("click", () => {
+        Store.toggleFollow(post.authorId);
         renderDetailPost(bodyEl, actionsEl, Store.getPost(post.id), onFollowClick);
         updateNotifBadges();
       });
@@ -251,18 +245,18 @@ window.Render = (function () {
 
   function renderCommentNode(c, depth, onReply) {
     const replyTag = c.parentId
-      ? `<span class="reply-tag">回复 #${c.parentId}</span> `
-      : "";
+        ? `<span class="reply-tag">回复 #${c.parentId}</span> `
+        : "";
     const authorName = c.authorName || c.author || "匿名用户";
     const avatarUrl = c.avatarUrl || null;
     const avatarLetter = c.avatarLetter || (authorName ? authorName.substring(0, 1) : "匿");
     const time = c.createdAt
-      ? formatTime(new Date(c.createdAt).getTime())
-      : formatTime(c.timestamp || Date.now());
+        ? formatTime(new Date(c.createdAt).getTime())
+        : formatTime(c.timestamp || Date.now());
     const text = c.content || c.text || "";
     const children = c.children && c.children.length > 0
-      ? `<div class="comment-children">${c.children.map(child => renderCommentNode(child, depth + 1, onReply)).join("")}</div>`
-      : "";
+        ? `<div class="comment-children">${c.children.map(child => renderCommentNode(child, depth + 1, onReply)).join("")}</div>`
+        : "";
     return `
       <div class="comment-item" data-cmt-id="${c.id}" style="margin-left: ${depth * 16}px">
         <div class="comment-header">
@@ -339,5 +333,5 @@ window.Render = (function () {
   }
 
   // ===== 公开 API =====
-  return { formatTime, escapeHtml, renderAvatar, getAvatarSizeStyle, renderFeed, renderDetailPost, renderComments, updateNotifBadges };
+  return { formatTime, escapeHtml, renderAvatar, renderFeed, renderDetailPost, renderComments, updateNotifBadges };
 })();

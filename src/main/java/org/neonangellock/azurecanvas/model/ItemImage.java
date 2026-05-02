@@ -7,23 +7,23 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import org.springframework.data.domain.Persistable;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "item_images")
 @Getter @Setter
-public class ItemImage {
+public class ItemImage implements Persistable<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "imageId", updatable = false, nullable = false)
     private UUID imageId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "itemId", nullable = false)
+    @Column(name = "itemId", nullable = false)
     @NotNull(message = "关联商品不能为空")
-    private Item item;
+    private UUID itemId;
 
     @Column(name = "imageUrl", nullable = false, length = 255)
     @NotNull(message = "图片URL不能为空")
@@ -36,4 +36,23 @@ public class ItemImage {
     @CreationTimestamp
     @Column(name = "uploadedAt", nullable = false, updatable = false)
     private OffsetDateTime uploadedAt;
+
+    @Transient
+    private boolean isNew = true;
+
+    @Override
+    public UUID getId() {
+        return imageId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
+    }
 }

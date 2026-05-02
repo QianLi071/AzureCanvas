@@ -1,0 +1,476 @@
+/* ============================================
+   导航卡片 - 增强玻璃拟态与液态玻璃效果
+   Liquid Glass Navigation Cards
+   ============================================ */
+
+/* CSS Variables for Card Theming */
+:root {
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --card-border: rgba(255, 255, 255, 0.18);
+    --card-shadow: rgba(0, 0, 0, 0.1);
+    --card-glow-pink: #ff72bd;
+    --card-glow-purple: #c841ff;
+    --card-glow-red: #0059ff;
+    --card-glow-green: #52ff52;
+    --card-glow-blue: #00BFFF;
+}
+
+/* 导航卡片容器 */
+#nav-cards-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 202;
+    pointer-events: none;
+}
+
+/* 导航卡片基础样式 - 玻璃拟态核心 */
+.nav-card {
+    position: absolute;
+    width: 260px;
+    height: 180px;
+    border-radius: 20px;
+    cursor: pointer;
+    pointer-events: auto;
+    transform-origin: center center;
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+                height 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    overflow: visible;
+}
+
+/* 卡片底层 - 色彩参照层，增强空间层次感 */
+.nav-card::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 23px;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 30%,
+        rgba(255, 255, 255, 0.05) 50%,
+        transparent 100%
+    );
+    z-index: -2;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+/* 玻璃层 - 多层渐变实现深度 */
+.nav-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.1) 30%,
+            rgba(255, 255, 255, 0.05) 70%,
+            rgba(255, 255, 255, 0.02) 100%
+        ),
+        radial-gradient(
+            ellipse at 30% 20%,
+            rgba(255, 255, 255, 0.15) 0%,
+            transparent 50%
+        ),
+        radial-gradient(
+            ellipse at 70% 80%,
+            rgba(255, 255, 255, 0.08) 0%,
+            transparent 40%
+        );
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    z-index: -1;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 液态玻璃流动层 - 伪元素实现 */
+.nav-card-liquid {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.nav-card-liquid::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -75%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 50%,
+        transparent 100%
+    );
+    transform: rotate(25deg);
+    animation: liquid-flow 4s ease-in-out infinite;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.nav-card:hover .nav-card-liquid::before {
+    opacity: 1;
+}
+
+@keyframes liquid-flow {
+    0%, 100% {
+        left: -75%;
+        top: -50%;
+    }
+    50% {
+        left: 125%;
+        top: 50%;
+    }
+}
+
+/* 霓虹光效层 */
+.nav-card-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    filter: blur(50px);
+    transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                height 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.nav-card:hover .nav-card-glow {
+    width: 130%;
+    height: 170%;
+    opacity: 0.7;
+}
+
+/* 边缘光效层 */
+.nav-card-edge {
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    background: linear-gradient(
+        135deg,
+        var(--glow-color, #fff) 0%,
+        transparent 30%,
+        transparent 70%,
+        var(--glow-color, #fff) 100%
+    );
+    opacity: 0;
+    z-index: -1;
+    filter: blur(3px);
+    transition: opacity 0.4s ease;
+}
+
+.nav-card:hover .nav-card-edge {
+    opacity: 0.6;
+}
+
+/* 内容层 */
+.nav-card-content {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        0 0 10px rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.nav-card-content i {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+                filter 0.4s ease;
+}
+
+.nav-card:hover .nav-card-content i {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+/* 悬浮反光效果 - 继承自 app.major.css */
+.nav-card-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.nav-card-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 80%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(255, 255, 255, 0.25) 40%,
+        rgba(255, 255, 255, 0.78) 50%,
+        rgba(255, 255, 255, 0.25) 60%,
+        transparent 100%
+    );
+    transform: rotate(25deg);
+    transition: left 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.nav-card:hover .nav-card-shine::after {
+    left: 150%;
+}
+
+/* ============================================
+   悬停动画 - 垂直拉伸与辉光增强
+   ============================================ */
+.nav-card:hover {
+    transform: translateY(-8px) scale(1.08);
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.25),
+        0 0 40px rgba(var(--glow-rgb, 255, 255, 255), 0.3),
+        inset 0 2px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* 垂直拉伸动画 */
+.nav-card.stretch {
+    animation: card-stretch 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes card-stretch {
+    0% {
+        transform: scale(1.08) translateY(-8px);
+        height: 80px;
+    }
+    50% {
+        transform: scale(1.08) translateY(-12px) scaleY(1.15);
+        height: 92px;
+    }
+    100% {
+        transform: scale(1.08) translateY(-8px) scaleY(1.05);
+        height: 84px;
+    }
+}
+
+/* 辉光脉冲效果 */
+.nav-card-glow-pulse {
+    position: absolute;
+    inset: -10px;
+    border-radius: 30px;
+    opacity: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.nav-card:hover .nav-card-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+    0%, 100% {
+        opacity: 0;
+        box-shadow: 0 0 20px var(--glow-color, #fff);
+    }
+    50% {
+        opacity: 0.4;
+        box-shadow: 0 0 40px var(--glow-color, #fff),
+                    0 0 60px var(--glow-color, #fff);
+    }
+}
+
+/* ============================================
+   点击过渡动画层
+   ============================================ */
+#cube-transition-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 300;
+    background: transparent;
+    pointer-events: none;
+}
+
+#cube-transition-overlay.active {
+    pointer-events: auto;
+}
+
+#transition-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.transition-line1 {
+    font-family: 'Segoe UI', 'Poppins', sans-serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: 8px;
+    text-shadow:
+        0 0 20px rgba(147, 112, 219, 0.8),
+        0 0 40px rgba(147, 112, 219, 0.5);
+}
+
+.transition-line2 {
+    font-family: 'Segoe UI', 'Poppins', sans-serif;
+    font-size: 5rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 12px;
+    margin-top: 10px;
+    text-shadow:
+        0 0 40px rgba(147, 112, 219, 1),
+        0 0 80px rgba(138, 43, 226, 0.6),
+        0 0 120px rgba(138, 43, 226, 0.3);
+}
+
+/* 白场过渡效果 */
+#white-flash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    opacity: 0;
+    z-index: 400;
+    pointer-events: none;
+    transition: opacity 4s ease;
+}
+
+#white-flash-overlay.active {
+    opacity: 1;
+}
+
+/* ============================================
+   卡片位置 - 响应式布局
+   ============================================ */
+.nav-card[data-position="top-center"] {
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.nav-card[data-position="top-left"] {
+    top: 30%;
+    left: 12%;
+}
+
+.nav-card[data-position="top-right"] {
+    top: 30%;
+    right: 12%;
+}
+
+.nav-card[data-position="bottom-left"] {
+    bottom: 25%;
+    left: 18%;
+}
+
+.nav-card[data-position="bottom-right"] {
+    bottom: 25%;
+    right: 18%;
+}
+
+/* ============================================
+   响应式适配
+   ============================================ */
+@media (max-width: 1024px) {
+    .nav-card {
+        width: 140px;
+        height: 70px;
+    }
+
+    .nav-card-content {
+        font-size: 0.85rem;
+    }
+
+    .nav-card-content i {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-card {
+        width: 110px;
+        height: 60px;
+        border-radius: 16px;
+    }
+
+    .nav-card-content {
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+
+    .nav-card-content i {
+        font-size: 1.1rem;
+    }
+
+    .transition-line1 {
+        font-size: 2rem;
+        letter-spacing: 4px;
+    }
+
+    .transition-line2 {
+        font-size: 3rem;
+        letter-spacing: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-card {
+        width: 90px;
+        height: 50px;
+        border-radius: 14px;
+    }
+
+    .nav-card-content {
+        font-size: 0.65rem;
+    }
+
+    .nav-card-content i {
+        font-size: 1rem;
+    }
+
+    .nav-card:hover .nav-card-glow {
+        width: 180px;
+        height: 180px;
+    }
+}

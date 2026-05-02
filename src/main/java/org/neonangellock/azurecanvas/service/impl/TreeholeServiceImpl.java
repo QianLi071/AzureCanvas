@@ -5,10 +5,11 @@ import jakarta.persistence.Query;
 import org.neonangellock.azurecanvas.model.RobotConfig;
 import org.neonangellock.azurecanvas.model.TreeholeComment;
 import org.neonangellock.azurecanvas.model.TreeholePost;
-import org.neonangellock.azurecanvas.model.es.EsTreeHole;
-import org.neonangellock.azurecanvas.responses.TreeholeResponse;
+import org.neonangellock.azurecanvas.model.TreeholeImage;
+import org.neonangellock.azurecanvas.repository.TreeholeImageRepository;
 import org.neonangellock.azurecanvas.service.AbstractQueryService;
 import org.neonangellock.azurecanvas.service.TreeholeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class TreeholeServiceImpl extends AbstractQueryService implements TreeholeService {
+
+    @Autowired
+    private TreeholeImageRepository treeholeImageRepository;
 
     protected TreeholeServiceImpl(EntityManager entityManager) {
         super(entityManager);
@@ -54,6 +58,32 @@ public class TreeholeServiceImpl extends AbstractQueryService implements Treehol
             return post;
         } else {
             return entityManager.merge(post);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void addImages(List<String> urls, Integer postId) {
+        if (urls == null || urls.isEmpty()) return;
+
+        for (String url : urls) {
+            // 移除可能存在的前缀，保持存储的一致性（如果传入的是带前缀的URL）
+            String cleanUrl = url;
+            if (url.startsWith("/resources/")) {
+                cleanUrl = url.substring("/resources/".length());
+            }
+
+            TreeholeImage image = new TreeholeImage();
+            // 如果 URL 是 UUID 字符串，尝试解析它
+            try {
+                image.setImageId(java.util.UUID.fromString(cleanUrl));
+            } catch (Exception e) {
+                image.setImageId(java.util.UUID.randomUUID());
+            }
+            image.setPostId(postId);
+            image.setImageUrl(cleanUrl);
+            image.setUploadedAt(java.time.OffsetDateTime.now());
+            treeholeImageRepository.saveAndFlush(image);
         }
     }
 

@@ -11,6 +11,7 @@ public interface TreeholeService {
     List<TreeholePost> findAllPosts();
     List<TreeholePost> findRecentPosts(int limit);
     TreeholePost savePost(TreeholePost post);
+    void addImages(List<String> urls, Integer postId);
     void deletePostById(Integer id);
     void incrementLikeCount(Integer postId);
     void decrementLikeCount(Integer postId);

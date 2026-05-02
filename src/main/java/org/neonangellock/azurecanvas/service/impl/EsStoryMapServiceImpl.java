@@ -2,18 +2,12 @@ package org.neonangellock.azurecanvas.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.neonangellock.azurecanvas.model.es.EsStoryMap;
-import org.neonangellock.azurecanvas.model.storymap.StoryMap;
-import org.neonangellock.azurecanvas.model.storymap.StoryMapLocation;
-import org.neonangellock.azurecanvas.model.storymap.StoryMapStats;
-import org.neonangellock.azurecanvas.repository.StoryMapRepository;
+import org.neonangellock.azurecanvas.model.storymap.StoryMapCombined;
 import org.neonangellock.azurecanvas.repository.es.EsStoryMapRepository;
 import org.neonangellock.azurecanvas.service.EsStoryMapService;
 import org.neonangellock.azurecanvas.service.IStoryMapService;
-import org.neonangellock.azurecanvas.service.IStoryMapService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
@@ -29,7 +23,6 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -98,12 +91,9 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
         int totalSynced = 0;
 
         try {
-            log.info("Starting scheduled storymap sync from database");
-
             int pageNum = 1;
             while (true) {
-                //Pageable pageable = PageRequest.of(pageNum, SYNC_BATCH_SIZE);
-                List<StoryMap> storyMaps = storyMapService.findAllWithRange(pageNum, SYNC_BATCH_SIZE);
+                List<StoryMapCombined> storyMaps = storyMapService.findAllWithRange(pageNum, SYNC_BATCH_SIZE);
 
                 if (storyMaps.isEmpty()) {
                     break;
@@ -113,7 +103,7 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
                 int synced = syncBatchWithRetry(esItems);
                 totalSynced += synced;
 
-                log.debug("Synced batch {} with {} storymap locations", pageNum, synced);
+                log.debug("Synced batch {} with {} storymap items", pageNum, synced);
 
                 if (storyMaps.size() < SYNC_BATCH_SIZE) {
                     break;
@@ -123,7 +113,7 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
 
             lastFullSyncTime = OffsetDateTime.now();
             long duration = System.currentTimeMillis() - startTime;
-            log.info("Completed full storymap sync: {} location items in {}ms", totalSynced, duration);
+            log.info("Completed full storymap sync: {} items in {}ms", totalSynced, duration);
 
         } catch (Exception e) {
             log.error("Failed to sync storymap from database: {}", e.getMessage(), e);
@@ -155,12 +145,12 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
             log.info("Starting incremental storymap sync since {}", lastFullSyncTime);
 
             OffsetDateTime syncSince = lastFullSyncTime.minusMinutes(30);
-            List<StoryMap> allStoryMaps = storyMapService.findAll();
+            List<StoryMapCombined> allStoryMaps = storyMapService.findAll();
 
             List<EsStoryMap> esItems = allStoryMaps.stream()
                     .filter(storyMap -> storyMap.getUpdatedAt() != null &&
                                         storyMap.getUpdatedAt().isAfter(syncSince))
-                    .flatMap(storyMap -> convertStoryMapToEsStoryMaps(storyMap).stream())
+                    .map(this::convertStoryMapToEsStoryMap)
                     .collect(Collectors.toList());
 
             if (!esItems.isEmpty()) {
@@ -169,7 +159,7 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
 
             lastFullSyncTime = OffsetDateTime.now();
             long duration = System.currentTimeMillis() - startTime;
-            log.info("Completed incremental storymap sync: {} location items in {}ms", totalSynced, duration);
+            log.info("Completed incremental storymap sync: {} items in {}ms", totalSynced, duration);
 
         } catch (Exception e) {
             log.error("Failed to incrementally sync storymap: {}", e.getMessage(), e);
@@ -178,84 +168,46 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
         }
     }
 
-    private List<EsStoryMap> convertStoryMapsToEsStoryMaps(List<StoryMap> storyMaps) {
-        List<EsStoryMap> esStoryMaps = new ArrayList<>();
-        for (StoryMap storyMap : storyMaps) {
-            esStoryMaps.addAll(convertStoryMapToEsStoryMaps(storyMap));
-        }
-        return esStoryMaps;
+    private List<EsStoryMap> convertStoryMapsToEsStoryMaps(List<StoryMapCombined> storyMaps) {
+        return storyMaps.stream().map(this::convertStoryMapToEsStoryMap).collect(Collectors.toList());
     }
 
-    private List<EsStoryMap> convertStoryMapToEsStoryMaps(StoryMap storyMap) {
-        List<EsStoryMap> esStoryMaps = new ArrayList<>();
-
-        if (storyMap == null) {
-            return esStoryMaps;
-        }
-
-        StoryMapStats stats = storyMap.getStats();
-        int likes = stats != null ? stats.getLikesCount() : 0;
-        int comments = stats != null ? stats.getCommentCount() : 0;
-
-        List<StoryMapLocation> locations = storyMap.getLocations();
-        if (locations == null || locations.isEmpty()) {
-            EsStoryMap esItem = new EsStoryMap();
-            esItem.setStoryMapId(storyMap.getStoryMapId().toString());
-            esItem.setTitle(storyMap.getTitle());
-            esItem.setDescription(storyMap.getContent());
-            esItem.setCategory("storymap");
-            esItem.setLocation("");
-            esItem.setLat(0.0);
-            esItem.setLng(0.0);
-            esItem.setLikes(likes);
-            esItem.setComments(comments);
-            esItem.setAuthorID(storyMap.getAuthorId() != null ? storyMap.getAuthorId().toString() : "");
-            esItem.setAuthor("");
-            esItem.setCreatedAt(formatDateTime(storyMap.getCreatedAt()));
-            esItem.setUpdatedAt(formatDateTime(storyMap.getUpdatedAt()));
-            esStoryMaps.add(esItem);
-        } else {
-            for (StoryMapLocation location : locations) {
-                EsStoryMap esItem = new EsStoryMap();
-                esItem.setStoryMapId(storyMap.getStoryMapId().toString());
-                esItem.setTitle(storyMap.getTitle());
-                esItem.setDescription(location.getDescription() != null ? location.getDescription() : storyMap.getContent());
-                esItem.setCategory("storymap");
-                esItem.setLocation(location.getTitle() != null ? location.getTitle() : "");
-                esItem.setLat(location.getLat() != null ? location.getLat().doubleValue() : 0.0);
-                esItem.setLng(location.getLng() != null ? location.getLng().doubleValue() : 0.0);
-                esItem.setLikes(likes);
-                esItem.setComments(comments);
-                esItem.setAuthorID(storyMap.getAuthorId() != null ? storyMap.getAuthorId().toString() : "");
-                esItem.setAuthor("");
-                esItem.setCreatedAt(formatDateTime(storyMap.getCreatedAt()));
-                esItem.setUpdatedAt(formatDateTime(storyMap.getUpdatedAt()));
-                esStoryMaps.add(esItem);
-            }
-        }
-
-        return esStoryMaps;
+    private EsStoryMap convertStoryMapToEsStoryMap(StoryMapCombined storyMap) {
+        EsStoryMap esItem = new EsStoryMap();
+        esItem.setStoryMapId(storyMap.getStoryMapId().toString());
+        esItem.setTitle(storyMap.getTitle());
+        esItem.setDescription(storyMap.getContent());
+        esItem.setLocation(storyMap.getLocationTitle());
+        esItem.setLat(storyMap.getLat().doubleValue());
+        esItem.setLng(storyMap.getLng().doubleValue());
+        esItem.setLikes(storyMap.getLikesCount());
+        esItem.setComments(storyMap.getCommentCount());
+        esItem.setAuthorID(storyMap.getAuthorId().toString());
+        esItem.setCreatedAt(storyMap.getCreatedAt().format(DATE_FORMATTER));
+        esItem.setUpdatedAt(storyMap.getUpdatedAt().format(DATE_FORMATTER));
+        return esItem;
     }
 
-    private String formatDateTime(OffsetDateTime dateTime) {
-        return dateTime != null ? dateTime.format(DATE_FORMATTER) : null;
+    @Override
+    public List<EsStoryMap> getAllStoryMaps(int page, int size) {
+        if (esStoryMapRepository == null) return new ArrayList<>();
+        return esStoryMapRepository.findAll(PageRequest.of(page, size)).getContent();
     }
 
-    private int syncBatchWithRetry(List<EsStoryMap> esItems) {
-        int attempts = 0;
-        while (attempts < MAX_RETRIES) {
+    private int syncBatchWithRetry(List<EsStoryMap> items) {
+        if (esStoryMapRepository == null) return 0;
+        
+        int retryCount = 0;
+        while (retryCount < MAX_RETRIES) {
             try {
-                if (elasticsearchOperations != null && esStoryMapRepository != null) {
-                    esStoryMapRepository.saveAll(esItems);
-                    return esItems.size();
-                }
+                esStoryMapRepository.saveAll(items);
+                return items.size();
             } catch (Exception e) {
-                attempts++;
-                log.warn("Failed to sync storymap batch (attempt {}/{}): {}",
-                        attempts, MAX_RETRIES, e.getMessage());
-                if (attempts < MAX_RETRIES) {
+                retryCount++;
+                log.error("Failed to sync batch (attempt {}/{}): {}", retryCount, MAX_RETRIES, e.getMessage());
+                if (retryCount < MAX_RETRIES) {
                     try {
-                        Thread.sleep(RETRY_DELAY_MS * attempts);
+                        Thread.sleep(RETRY_DELAY_MS);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         break;
@@ -266,66 +218,7 @@ public class EsStoryMapServiceImpl implements EsStoryMapService {
         return 0;
     }
 
-    @Override
-    public List<EsStoryMap> getAllStoryMaps(int page, int size) {
-        try {
-            if (elasticsearchOperations == null) {
-                log.warn("Elasticsearch operations not available");
-                return List.of();
-            }
-
-            NativeQuery query = NativeQuery.builder()
-                    .withQuery(q -> q.matchAll(m -> m))
-                    .withPageable(PageRequest.of(page, size))
-                    .build();
-
-            log.debug("Fetching all storymaps from ES, page: {}, size: {}", page, size);
-            SearchHits<EsStoryMap> searchHits = elasticsearchOperations.search(query, EsStoryMap.class);
-            return searchHits.getSearchHits().stream()
-                    .map(hit -> hit.getContent())
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.error("Failed to get all storymaps from ES: {}", e.getMessage(), e);
-            return List.of();
-        }
-    }
-
     private SearchHits<EsStoryMap> createEmptySearchHits() {
-        return new EmptyStoryMapSearchHits();
-    }
-
-    private static class EmptyStoryMapSearchHits implements SearchHits<EsStoryMap> {
-        @Override
-        public long getTotalHits() { return 0; }
-        @Override
-        public org.springframework.data.elasticsearch.core.TotalHitsRelation getTotalHitsRelation() {
-            return org.springframework.data.elasticsearch.core.TotalHitsRelation.EQUAL_TO;
-        }
-        @Override
-        public float getMaxScore() { return 0f; }
-        @Override
-        public org.springframework.data.elasticsearch.core.suggest.response.Suggest getSuggest() { return null; }
-        @Override
-        public List<org.springframework.data.elasticsearch.core.SearchHit<EsStoryMap>> getSearchHits() {
-            return List.of();
-        }
-        @Override
-        public org.springframework.data.elasticsearch.core.SearchHit<EsStoryMap> getSearchHit(int index) {
-            throw new IndexOutOfBoundsException();
-        }
-
-        public List<EsStoryMap> getSearchHitsContents() { return List.of(); }
-        @Override
-        public boolean hasSearchHits() { return false; }
-        @Override
-        public org.springframework.data.elasticsearch.core.AggregationsContainer<?> getAggregations() { return null; }
-
-        public <A> A getAggregation(String name, Class<A> aClass) { return null; }
-        @Override
-        public org.springframework.data.elasticsearch.core.SearchShardStatistics getSearchShardStatistics() { return null; }
-        @Override
-        public String getPointInTimeId() { return null; }
-        @Override
-        public java.time.Duration getExecutionDuration() { return java.time.Duration.ZERO; }
+        return null; // Or return an empty implementation
     }
 }

@@ -77,42 +77,32 @@ public class MarketServiceImpl extends AbstractQueryService implements IMarketSe
 
     @Override
     @Transactional
-    public void addImages(List<String> urls, Item target){
-        if (urls == null || urls.isEmpty() || target == null) return;
+    public void addImages(List<String> urls, UUID targetID){
+        if (urls == null || urls.isEmpty()) return;
 
         // 1. 去重处理，防止同一事务内重复操作同一 URL
         List<String> uniqueUrls = urls.stream().distinct().toList();
 
         for (String url : uniqueUrls) {
-            UUID imageId = null;
-            try {
-                imageId = UUID.fromString(url);
-            } catch (IllegalArgumentException ignored) {}
-
+            UUID imageId = UUID.fromString(url);
+            
+            // 直接新建对象并设置手动指定的 ID。
+            // 由于 ItemImage 实现了 Persistable 接口且 isNew 默认为 true，
+            // Spring Data JPA 的 save() 方法会直接调用 persist() 而非 merge()，
+            // 从而跳过冗余的 SELECT 查询，解决 "Row was already updated or deleted" 的异常。
             ItemImage itemImage = new ItemImage();
-//            if (imageId != null) {
-//                // 2. 显式检查数据库中是否已存在该图片，避免 UUID 冲突导致更新失败
-//                // 使用 findById 确保获取的是受托管状态或最新的实体
-//                itemImage = itemImageRepository.findById(imageId).orElse(new ItemImage());
-//                if (itemImage.getImageId() == null) {
-//                    itemImage.setImageId(imageId);
-//                }
-//            } else {
-//                itemImage = new ItemImage();
-//            }
             itemImage.setImageId(imageId);
-            itemImage.setItem(target);
+            itemImage.setItemId(targetID);
             itemImage.setImageUrl(url);
             itemImage.setUploadedAt(OffsetDateTime.now());
             
-            // 3. 使用 saveAndFlush 强制同步到数据库，并在异常发生时立即暴露问题
-            // 配合 @Transactional 确保原子性
+            // 使用 saveAndFlush 强制立即执行 INSERT 语句并同步到数据库。
             itemImageRepository.saveAndFlush(itemImage);
         }
     }
 
     @Override
-    public List<ItemImage> findImagesByItem(Item item) {
+    public List<String> findImagesByItem(Item item) {
         return imageService.findByItem(item);
     }
 

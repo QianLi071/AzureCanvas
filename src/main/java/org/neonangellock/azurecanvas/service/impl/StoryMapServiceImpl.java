@@ -3,9 +3,8 @@ package org.neonangellock.azurecanvas.service.impl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.neonangellock.azurecanvas.model.User;
-import org.neonangellock.azurecanvas.model.storymap.StoryMap;
-import org.neonangellock.azurecanvas.model.storymap.StoryMapLocation;
-import org.neonangellock.azurecanvas.repository.StoryMapRepository;
+import org.neonangellock.azurecanvas.model.storymap.StoryMapCombined;
+import org.neonangellock.azurecanvas.repository.StoryMapCombinedRepository;
 import org.neonangellock.azurecanvas.service.AbstractQueryService;
 import org.neonangellock.azurecanvas.service.IStoryMapService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,80 +21,75 @@ import java.util.UUID;
 public class StoryMapServiceImpl extends AbstractQueryService implements IStoryMapService {
     
     @Autowired
-    private StoryMapRepository repository;
+    private StoryMapCombinedRepository repository;
 
     protected StoryMapServiceImpl(EntityManager entityManager) {
         super(entityManager);
     }
 
     @Override
-    public List<StoryMap> findStoriesByUser(User user) {
+    public List<StoryMapCombined> findStoriesByUser(User user) {
         return repository.findByAuthorId(user.getUserId(), PageRequest.of(0, 100)).getContent();
     }
 
     @Override
-    @Transactional
-    public void updateLocationOfStory(StoryMap storyMap, StoryMapLocation newLocation) {
-        // Implementation for updating locations
+    @Transactional(rollbackFor = Exception.class)
+    public void updateLocationOfStory(StoryMapCombined storyMap, String title, String description) {
+        storyMap.setLocationTitle(title);
+        storyMap.setLocationDescription(description);
+        repository.save(storyMap);
     }
 
-    public List<StoryMap> findNewest(){
+    @Override
+    public List<StoryMapCombined> findNewest(){
         Query query = entityManager.createQuery(
-                "SELECT p FROM StoryMap p WHERE p.createdAt = :lastTimeLogout ORDER BY p.createdAt ASC");
-
-        query.setParameter("lastTimeLogout", OffsetDateTime.now());
-
+                "SELECT p FROM StoryMapCombined p ORDER BY p.createdAt DESC");
+        query.setMaxResults(10);
         return query.getResultList();
     }
 
     @Override
-    @Transactional
-    public void deleteLocationFromStory(StoryMap storyMap, StoryMapLocation removal) {
-        storyMap.getLocations().remove(removal);
-        repository.save(storyMap);
+    public StoryMapCombined findById(UUID id) {
+        return repository.findByStoryMapId(id).orElse(null);
     }
 
     @Override
-    @Transactional
-    public void addLocationFromStory(StoryMap storyMap, StoryMapLocation location) {
-        location.setStoryMap(storyMap);
-        storyMap.getLocations().add(location);
-        repository.save(storyMap);
-    }
-
-    @Override
-    public StoryMap findById(UUID id) {
-        return repository.findById(id).orElse(null);
-    }
-
-    @Override
-    public List<StoryMap> findAll() {
+    public List<StoryMapCombined> findAll() {
         return repository.findAll();
     }
+
     @Override
-    public List<StoryMap> findAllWithRange(int page, int limit) {
+    public List<StoryMapCombined> findAllWithRange(int page, int limit) {
         return repository.findAll(PageRequest.of(page - 1, limit, Sort.by("createdAt").descending())).getContent();
     }
     
-    public List<StoryMap> findByAuthor(UUID authorId, int page, int limit) {
+    public List<StoryMapCombined> findByAuthor(UUID authorId, int page, int limit) {
         return repository.findByAuthorId(authorId, PageRequest.of(page - 1, limit, Sort.by("createdAt").descending())).getContent();
     }
 
     @Override
-    @Transactional
-    public StoryMap save(StoryMap storyMap) {
+    @Transactional(rollbackFor = Exception.class)
+    public StoryMapCombined save(StoryMapCombined storyMap) {
         return repository.save(storyMap);
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void deleteById(UUID id) {
-        repository.deleteById(id);
+        repository.findByStoryMapId(id).ifPresent(s -> repository.delete(s));
     }
 
-    // 搜索故事地图
     @Override
-    public List<StoryMap> searchByKeyword(String keyword) {
+    public List<StoryMapCombined> searchByKeyword(String keyword) {
         return repository.searchByKeyword(keyword);
+    }
+
+    // 线程安全更新点赞数 (使用悲观锁 @Lock 及 乐观锁 @Version)
+    @Transactional(rollbackFor = Exception.class)
+    public void incrementLikes(UUID storyMapId) {
+        StoryMapCombined storyMap = repository.findByStoryMapIdForUpdate(storyMapId)
+                .orElseThrow(() -> new RuntimeException("StoryMap not found"));
+        storyMap.setLikesCount(storyMap.getLikesCount() + 1);
+        repository.save(storyMap);
     }
 }

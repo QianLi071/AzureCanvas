@@ -112,7 +112,7 @@ public class MarketController {
     public ResponseEntity<?> createItemImage(@PathVariable UUID itemId, @RequestBody Map<String, Object> request) {
         List<String> images = (List<String>) request.get("images");
         if (images != null && !images.isEmpty()) {
-            marketService.addImages(images, marketService.findItemById(itemId));
+            marketService.addImages(images, itemId);
         }
         return ResponseEntity.ok(Map.of("success", true));
     }
@@ -182,12 +182,7 @@ public class MarketController {
 
     private ItemDTO convertToDTO(Item item) {
 
-        List<ItemImage> images = marketService.findImagesByItem(item);
-        List<String> stringImageName = new ArrayList<>();
-
-        for (ItemImage image : images) {
-            stringImageName.add(image.getImageUrl());
-        }
+        List<String> images = marketService.findImagesByItem(item);
 
         return ItemDTO.builder()
                 .itemId(item.getItemId())
@@ -202,7 +197,7 @@ public class MarketController {
                 .category(item.getCategory())
                 .views(item.getViews())
                 .location(item.getLocation())
-                .images(stringImageName) // images are in a separate table
+                .images(images) // images are in a separate table
                 .build();
     }
 }
