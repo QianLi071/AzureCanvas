@@ -424,6 +424,52 @@ document.addEventListener("DOMContentLoaded", () => {
   Store.init();
   const u = Store.currentUser;
 
+  // 从 API 获取最新用户信息（包括头像）
+  (async function fetchAndApplyUserInfo() {
+    try {
+      const res = await fetch("/api/users/me", { credentials: "include" });
+      if (res.ok) {
+        const apiUser = await res.json();
+
+        // 处理头像 URL：支持 avatar 字段（UUID 格式）
+        let avatarUrl = null;
+        if (apiUser.avatar || apiUser.avatarUrl) {
+          const rawAvatar = apiUser.avatar || apiUser.avatarUrl;
+          // 如果已经是完整 URL，直接使用
+          if (rawAvatar.startsWith('http://') || rawAvatar.startsWith('https://') || rawAvatar.startsWith('/')) {
+            avatarUrl = rawAvatar;
+          } else {
+            // 假设是 UUID 格式，转换为 /resource/{uuid}
+            avatarUrl = '/resource/' + rawAvatar;
+          }
+        }
+
+        // 更新 Store 中的用户信息
+        Store.updateUser({
+          id: apiUser.userId || apiUser.id,
+          nickname: apiUser.username || apiUser.nickname || u.nickname,
+          avatarUrl: avatarUrl,
+          avatarLetter: apiUser.username ? apiUser.username.substring(0, 1) : u.avatarLetter,
+          uuid: apiUser.userId || apiUser.id
+        });
+
+        // 如果有头像 URL，更新预览头像的显示
+        if (avatarUrl) {
+          const previewAvatarEl = document.getElementById("previewAvatar");
+          previewAvatarEl.innerHTML = `<img src="${avatarUrl}" alt="头像" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.parentElement.textContent='${Store.currentUser.avatarLetter || '我'}';this.parentElement.style.background='${u.avatarColor || '#555'}'">`;
+          previewAvatarEl.style.background = "transparent";
+        }
+      }
+    } catch (e) {
+      console.warn("获取用户信息失败:", e);
+    }
+
+    // 初始化表单和预览
+    initFormAndPreview();
+  })();
+
+  function initFormAndPreview() {
+
   // 填充表单
   document.getElementById("inputNickname").value = u.nickname || "";
   document.getElementById("inputGender").value = u.gender || "";
@@ -481,6 +527,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("inputGender").addEventListener("change", updatePreview);
   updatePreview();
+
+  } // end initFormAndPreview
 
   // Tab 切换
   document.querySelectorAll(".settings-tab").forEach(tab => {

@@ -25,13 +25,15 @@ window.Render = (function () {
   }
 
   /** 渲染用户头像：有 avatarUrl 则用图片，否则粉紫渐变+首字母 */
-  function renderAvatar(avatarUrl, avatarLetter, extraClass) {
+  function renderAvatar(avatarUrl, avatarLetter, extraClass, userId) {
     const letter = avatarLetter || "匿";
     const cls = extraClass ? " " + extraClass : "";
+    const userIdAttr = userId ? ` data-user-id="${userId}"` : "";
+
     if (avatarUrl) {
-      return `<img src="${avatarUrl}" alt="" class="avatar-img${cls}" onerror="this.outerHTML='<div class=\\'avatar${cls}\\'>${escapeHtml(letter)}</div>'">`;
+      return `<img src="${avatarUrl}" alt="" class="avatar-img${cls}"${userIdAttr} onerror="this.outerHTML='<div class=\\'avatar${cls}\\'${userIdAttr.replace(/"/g, '\\\\\"')}>${escapeHtml(letter)}</div>'">`;
     }
-    return `<div class="avatar avatar-gradient${cls}">${escapeHtml(letter)}</div>`;
+    return `<div class="avatar avatar-gradient${cls}"${userIdAttr}>${escapeHtml(letter)}</div>`;
   }
 
   /** 高亮关键字 */
@@ -250,6 +252,8 @@ window.Render = (function () {
     const authorName = c.authorName || c.author || "匿名用户";
     const avatarUrl = c.avatarUrl || null;
     const avatarLetter = c.avatarLetter || (authorName ? authorName.substring(0, 1) : "匿");
+    // 获取评论者的用户 UUID（支持多种字段名）
+    const userId = c.authorId || c.userId || c.userUuid || null;
     const time = c.createdAt
         ? formatTime(new Date(c.createdAt).getTime())
         : formatTime(c.timestamp || Date.now());
@@ -260,7 +264,7 @@ window.Render = (function () {
     return `
       <div class="comment-item" data-cmt-id="${c.id}" style="margin-left: ${depth * 16}px">
         <div class="comment-header">
-          ${renderAvatar(avatarUrl, avatarLetter, "comment-avatar")}
+          ${renderAvatar(avatarUrl, avatarLetter, "comment-avatar", userId)}
           <span class="comment-author">${escapeHtml(authorName)}</span>
           <span class="comment-time">${time}</span>
           <button class="reply-btn" data-cmt-id="${c.id}">回复</button>
@@ -286,6 +290,7 @@ window.Render = (function () {
     }
     listEl.innerHTML = post.comments.map(c => renderCommentNode(c, 0, onReply)).join("");
 
+    // 绑定回复按钮事件
     listEl.querySelectorAll(".reply-btn").forEach(btn => {
       btn.addEventListener("click", e => {
         e.stopPropagation();
@@ -301,6 +306,43 @@ window.Render = (function () {
         };
         const cmt = findComment(post.comments, btn.dataset.cmtId);
         if (cmt && onReply) onReply(cmt);
+      });
+    });
+
+    // 绑定评论区头像点击事件（实现跳转功能）
+    bindCommentAvatarClickEvents(listEl);
+  }
+
+  /**
+   * 绑定评论区头像的点击事件
+   * 点击他人头像 → 跳转到 seller-profile.html?id=user_uuid
+   * 点击自己头像 → 跳转到 profile.html
+   */
+  function bindCommentAvatarClickEvents(container) {
+    const avatars = container.querySelectorAll('.comment-avatar[data-user-id], .avatar-img.comment-avatar[data-user-id]');
+
+    avatars.forEach(avatar => {
+      avatar.style.cursor = 'pointer';
+      avatar.addEventListener('click', function(e) {
+        e.stopPropagation();
+
+        const clickedUserId = this.dataset.userId;
+
+        if (!clickedUserId) {
+          console.warn('用户 ID 未找到');
+          return;
+        }
+
+        const currentUserId = Store.currentUser && (Store.currentUser.uuid || Store.currentUser.id);
+
+        // 判断是否是自己的头像
+        if (clickedUserId === currentUserId) {
+          // 跳转到个人空间页面
+          window.location.href = '../azure_trade/profile.html';
+        } else {
+          // 跳转到他人的卖家资料页面，携带 UUID 参数
+          window.location.href = '../azure_trade/seller-profile.html?id=' + encodeURIComponent(clickedUserId);
+        }
       });
     });
   }
@@ -333,5 +375,5 @@ window.Render = (function () {
   }
 
   // ===== 公开 API =====
-  return { formatTime, escapeHtml, renderAvatar, renderFeed, renderDetailPost, renderComments, updateNotifBadges };
+  return { formatTime, escapeHtml, renderAvatar, renderFeed, renderDetailPost, renderComments, updateNotifBadges, bindCommentAvatarClickEvents };
 })();
