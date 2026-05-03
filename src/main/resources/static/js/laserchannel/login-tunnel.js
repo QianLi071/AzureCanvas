@@ -19,7 +19,7 @@ class LaserTunnel {
         this.audioLoader = new THREE.AudioLoader();
         this.listener = new THREE.AudioListener();
         this.outsideSound = new THREE.Audio(this.listener);
-        
+
         this.params = {
             tunnelRadius: 8,
             tunnelLength: 200,
@@ -35,7 +35,7 @@ class LaserTunnel {
         this.tunnelSegments = [];
         this.lasers = [];
         this.cameraSpeed = 15;
-        
+
         this.init();
     }
 
@@ -47,12 +47,12 @@ class LaserTunnel {
         await this.loadEnvironment();
         await this.setupAudio();
         this.setupPostProcessing();
-        
+
         this.createMaterials();
         this.initTunnel();
         this.createLasers();
         this.createExit();
-        
+
         this.addEventListeners();
         this.animate();
 
@@ -75,98 +75,19 @@ class LaserTunnel {
         };
     }
 
-    async setupAudio() {
-        // Load within 200ms of DOMContentLoaded is handled by the timing of init call
+    async setupAudio(){
         this.audioLoader.load('../audios/login/login_loop.ogg', (buffer) => {
             this.outsideSound.setBuffer(buffer);
             this.outsideSound.setLoop(true);
-            this.outsideSound.setVolume(0.25);
-            
-            // Handle autoplay policy
-            const startAudio = () => {
-                if (this.listener.context.state === 'suspended') {
-                    this.listener.context.resume();
-                }
-                if (!this.outsideSound.isPlaying) {
-                    this.outsideSound.play();
-                }
-                window.removeEventListener('mousedown', startAudio);
-                window.removeEventListener('keydown', startAudio);
-                window.removeEventListener('touchstart', startAudio);
-            };
-            window.addEventListener('mousedown', startAudio);
-            window.addEventListener('keydown', startAudio);
-            window.addEventListener('touchstart', startAudio);
+            this.outsideSound.setVolume(1);
         });
+        if (this.listener.context.state === 'suspended') {
+            this.listener.context.resume();
+        }
 
-        window.addEventListener('beforeunload', () => {
-            if (this.outsideSound.isPlaying) {
-                this.outsideSound.stop();
-            }
-            // Release resources
-            if (this.outsideSound.buffer) {
-                this.outsideSound.buffer = null;
-            }
-        });
-    }
-
-    async flyToExit(duration = 1200) {
-        if (!this.exitGroup) return;
-
-        return new Promise(resolve => {
-            // Ensure target is slightly behind the exit to "fly through" it
-            const targetZ = this.exitGroup.position.z - 20;
-            
-            // Create a fade overlay if not exists
-            let fadeOverlay = document.getElementById('fade-overlay');
-            if (!fadeOverlay) {
-                fadeOverlay = document.createElement('div');
-                fadeOverlay.id = 'fade-overlay';
-                fadeOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:9998;opacity:0;pointer-events:none;';
-                document.body.appendChild(fadeOverlay);
-            }
-
-            const tl = gsap.timeline({
-                onComplete: resolve
-            });
-
-            // Camera flight with smooth ease (power3.in) for 1.2s
-            tl.to(this.camera.position, {
-                z: targetZ,
-                duration: duration / 1000,
-                ease: 'power3.in'
-            });
-
-            // Dims camera light
-            tl.to(this.cameraLight, {
-                intensity: 0,
-                duration: duration / 1000,
-                ease: 'power2.in'
-            }, 0);
-
-            // Fade to black (0 -> 1)
-            tl.to(fadeOverlay, {
-                opacity: 1,
-                duration: duration / 1000,
-                ease: 'power2.in'
-            }, 0);
-
-            // Fade out audio and stop exactly when animation ends
-            if (this.outsideSound.isPlaying) {
-                const audioParams = { vol: this.outsideSound.getVolume() };
-                gsap.to(audioParams, {
-                    vol: 0,
-                    duration: duration / 1000,
-                    ease: 'power2.in',
-                    onUpdate: () => {
-                        this.outsideSound.setVolume(audioParams.vol);
-                    },
-                    onComplete: () => {
-                        this.outsideSound.stop();
-                    }
-                });
-            }
-        });
+        if (this.outsideSound.buffer && !this.outsideSound.isPlaying) {
+            this.outsideSound.play();
+        }
     }
 
     async loadEnvironment() {
@@ -239,7 +160,7 @@ class LaserTunnel {
     initTunnel() {
         this.tunnelGroup = new THREE.Group();
         this.scene.add(this.tunnelGroup);
-        
+
         // Initial tunnel generation
         // for (let i = 0; i < 20; i++) {
         //     this.generateTunnelSegment();
@@ -255,7 +176,7 @@ class LaserTunnel {
         radiusBases.forEach((radiusBase, layer) => {
             const t = Math.abs(segmentZ) / this.params.tunnelLength;
             const spiralAngle = t * Math.PI * 2 * this.params.spiralTurns + (layer * Math.PI);
-            
+
             const ringPoints = [];
             for (let j = 0; j < pointsPerRing; j++) {
                 const ringAngle = (j / pointsPerRing) * Math.PI * 2 + spiralAngle;
@@ -266,10 +187,10 @@ class LaserTunnel {
 
             ringPoints.forEach((p, j) => {
                 if (Math.random() > 0.4) {
-                    const geometry = Math.random() > 0.5 ? 
+                    const geometry = Math.random() > 0.5 ?
                         new THREE.BoxGeometry(0.2, 0.2, 4) :
                         new THREE.CylinderGeometry(0.1, 0.1, 4, 4);
-                    
+
                     const mat = this.mats[(Math.floor(Math.abs(segmentZ) / 5) + j + layer) % 3];
                     const mesh = new THREE.Mesh(geometry, mat);
                     mesh.position.copy(p);
@@ -302,15 +223,15 @@ class LaserTunnel {
             const isPink = Math.random() > 0.5;
             const color = isPink ? 0xff00ff : 0x00ffff;
             const laserGroup = new THREE.Group();
-            
+
             const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
             const core = new THREE.Mesh(laserGeo, coreMat);
             laserGroup.add(core);
-            
+
             const glowGeo = new THREE.CylinderGeometry(0.15, 0.15, 11, 8);
-            const glowMat = new THREE.MeshBasicMaterial({ 
-                color: color, 
-                transparent: true, 
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
                 opacity: 0.5,
                 side: THREE.BackSide
             });
@@ -336,14 +257,14 @@ class LaserTunnel {
     createExit() {
         this.exitGroup = new THREE.Group();
         const exitGeo = new THREE.CircleGeometry(20, 64);
-        const exitMat = new THREE.MeshBasicMaterial({ 
+        const exitMat = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
             opacity: 0.9
         });
         this.exit = new THREE.Mesh(exitGeo, exitMat);
         this.exitGroup.add(this.exit);
-        
+
         for (let i = 1; i <= 3; i++) {
             const glowGeo = new THREE.CircleGeometry(20 + i * 10, 64);
             const glowMat = new THREE.MeshBasicMaterial({
@@ -359,7 +280,7 @@ class LaserTunnel {
 
         this.exitGroup.position.z = this.currentTunnelZ - 100;
         this.scene.add(this.exitGroup);
-        
+
         this.exitLight = new THREE.PointLight(0xffffff, 50, 200);
         this.exitLight.position.copy(this.exitGroup.position);
         this.scene.add(this.exitLight);
@@ -391,7 +312,7 @@ class LaserTunnel {
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        
+
         const delta = this.clock.getDelta();
         const time = this.clock.getElapsedTime();
 
