@@ -29,11 +29,12 @@ window.Render = (function () {
     const letter = avatarLetter || "匿";
     const cls = extraClass ? " " + extraClass : "";
     const userIdAttr = userId ? ` data-user-id="${userId}"` : "";
+    const escapedLetter = escapeHtml(letter);
 
     if (avatarUrl) {
-      return `<img src="${avatarUrl}" alt="" class="avatar-img${cls}"${userIdAttr} onerror="this.outerHTML='<div class=\\'avatar${cls}\\'${userIdAttr.replace(/"/g, '\\\\\"')}>${escapeHtml(letter)}</div>'">`;
+      return `<img src="${avatarUrl}" alt="" class="avatar-img${cls}"${userIdAttr} onerror="this.outerHTML='<div class=\\'avatar avatar-gradient${cls}\\'${userIdAttr}>${escapedLetter}</div>'">`;
     }
-    return `<div class="avatar avatar-gradient${cls}"${userIdAttr}>${escapeHtml(letter)}</div>`;
+    return `<div class="avatar avatar-gradient${cls}"${userIdAttr}>${escapedLetter}</div>`;
   }
 
   /** 高亮关键字 */
@@ -250,7 +251,13 @@ window.Render = (function () {
         ? `<span class="reply-tag">回复 #${c.parentId}</span> `
         : "";
     const authorName = c.authorName || c.author || "匿名用户";
-    const avatarUrl = c.avatarUrl || null;
+    
+    // 处理头像：如果存在 avatar (UUID)，转换为 /resources/{uuid}
+    let avatarUrl = c.avatarUrl || null;
+    if (c.avatar && !avatarUrl) {
+      avatarUrl = '/resources/' + c.avatar;
+    }
+    
     const avatarLetter = c.avatarLetter || (authorName ? authorName.substring(0, 1) : "匿");
     // 获取评论者的用户 UUID（支持多种字段名）
     const userId = c.authorId || c.userId || c.userUuid || null;
@@ -319,32 +326,53 @@ window.Render = (function () {
    * 点击自己头像 → 跳转到 profile.html
    */
   function bindCommentAvatarClickEvents(container) {
-    const avatars = container.querySelectorAll('.comment-avatar[data-user-id], .avatar-img.comment-avatar[data-user-id]');
+    // 查找所有评论头像元素（包括 div.avatar 和 img.avatar-img）
+    const avatarDivs = container.querySelectorAll('div.comment-avatar[data-user-id]');
+    const avatarImgs = container.querySelectorAll('img.comment-avatar[data-user-id]');
+    const allAvatars = [...avatarDivs, ...avatarImgs];
 
-    avatars.forEach(avatar => {
+    if (allAvatars.length === 0) {
+      console.log('[DEBUG] 未找到评论头像元素，跳过事件绑定');
+      return;
+    }
+
+    console.log(`[DEBUG] 找到 ${allAvatars.length} 个评论头像，开始绑定点击事件`);
+
+    allAvatars.forEach(avatar => {
+      // 添加鼠标样式
       avatar.style.cursor = 'pointer';
-      avatar.addEventListener('click', function(e) {
+
+      // 移除旧事件监听器（通过克隆节点方式）
+      const newAvatar = avatar.cloneNode(true);
+      avatar.parentNode.replaceChild(newAvatar, avatar);
+
+      // 添加新的点击事件
+      newAvatar.addEventListener('click', function(e) {
         e.stopPropagation();
 
         const clickedUserId = this.dataset.userId;
 
         if (!clickedUserId) {
-          console.warn('用户 ID 未找到');
+          console.warn('[DEBUG] 头像缺少 data-user-id 属性');
           return;
         }
 
-        const currentUserId = Store.currentUser && (Store.currentUser.uuid || Store.currentUser.id);
+        // 统一获取当前用户 UUID
+        const currentUserId = Store.currentUser && (Store.currentUser.uuid || Store.currentUser.id || Store.currentUser.userId);
+        console.log(`[DEBUG] 点击头像，用户ID: ${clickedUserId}, 当前用户ID: ${currentUserId}`);
 
         // 判断是否是自己的头像
-        if (clickedUserId === currentUserId) {
-          // 跳转到个人空间页面
+        if (clickedUserId === String(currentUserId)) {
+          console.log('[DEBUG] 点击自己头像，跳转到 profile.html');
           window.location.href = '../azure_trade/profile.html';
         } else {
-          // 跳转到他人的卖家资料页面，携带 UUID 参数
+          console.log(`[DEBUG] 点击他人头像，跳转到 seller-profile.html?id=${clickedUserId}`);
           window.location.href = '../azure_trade/seller-profile.html?id=' + encodeURIComponent(clickedUserId);
         }
       });
     });
+
+    console.log('[DEBUG] 评论头像点击事件绑定完成');
   }
 
   // ===== 通知徽章更新 =====

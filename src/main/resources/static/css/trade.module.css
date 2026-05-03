@@ -111,3 +111,114 @@
 /* --- Hide Scrollbar --- */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* --- Scroll-Driven Animation for Product Cards --- */
+@keyframes cardScaleIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.trade-api-card {
+    background: var(--trade-bg-card);
+    border-radius: var(--trade-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--trade-shadow-sm);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    animation: cardScaleIn 0.5s ease-out forwards;
+    will-change: transform, opacity;
+}
+
+.trade-api-card:hover {
+    box-shadow: var(--trade-shadow-md);
+}
+
+.trade-api-card .card-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f3ff 0%, #e9d5ff 50%, #f3e8ff 100%);
+}
+
+.trade-api-card .card-image-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+.trade-api-card .card-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+    position: relative;
+    z-index: 2;
+}
+
+.trade-api-card .card-cover.loaded {
+    opacity: 1;
+}
+
+.trade-api-card .card-image-wrapper.image-loaded::before {
+    opacity: 0;
+}
+
+/* Scroll-driven animation using view timeline */
+@supports (animation-timeline: view()) {
+    .trade-api-card {
+        animation: cardScrollIn linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 100%;
+    }
+    
+    @keyframes cardScrollIn {
+        from {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+}
+
+/* --- Loading Indicator --- */
+.loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: var(--trade-primary);
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--trade-primary-light);
+    border-top-color: var(--trade-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- End of Feed Message --- */
+.feed-end-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--trade-text-muted);
+    font-size: 14px;
+}

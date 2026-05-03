@@ -443,8 +443,8 @@ document.addEventListener("DOMContentLoaded", () => {
           if (rawAvatar.startsWith('http://') || rawAvatar.startsWith('https://') || rawAvatar.startsWith('/')) {
             avatarUrl = rawAvatar;
           } else {
-            // 假设是 UUID 格式，转换为 /resource/{uuid}
-            avatarUrl = '/resource/' + rawAvatar;
+            // 假设是 UUID 格式，转换为 /resources/{uuid}
+            avatarUrl = '/resources/' + rawAvatar;
           }
         }
 

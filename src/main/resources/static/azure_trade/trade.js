@@ -30,6 +30,240 @@ var publishModal   = document.getElementById('publish-modal');
 var publishForm    = document.getElementById('publish-form');
 var toastEl        = document.getElementById('toast');
 
+// ========== API 商品列表分页状态 ==========
+var apiState = {
+    page: 1,
+    limit: 20,
+    isLoading: false,
+    hasMore: true,
+    items: [],
+    currentCategory: null,
+    currentSearch: null,
+    infiniteScrollSetup: false
+};
+
+// ========== 随机渐变背景池 ==========
+var gradientPool = [
+    'from-rose-200 to-pink-300', 'from-sky-200 to-blue-300',
+    'from-amber-200 to-orange-300', 'from-emerald-200 to-green-300',
+    'from-violet-200 to-purple-300', 'from-cyan-200 to-teal-300',
+    'from-red-200 to-rose-300', 'from-indigo-200 to-blue-300',
+    'from-lime-200 to-green-300', 'from-fuchsia-200 to-pink-300',
+    'from-pink-200 to-rose-300', 'from-teal-200 to-cyan-300',
+    'from-purple-200 to-violet-300', 'from-orange-200 to-amber-300'
+];
+
+function getRandomGradient() {
+    return gradientPool[Math.floor(Math.random() * gradientPool.length)];
+}
+
+// ========== 从 API 获取商品列表 ==========
+async function fetchItemsFromApi(page, category, search) {
+    if (apiState.isLoading) return { items: [], hasMore: false };
+    apiState.isLoading = true;
+    
+    try {
+        var params = new URLSearchParams({
+            page: page,
+            limit: apiState.limit
+        });
+        if (category) params.set('category', category);
+        if (search) params.set('search', search);
+        
+        var response = await fetch('/api/market/items?' + params.toString(), {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('API request failed');
+        
+        var items = await response.json();
+        apiState.hasMore = items.length >= apiState.limit;
+        apiState.isLoading = false;
+        return { items: items, hasMore: apiState.hasMore };
+    } catch (error) {
+        console.error('获取商品列表失败:', error);
+        apiState.isLoading = false;
+        return { items: [], hasMore: false };
+    }
+}
+
+// ========== 创建商品卡片元素 ==========
+function createApiCard(item, index) {
+    var card = document.createElement('div');
+    card.className = 'trade-api-card';
+    card.style.animationDelay = (index % apiState.limit) * 50 + 'ms';
+    
+    var gradient = getRandomGradient();
+    var coverUrl = item.images && item.images.length > 0 ? item.images[0] : null;
+    var itemId = item.itemId || item.id;
+    
+    var imageHtml;
+    if (coverUrl) {
+        imageHtml = 
+            '<div class="card-image-wrapper bg-gradient-to-br ' + gradient + '">' +
+                '<img class="card-cover" data-src="' + coverUrl + '" alt="' + item.title + '">' +
+            '</div>';
+    } else {
+        var emoji = item.emoji || '📦';
+        imageHtml = 
+            '<div class="card-image-wrapper bg-gradient-to-br ' + gradient + ' flex items-center justify-center text-6xl">' +
+                emoji +
+            '</div>';
+    }
+    
+    var sellerInitial = (item.sellerUsername || '匿').charAt(0).toUpperCase();
+    var price = typeof item.price === 'number' ? '¥' + item.price.toFixed(2) : '¥' + item.price;
+    var wants = item.wants || Math.floor(Math.random() * 100) + 1;
+    
+    card.innerHTML = imageHtml +
+        '<div class="p-3 flex flex-col flex-1">' +
+            '<p class="text-sm text-gray-800 leading-snug line-clamp-2 font-medium">' + item.title + '</p>' +
+            '<div class="mt-auto pt-2">' +
+                '<div class="flex items-center justify-between">' +
+                    '<span class="trade-price text-base">' + price + '</span>' +
+                    '<span class="text-xs text-gray-400">' + wants + '人想要</span>' +
+                '</div>' +
+                '<div class="flex items-center mt-2 space-x-1.5">' +
+                    '<div class="w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-[10px] text-purple-600 font-bold">' + sellerInitial + '</div>' +
+                    '<span class="text-xs text-gray-500">' + (item.sellerUsername || '匿名用户') + '</span>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    
+    card.addEventListener('click', function() {
+        window.location.href = 'product.html?id=' + itemId;
+    });
+    
+    if (coverUrl) {
+        var img = card.querySelector('.card-cover');
+        var wrapper = card.querySelector('.card-image-wrapper');
+        var tempImg = new Image();
+        tempImg.onload = function() {
+            img.src = coverUrl;
+            img.classList.add('loaded');
+            wrapper.classList.add('image-loaded');
+        };
+        tempImg.onerror = function() {
+            wrapper.classList.add('image-loaded');
+        };
+        tempImg.src = coverUrl;
+    }
+    
+    return card;
+}
+
+// ========== 渲染 API 商品列表 ==========
+function renderApiItems(items, append) {
+    if (!append) {
+        recommendGrid.innerHTML = '';
+    }
+    
+    items.forEach(function(item, index) {
+        var card = createApiCard(item, append ? apiState.items.length + index : index);
+        recommendGrid.appendChild(card);
+    });
+}
+
+// ========== 加载更多商品 ==========
+async function loadMoreItems() {
+    if (apiState.isLoading || !apiState.hasMore) return;
+    
+    var loadingIndicator = document.getElementById('loading-indicator');
+    if (!loadingIndicator) {
+        loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'loading-indicator';
+        loadingIndicator.className = 'loading-indicator';
+        loadingIndicator.innerHTML = '<div class="loading-spinner"></div>';
+        recommendGrid.parentElement.appendChild(loadingIndicator);
+    }
+    loadingIndicator.style.display = 'flex';
+    
+    var result = await fetchItemsFromApi(apiState.page, apiState.currentCategory, apiState.currentSearch);
+    
+    loadingIndicator.style.display = 'none';
+    
+    if (result.items.length > 0) {
+        if (apiState.page === 1) {
+            apiState.items = result.items;
+        } else {
+            apiState.items = apiState.items.concat(result.items);
+        }
+        renderApiItems(result.items, apiState.page > 1);
+        apiState.page++;
+    }
+    
+    if (!result.hasMore) {
+        showFeedEndMessage();
+    }
+}
+
+// ========== 显示已加载完毕消息 ==========
+function showFeedEndMessage() {
+    var endMsg = document.getElementById('feed-end-message');
+    if (!endMsg) {
+        endMsg = document.createElement('div');
+        endMsg.id = 'feed-end-message';
+        endMsg.className = 'feed-end-message';
+        endMsg.textContent = '— 已经到底了 —';
+        recommendGrid.parentElement.appendChild(endMsg);
+    }
+    endMsg.style.display = 'block';
+}
+
+// ========== 无限滚动检测 ==========
+var scrollObserver = null;
+
+function setupInfiniteScroll() {
+    if (apiState.infiniteScrollSetup) {
+        var sentinel = document.getElementById('scroll-sentinel');
+        if (sentinel && scrollObserver) {
+            scrollObserver.observe(sentinel);
+        }
+        return;
+    }
+    
+    apiState.infiniteScrollSetup = true;
+    
+    scrollObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting && apiState.hasMore && !apiState.isLoading) {
+                loadMoreItems();
+            }
+        });
+    }, {
+        rootMargin: '100px'
+    });
+    
+    var sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) {
+        scrollObserver.observe(sentinel);
+    } else {
+        var newSentinel = document.createElement('div');
+        newSentinel.id = 'scroll-sentinel';
+        newSentinel.style.height = '1px';
+        newSentinel.style.width = '100%';
+        recommendGrid.parentElement.appendChild(newSentinel);
+        scrollObserver.observe(newSentinel);
+    }
+}
+
+// ========== 初始化 API 商品列表 ==========
+async function initApiItems(category, search) {
+    apiState.page = 1;
+    apiState.hasMore = true;
+    apiState.items = [];
+    apiState.currentCategory = category || null;
+    apiState.currentSearch = search || null;
+
+    var endMsg = document.getElementById('feed-end-message');
+    if (endMsg) endMsg.style.display = 'none';
+
+    await loadMoreItems();
+    setupInfiniteScroll();
+}
+
 // ========== Toast 提示 ==========
 function showToast(msg) {
     toastEl.textContent = msg;
@@ -173,17 +407,27 @@ document.querySelectorAll('.recommend-tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
         // 1. 重置所有标签的样式（移除紫色渐变和白字，恢复未选中时的白底灰字）
         document.querySelectorAll('.recommend-tab').forEach(function (t) {
-            t.style.background = ''; 
+            t.style.background = '';
             t.classList.remove('text-white', 'font-bold', 'bg-gradient-to-br', 'from-purple-500', 'to-purple-600');
             t.classList.add('bg-white', 'text-gray-600');
         });
-        
+
         // 2. 为当前点击的标签添加主题配套的紫色渐变
         tab.classList.remove('bg-white', 'text-gray-600');
         tab.classList.add('text-white', 'font-bold', 'bg-gradient-to-br', 'from-purple-500', 'to-purple-600');
         // (注：这里删除了原本写死黄色的 tab.style.background)
 
         var label = tab.textContent.trim();
+
+        // "猜你喜欢" 使用 API 获取真实商品数据
+        if (label === '猜你喜欢') {
+            // 重置无限滚动状态以便重新初始化
+            apiState.infiniteScrollSetup = false;
+            initApiItems(null, null);
+            return;
+        }
+
+        // 其他标签使用本地模拟数据
         var subKeys = tabSeedMap[label];
         var pool = null;
         if (subKeys) {
@@ -193,6 +437,14 @@ document.querySelectorAll('.recommend-tab').forEach(function (tab) {
             });
             if (pool.length === 0) pool = null;
         }
+        // 关闭无限滚动，使用模拟数据渲染
+        if (scrollObserver) {
+            scrollObserver.disconnect();
+        }
+        var sentinel = document.getElementById('scroll-sentinel');
+        if (sentinel) sentinel.remove();
+        var endMsg = document.getElementById('feed-end-message');
+        if (endMsg) endMsg.style.display = 'none';
         renderRecommend(pool);
     });
 });
@@ -387,7 +639,11 @@ function updateDropdownCounts() {
 
 // ========== 初始化渲染 ==========
 renderCards(cards);
-renderRecommend(null);
+
+// 默认使用 API 获取真实商品数据
+// initApiItems 会自动设置无限滚动
+initApiItems(null, null);
+
 updateDropdownCounts();
 
 document.addEventListener('DOMContentLoaded', async () => {

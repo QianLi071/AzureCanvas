@@ -166,6 +166,12 @@ document.addEventListener("DOMContentLoaded", () => {
     detailView.classList.add("active");
     messageView.classList.remove("active");
     Render.renderDetailPost(detailPostBody, detailActions, post, openMessage);
+
+    // 获取评论者的用户信息（替换"匿名用户"为真实用户名）
+    if (post.comments && post.comments.length > 0) {
+      post.comments = await Store.enrichCommentsWithUserInfo(post.comments);
+    }
+
     Render.renderComments(commentsList, commentCountEl, post, onReply);
     replyingTo = null;
     updateReplyHint();

@@ -20,8 +20,8 @@ window.UserModule = (function () {
     if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('/')) {
       return avatar;
     }
-    // 假设是 UUID 格式，转换为 /resource/{uuid}
-    return '/resource/' + avatar;
+    // 假设是 UUID 格式，转换为 /resources/{uuid}
+    return '/resources/' + avatar;
   }
 
   async function fetchCurrentUser() {

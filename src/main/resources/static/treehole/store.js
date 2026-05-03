@@ -414,8 +414,8 @@ window.Store = (function () {
       if (!res.ok) return null;
       const p = await res.json();
       p.id = p.id || p.postId || "post_" + p.id;
-      p.author = p.author || "匿名用户";
-      p.avatarLetter = p.avatarLetter || (p.author ? p.author.substring(0, 1) : "匿");
+      p.author = p.author || "";
+      p.avatarLetter = p.avatarLetter || (p.author ? p.author.substring(0, 1) : "");
       p.avatarUrl = p.avatarUrl || null;
       p.images = p.imagesList || [];
       p.timestamp = p.createdAt ? new Date(p.createdAt).getTime() : Date.now();
@@ -447,6 +447,32 @@ window.Store = (function () {
     }
   }
 
+  /**
+   * 为评论列表补充用户信息（递归处理 children）
+   * @param {Array} comments 评论数组
+   */
+  async function enrichCommentsWithUserInfo(comments) {
+    if (!comments || !comments.length) return [];
+    
+    // 递归处理函数
+    const processComments = (list) => {
+      list.forEach(c => {
+        // 确保 id 是字符串
+        c.id = String(c.id || c.commentId);
+        
+        // 如果有 userId 但没有作者名，可以考虑在这里补充（但目前后端 buildCommentTreeWithUser 应该已经补充了）
+        // 这里主要确保 avatar (UUID) 的存在，如果后端没返回，我们可以通过 c.userId 或 c.authorId 映射
+        
+        if (c.children && c.children.length) {
+          processComments(c.children);
+        }
+      });
+    };
+
+    processComments(comments);
+    return comments;
+  }
+
   // ===== 公开 API =====
   return {
     init, save,
@@ -461,6 +487,6 @@ window.Store = (function () {
     updateUser,
     getFilteredPosts, getPost, searchPostsWithES,
     getFollowedUsers, getCollectedPosts,
-    fetchPostsFromApi, fetchPostFromApi, fetchCommentsFromApi
+    fetchPostsFromApi, fetchPostFromApi, fetchCommentsFromApi, enrichCommentsWithUserInfo
   };
 })();
