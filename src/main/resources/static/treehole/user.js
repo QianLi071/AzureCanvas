@@ -40,6 +40,13 @@ window.UserModule = (function () {
           avatarLetter: u.username ? u.username.substring(0, 1) : "我",
           uuid: u.userId || u.id  // 保存用户 UUID 用于后续跳转
         });
+      } else {
+        // 如果未登录且当前在需要权限的页面，重定向
+        const protectedPages = ['publish.html', 'settings.html', 'favorites.html'];
+        const currentPage = window.location.pathname.split('/').pop();
+        if (protectedPages.includes(currentPage)) {
+          window.location.href = "../login/index.html?redirect=" + encodeURIComponent(window.location.pathname);
+        }
       }
     } catch (e) {
       console.warn("fetchCurrentUser failed:", e);

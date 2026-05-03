@@ -58,11 +58,11 @@ window.Store = (function () {
     try { posts = JSON.parse(localStorage.getItem(KEYS.posts)) || getMockPosts(); }
     catch (e) { posts = getMockPosts(); }
 
-    // 加载当前用户（默认匿名）
+    // 加载当前用户（默认匿名状态，但会尝试通过 API 刷新）
     try { currentUser = JSON.parse(localStorage.getItem(KEYS.user)); }
     catch (e) { currentUser = null; }
     if (!currentUser) {
-      currentUser = { id: "me", nickname: "我的树洞", avatarLetter: "我", avatarColor: "#555" };
+      currentUser = { id: null, nickname: "未登录用户", avatarLetter: "匿", avatarColor: "#555" };
     }
 
     // 加载关注列表

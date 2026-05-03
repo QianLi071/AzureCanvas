@@ -15,7 +15,7 @@ async function startAnimation() {
 	const perf = getPerformanceConfig();
 	const deckData = generateFullDeck();
 	const scene = new Scene();
-	scene.background = new Color(8900331);
+	scene.background = new Color('#000F33');
 	const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 1e3);
 	camera.position.set(0, 15, .1);
 	camera.lookAt(0, 0, 0);

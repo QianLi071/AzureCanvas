@@ -30,11 +30,20 @@ window.Render = (function () {
     const cls = extraClass ? " " + extraClass : "";
     const userIdAttr = userId ? ` data-user-id="${userId}"` : "";
     const escapedLetter = escapeHtml(letter);
+    
+    // 统一头像占位图逻辑：使用单引号属性以防在 onerror 中注入时导致 HTML 解析崩溃
+    const fallbackHtml = `<div class='avatar avatar-gradient${cls}'${userIdAttr.replace(/"/g, "'")}>${escapedLetter}</div>`;
 
     if (avatarUrl) {
-      return `<img src="${avatarUrl}" alt="" class="avatar-img${cls}"${userIdAttr} onerror="this.outerHTML='<div class=\\'avatar avatar-gradient${cls}\\'${userIdAttr}>${escapedLetter}</div>'">`;
+      // 确保 URL 完整
+      let fullUrl = avatarUrl;
+      if (!avatarUrl.startsWith('http') && !avatarUrl.startsWith('/')) {
+        fullUrl = '/resources/' + avatarUrl;
+      }
+      // 使用双引号包裹属性，内部使用转义后的单引号 fallbackHtml
+      return `<img src="${fullUrl}" alt="" class="avatar-img${cls}"${userIdAttr} onerror="this.onerror=null; this.outerHTML='${fallbackHtml.replace(/'/g, "\\'")}'">`;
     }
-    return `<div class="avatar avatar-gradient${cls}"${userIdAttr}>${escapedLetter}</div>`;
+    return fallbackHtml;
   }
 
   /** 高亮关键字 */
@@ -94,9 +103,9 @@ window.Render = (function () {
         <div class="post-card animated" data-id="${post.id}">
           <div class="post-header">
             <div class="avatar-popover-wrap">
-              ${renderAvatar(post.avatarUrl, post.avatarLetter)}
+              ${renderAvatar(post.avatarUrl, post.avatarLetter, "", post.authorId)}
               <div class="author-popover">
-                ${renderAvatar(post.avatarUrl, post.avatarLetter, "ap-avatar")}
+                ${renderAvatar(post.avatarUrl, post.avatarLetter, "ap-avatar", post.authorId)}
                 <div class="ap-name">${escapeHtml(post.author)}</div>
                 <div class="ap-meta">${userPosts} 条帖子</div>
                 ${!isMe ? `<button class="ap-follow-btn ${following ? "following" : ""}" data-author-id="${post.authorId}">
@@ -173,8 +182,8 @@ window.Render = (function () {
 
     bodyEl.innerHTML = `
       <div class="post-header">
-        <div id="detailAvatar" data-author-id="${post.authorId}" style="cursor:pointer" title="点击关注">
-          ${renderAvatar(post.avatarUrl, post.avatarLetter, "detail-avatar")}
+        <div id="detailAvatar" data-user-id="${post.authorId}" style="cursor:pointer" title="点击跳转资料页">
+          ${renderAvatar(post.avatarUrl, post.avatarLetter, "detail-avatar", post.authorId)}
         </div>
         <div class="post-meta" style="flex:1">
           <span class="post-author">${escapeHtml(post.author)}</span>
@@ -223,13 +232,24 @@ window.Render = (function () {
       });
     }
 
-    // 点击头像也可关注
+    // 点击头像跳转资料页
     const avatarEl = document.getElementById("detailAvatar");
-    if (avatarEl && !isMe) {
-      avatarEl.addEventListener("click", () => {
-        Store.toggleFollow(post.authorId);
-        renderDetailPost(bodyEl, actionsEl, Store.getPost(post.id), onFollowClick);
-        updateNotifBadges();
+    if (avatarEl) {
+      avatarEl.style.cursor = 'pointer';
+      // 移除旧事件监听器并添加新的
+      const newAvatarEl = avatarEl.cloneNode(true);
+      avatarEl.parentNode.replaceChild(newAvatarEl, avatarEl);
+      
+      newAvatarEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const clickedUserId = newAvatarEl.dataset.userId;
+        const currentUserId = Store.currentUser && (Store.currentUser.uuid || Store.currentUser.id || Store.currentUser.userId);
+        
+        if (clickedUserId === String(currentUserId)) {
+          window.location.href = '../azure_trade/profile.html';
+        } else {
+          window.location.href = '../azure_trade/seller-profile.html?id=' + encodeURIComponent(clickedUserId);
+        }
       });
     }
   }

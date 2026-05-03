@@ -11,6 +11,7 @@ import org.neonangellock.azurecanvas.responses.TreeholeResponse;
 import org.neonangellock.azurecanvas.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -112,11 +113,9 @@ public class TreeholeController {
             if (u != null) {
                 result.put("author", u.getUsername());
                 result.put("avatarUrl", u.getAvatarUrl());
-                result.put("avatarLetter", u.getUsername().substring(0, 1));
             }
         } else {
-            result.put("author", "匿名用户");
-            result.put("avatarLetter", "匿");
+            result.put("author", "null");
         }
 
         List<TreeholeComment> allComments = treeholeService.findCommentsByPostId(id);
@@ -140,12 +139,10 @@ public class TreeholeController {
                     node.put("avatarUrl", u.getAvatarUrl());
                     node.put("avatarLetter", u.getUsername().substring(0, 1));
                 } else {
-                    node.put("authorName", "匿名用户");
-                    node.put("avatarLetter", "匿");
+                    node.put("authorName", "null");
                 }
             } else {
-                node.put("authorName", "匿名用户");
-                node.put("avatarLetter", "匿");
+                node.put("authorName", "null");
             }
             node.put("children", new java.util.ArrayList<>());
             map.put(c.getId(), node);
@@ -163,7 +160,12 @@ public class TreeholeController {
     }
 
     @PostMapping("/posts")
-    public ResponseEntity<TreeholePost> createPost(@RequestBody Map<String, Object> request) throws JsonProcessingException {
+    public ResponseEntity<?> createPost(@RequestBody Map<String, Object> request,
+                                                   @CookieValue(name = "user_id", required = false) UUID userId) throws JsonProcessingException {
+        User u = userService.findById(userId);
+        if (u == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "NOT_LOGGED_IN", "redirect", "/login/index.html?redirect=/treehole/index.html"));
+        }
         TreeholePost post = new TreeholePost();
         post.setContent((String) request.get("content"));
         Object title = request.get("title");
@@ -175,15 +177,6 @@ public class TreeholeController {
             post.setCategory((String) category);
         }
         
-        Object isAnon = request.get("isAnonymous");
-        UUID userId = null;
-        if (Boolean.FALSE.equals(isAnon)) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-                User user = userService.findByUsername(auth.getName());
-                if (user != null) userId = user.getUserId();
-            }
-        }
         post.setUserId(userId);
         
         return ResponseEntity.ok(treeholeService.savePost(post));
@@ -225,7 +218,12 @@ public class TreeholeController {
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<?> createComment(
             @PathVariable Integer postId,
-            @RequestBody Map<String, Object> request) {
+            @RequestBody Map<String, Object> request,
+            @CookieValue(name = "user_id", required = false) UUID userId) {
+        User u = userService.findById(userId);
+        if (u == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "NOT_LOGGED_IN"));
+        }
         TreeholePost post = treeholeService.findPostById(postId);
         if (post == null) {
             return ResponseEntity.notFound().build();
@@ -236,15 +234,7 @@ public class TreeholeController {
         if (parentId != null) {
             comment.setParentId((Integer) parentId);
         }
-        UUID userId = null;
-        Object isAnon = request.get("isAnonymous");
-        if (isAnon != null && Boolean.FALSE.equals(isAnon)) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-                User user = userService.findByUsername(auth.getName());
-                if (user != null) userId = user.getUserId();
-            }
-        }
+        
         comment.setUserId(userId);
         comment.setPost(post);
         return ResponseEntity.ok(treeholeService.saveComment(comment));

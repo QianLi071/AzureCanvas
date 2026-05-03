@@ -420,8 +420,132 @@
 
 
     // ===== 原有基础功能逻辑 =====
-    
-    // 收藏功能 — localStorage 联动
+
+    var currentProduct = null;
+    var currentSellerId = null;
+
+    async function loadProductDetail(itemId) {
+        try {
+            var response = await fetch('/api/market/items/' + itemId, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('Failed to load product');
+                return;
+            }
+
+            var product = await response.json();
+            currentProduct = product;
+            currentSellerId = product.sellerId;
+
+            document.getElementById('product-title').textContent = product.title || '商品详情';
+            document.getElementById('product-desc').textContent = product.description || '暂无描述';
+            document.getElementById('product-price').textContent = typeof product.price === 'number' ? product.price.toFixed(0) : product.price;
+            document.getElementById('product-wants').textContent = product.wants || 0;
+            document.getElementById('product-views').textContent = product.views || 0;
+
+            if (product.sellerUsername) {
+                document.getElementById('seller-name').textContent = product.sellerUsername;
+            }
+
+            if (product.images && product.images.length > 0) {
+                renderImageGallery(product.images);
+            }
+
+            if (product.category) {
+                renderCategoryTag(product.category);
+            }
+
+        } catch (error) {
+            console.error('Error loading product:', error);
+        }
+    }
+
+    function renderImageGallery(images) {
+        var thumbnailContainer = document.getElementById('thumbnail-container');
+        thumbnailContainer.innerHTML = '';
+
+        var productImage = document.getElementById('product-image');
+
+        if (images.length === 0) {
+            productImage.className = 'w-full h-full bg-gradient-to-br from-purple-300 to-pink-300 flex items-center justify-center text-[140px] transition-all duration-500 transform group-hover:scale-105';
+            productImage.textContent = '📦';
+            return;
+        }
+
+        productImage.style.backgroundImage = 'url(' + images[0] + ')';
+        productImage.style.backgroundSize = 'cover';
+        productImage.style.backgroundPosition = 'center';
+        productImage.className = 'w-full h-full flex items-center justify-center text-[140px] transition-all duration-500 transform group-hover:scale-105';
+        productImage.textContent = '';
+
+        var gradientPool = [
+            'from-rose-200 to-pink-300', 'from-sky-200 to-blue-300',
+            'from-amber-200 to-orange-300', 'from-emerald-200 to-green-300',
+            'from-violet-200 to-purple-300', 'from-cyan-200 to-teal-300',
+            'from-red-200 to-rose-300', 'from-indigo-200 to-blue-300'
+        ];
+
+        images.forEach(function(imgUrl, index) {
+            var thumb = document.createElement('div');
+            thumb.className = 'thumbnail w-16 h-16 rounded-2xl flex items-center justify-center text-2xl border-2 border-transparent hover:border-purple-300 cursor-pointer transition transform hover:-translate-y-1';
+            thumb.dataset.index = index;
+
+            if (index === 0) {
+                thumb.classList.remove('border-transparent');
+                thumb.classList.add('border-purple-500', '-translate-y-1');
+            }
+
+            var gradient = gradientPool[index % gradientPool.length];
+            thumb.classList.add('bg-gradient-to-br', gradient);
+            thumb.textContent = (index + 1);
+
+            thumb.addEventListener('click', function() {
+                switchToImageByUrl(imgUrl, index);
+            });
+
+            thumbnailContainer.appendChild(thumb);
+        });
+
+        window.galleryImages = images;
+    }
+
+    function switchToImageByUrl(imgUrl, index) {
+        var productImage = document.getElementById('product-image');
+        var thumbnails = document.querySelectorAll('.thumbnail');
+
+        thumbnails.forEach(function(t) {
+            t.classList.remove('border-purple-500', '-translate-y-1');
+            t.classList.add('border-transparent');
+        });
+
+        if (thumbnails[index]) {
+            thumbnails[index].classList.remove('border-transparent');
+            thumbnails[index].classList.add('border-purple-500', '-translate-y-1');
+        }
+
+        productImage.style.opacity = 0;
+        setTimeout(function() {
+            productImage.style.backgroundImage = 'url(' + imgUrl + ')';
+            productImage.style.backgroundSize = 'cover';
+            productImage.style.backgroundPosition = 'center';
+            productImage.textContent = '';
+            productImage.style.opacity = 1;
+        }, 150);
+    }
+
+    function renderCategoryTag(category) {
+        var tagsContainer = document.getElementById('product-tags');
+        tagsContainer.innerHTML = '';
+
+        var tag = document.createElement('span');
+        tag.className = 'text-xs bg-orange-50 border border-orange-100 text-orange-600 px-2.5 py-1 rounded-lg font-bold';
+        tag.textContent = category;
+        tagsContainer.appendChild(tag);
+    }
+
     function getFavs() {
         try { return JSON.parse(localStorage.getItem('azureFavs') || '[]'); } catch(e) { return []; }
     }
@@ -429,6 +553,10 @@
 
     var params = new URLSearchParams(window.location.search);
     var pid = params.get('id') || '';
+
+    if (pid) {
+        loadProductDetail(pid);
+    }
 
     function updateFavUI() {
         var favs = getFavs();
@@ -472,10 +600,13 @@
 
     updateFavUI();
 
-    // 跳转主页逻辑
     document.getElementById('seller-card').addEventListener('click', function() {
-        var sellerName = document.getElementById('seller-name').textContent || '卖家';
-        window.location.href = 'seller-profile.html?seller=' + encodeURIComponent(sellerName);
+        if (currentSellerId) {
+            window.location.href = 'seller-profile.html?id=' + currentSellerId;
+        } else {
+            var sellerName = document.getElementById('seller-name').textContent || '卖家';
+            window.location.href = 'seller-profile.html?seller=' + encodeURIComponent(sellerName);
+        }
     });
 
     // 聊一聊逻辑

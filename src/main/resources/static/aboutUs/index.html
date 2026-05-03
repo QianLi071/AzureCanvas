@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>滚动描边动画 - 螺线（从上到下全程画线）</title>
+    <title>About Us - AzureCanvas Immersive</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- 引入 Lenis 平滑滚动库 -->
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.34/dist/lenis.min.js"></script>
     <script type="importmap">
         {
             "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+                "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
             }
         }
     </script>
@@ -20,35 +23,51 @@
             box-sizing: border-box;
         }
         body {
-            background: #87CEEB;
+            background: #0035bd;
             font-family: system-ui, 'Inter', sans-serif;
             overflow-x: hidden;
         }
 
         .header-section {
-            height: 100px;
+            height: 100vh;
             width: 100%;
-            background: #87CEEB;
+            background: #000F33FF;
             display: flex;
             justify-content: center;
             align-items: center;
             position: absolute;
             top: 0;
             z-index: 10;
+            overflow: hidden;
         }
 
-        .header-section h1 {
-            color: #FFD700;
-            font-size: 3rem;
-            letter-spacing: 0.5rem;
+        #about-us-title {
+            position: relative;
+            font-size: 12vw;
+            letter-spacing: -0.02em;
             text-transform: uppercase;
             font-weight: 900;
+            color: rgba(255, 255, 255, 0.03);
+            z-index: 2;
+            pointer-events: none;
+            user-select: none;
+            margin: 0;
+            line-height: 1;
+        }
+
+        #fluid-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
         .canvas-container {
             margin: 0 auto;
             width: 100%;
-            background: linear-gradient(to bottom, #8A2BE2, #87CEEB);
+            background: #000F33FF;
         }
         svg {
             display: block;
@@ -57,11 +76,12 @@
         }
         .spacer {
             height: 100vh;
-            background: linear-gradient(to bottom, #87CEEB, #8A2BE2);
+            /*background: linear-gradient(to bottom, #87CEEB, #0035bd);*/
+            background: #000F33FF;
         }
         .top-spacer {
             height: 200vh;
-            background: #87CEEB;
+            background: linear-gradient(to bottom, #000F33FF, #0035bd);;
             position: relative;
         }
 
@@ -97,11 +117,13 @@
             backface-visibility: hidden;
         }
     </style>
+    <link rel="stylesheet" href="aboutUs.css">
 </head>
 <body>
 
 <div class="top-spacer">
     <div class="header-section">
+        <canvas id="fluid-canvas"></canvas>
         <h1 id="about-us-title">About us</h1>
     </div>
     <div id="canvas-container" class="poker-iframe-wrapper"></div>
@@ -110,23 +132,425 @@
 <div class="spacer"></div>
 
 <div class="canvas-container">
-    <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <linearGradient id="myGradient" x1="27.85" y1="167.12" x2="154.96" y2="167.12" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#ffa07a" stop-opacity="1" />
-                <stop offset="100%" stop-color="#ffd700" stop-opacity="1" />
-            </linearGradient>
-        </defs>
-        <path id="spiralPath" d="m 68.181817,16.363636 c -3.459103,3.882689 -5.577674,8.937854 -5.920328,14.126617 -0.342654,5.188762 1.092755,10.478624 4.011238,14.782474 3.336848,4.920808 8.467722,8.435947 13.998337,10.617962 5.530616,2.182016 11.473643,3.116865 17.394104,3.661879 5.920464,0.545013 11.875284,0.715834 17.775894,1.444984 5.90062,0.72915 11.80153,2.041119 17.10439,4.72972 5.26379,2.66879 9.8255,6.659803 13.33048,11.407961 3.50497,4.748157 5.96261,10.241185 7.36081,15.974849 2.79641,11.467328 1.32629,23.700428 -2.69129,34.799008 -4.22496,11.67147 -11.28499,22.3581 -20.6384,30.5182 -9.3534,8.1601 -21.00918,13.7375 -33.296009,15.50023 -12.28683,1.76273 -25.162214,-0.3566 -36.048514,-6.31998 -10.886301,-5.96338 -19.676316,-15.79682 -24.017076,-27.42572 -2.652495,-7.10603 -3.652721,-14.87437 -2.489416,-22.36958 1.163306,-7.49521 4.538273,-14.69114 9.845681,-20.109893 5.307408,-5.418753 12.567114,-8.977391 20.136079,-9.469558 7.568965,-0.492167 15.365348,2.183282 20.780382,7.494484 3.827906,3.754507 6.404643,8.704207 7.591972,13.932927 1.187328,5.22871 1.016627,10.72377 -0.184468,15.94933 -2.402189,10.45114 -8.773056,19.59292 -16.134774,27.39047 -7.862901,8.32841 -16.978854,15.44059 -24.448398,24.12353 -3.734771,4.34148 -7.053288,9.08458 -9.408548,14.3047 -2.355261,5.22011 -3.726379,10.94004 -3.506692,16.66268 0.236457,6.15948 2.315606,12.17454 5.517293,17.44182 3.201687,5.26729 7.498738,9.81352 12.271198,13.71464 9.544921,7.80223 20.878296,13.0226 31.626113,19.06122 10.747818,6.03861 21.316237,13.27508 27.849227,23.72976 3.2665,5.22734 5.43346,11.20729 5.77639,17.36176 0.34292,6.15447 -1.20791,12.47663 -4.76749,17.50897 -0.26253,0.37115 -0.5354,0.73498 -0.81819,1.09093" fill="none" stroke="url(#myGradient)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    <div class="svg-wrapper">
+        <svg viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="myGradient" x1="27.85" y1="167.12" x2="154.96" y2="167.12" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#ffa07a" stop-opacity="1" />
+                    <stop offset="100%" stop-color="#ffd700" stop-opacity="1" />
+                </linearGradient>
+            </defs>
+            <path id="spiralPath" d="m 68.181817,16.363636 c -3.459103,3.882689 -5.577674,8.937854 -5.920328,14.126617 -0.342654,5.188762 1.092755,10.478624 4.011238,14.782474 3.336848,4.920808 8.467722,8.435947 13.998337,10.617962 5.530616,2.182016 11.473643,3.116865 17.394104,3.661879 5.920464,0.545013 11.875284,0.715834 17.775894,1.444984 5.90062,0.72915 11.80153,2.041119 17.10439,4.72972 5.26379,2.66879 9.8255,6.659803 13.33048,11.407961 3.50497,4.748157 5.96261,10.241185 7.36081,15.974849 2.79641,11.467328 1.32629,23.700428 -2.69129,34.799008 -4.22496,11.67147 -11.28499,22.3581 -20.6384,30.5182 -9.3534,8.1601 -21.00918,13.7375 -33.296009,15.50023 -12.28683,1.76273 -25.162214,-0.3566 -36.048514,-6.31998 -10.886301,-5.96338 -19.676316,-15.79682 -24.017076,-27.42572 -2.652495,-7.10603 -3.652721,-14.87437 -2.489416,-22.36958 1.163306,-7.49521 4.538273,-14.69114 9.845681,-20.109893 5.307408,-5.418753 12.567114,-8.977391 20.136079,-9.469558 7.568965,-0.492167 15.365348,2.183282 20.780382,7.494484 3.827906,3.754507 6.404643,8.704207 7.591972,13.932927 1.187328,5.22871 1.016627,10.72377 -0.184468,15.94933 -2.402189,10.45114 -8.773056,19.59292 -16.134774,27.39047 -7.862901,8.32841 -16.978854,15.44059 -24.448398,24.12353 -3.734771,4.34148 -7.053288,9.08458 -9.408548,14.3047 -2.355261,5.22011 -3.726379,10.94004 -3.506692,16.66268 0.236457,6.15948 2.315606,12.17454 5.517293,17.44182 3.201687,5.26729 7.498738,9.81352 12.271198,13.71464 9.544921,7.80223 20.878296,13.0226 31.626113,19.06122 10.747818,6.03861 21.316237,13.27508 27.849227,23.72976 3.2665,5.22734 5.43346,11.20729 5.77639,17.36176 0.34292,6.15447 -1.20791,12.47663 -4.76749,17.50897 -0.26253,0.37115 -0.5354,0.73498 -0.81819,1.09093" fill="none" stroke="url(#myGradient)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </div>
+
+    <div class="team-section">
+        <div class="team-card card-team-1"></div>
+        <div class="team-card card-team-2"></div>
+        <div class="team-card card-team-3"></div>
+        <div class="team-card card-team-4"></div>
+        <div class="team-card card-team-5"></div>
+    </div>
 </div>
 
-<!-- 新增：瀑布外景移植区域 -->
+<!-- 瀑布外景移植区域保持不变 -->
 <div class="portal-section">
     <div id="portal-preview-box"></div>
 </div>
 
-<script type="module" src="./poker-animation/src/main.js"></script>
+<script type="module">
+    import * as THREE from 'three';
+
+    class FluidSimulation {
+        constructor(canvasId, textId) {
+            this.canvas = document.getElementById(canvasId);
+            this.textElement = document.getElementById(textId);
+            this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            
+            this.width = 0;
+            this.height = 0;
+            this.simRes = 128; // 模拟分辨率
+            
+            this.mouse = new THREE.Vector2(0, 0);
+            this.lastMouse = new THREE.Vector2(0, 0);
+            this.velocity = new THREE.Vector2(0, 0);
+            this.isMouseDown = false;
+            
+            this.init();
+        }
+
+        async init() {
+            this.resize();
+            this.setupBuffers();
+            this.setupShaders();
+            this.setupTextMask();
+            this.addEventListeners();
+            this.animate();
+        }
+
+        resize() {
+            const parent = this.canvas.parentElement;
+            this.width = parent.clientWidth;
+            this.height = parent.clientHeight;
+            this.renderer.setSize(this.width, this.height);
+            
+            if (this.textMaskMaterial) {
+                this.setupTextMask();
+            }
+        }
+
+        setupBuffers() {
+            const params = {
+                type: THREE.HalfFloatType,
+                format: THREE.RGBAFormat,
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter
+            };
+
+            this.density = this.createDoubleBuffer(this.simRes, this.simRes, params);
+            this.velocityField = this.createDoubleBuffer(this.simRes, this.simRes, params);
+            this.pressure = this.createDoubleBuffer(this.simRes, this.simRes, params);
+            this.divergence = new THREE.WebGLRenderTarget(this.simRes, this.simRes, params);
+        }
+
+        createDoubleBuffer(w, h, params) {
+            return {
+                read: new THREE.WebGLRenderTarget(w, h, params),
+                write: new THREE.WebGLRenderTarget(w, h, params),
+                swap: function() {
+                    const tmp = this.read;
+                    this.read = this.write;
+                    this.write = tmp;
+                }
+            };
+        }
+
+        setupShaders() {
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.Camera();
+            this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
+            this.scene.add(this.mesh);
+
+            this.baseVertex = `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position, 1.0);
+                }
+            `;
+
+            // 通用渲染函数
+            this.renderQuad = (material, target) => {
+                this.mesh.material = material;
+                this.renderer.setRenderTarget(target);
+                this.renderer.render(this.scene, this.camera);
+            };
+        }
+
+        setupTextMask() {
+            const canvas = document.createElement('canvas');
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = this.width * dpr;
+            canvas.height = this.height * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            
+            const style = window.getComputedStyle(this.textElement);
+            // 确保字体加载完成或使用系统字体
+            ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // 绘制文本
+            ctx.fillText(this.textElement.innerText.toUpperCase(), this.width / 2, this.height / 2);
+            
+            if (this.textTexture) this.textTexture.dispose();
+            this.textTexture = new THREE.CanvasTexture(canvas);
+        }
+
+        addEventListeners() {
+            window.addEventListener('resize', () => this.resize());
+            
+            const handleMove = (e) => {
+                const x = e.clientX || (e.touches && e.touches[0].clientX);
+                const y = e.clientY || (e.touches && e.touches[0].clientY);
+                
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouse.set(
+                    (x - rect.left) / rect.width,
+                    1.0 - (y - rect.top) / rect.height
+                );
+                
+                this.velocity.subVectors(this.mouse, this.lastMouse);
+                this.lastMouse.copy(this.mouse);
+            };
+
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('touchstart', handleMove);
+            window.addEventListener('touchmove', handleMove);
+        }
+
+        // 核心 Shader 逻辑
+        getAdvectShader() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    uVelocity: { value: null },
+                    uSource: { value: null },
+                    dt: { value: 0.016 },
+                    dissipation: { value: 0.98 },
+                    texelSize: { value: new THREE.Vector2(1/this.simRes, 1/this.simRes) }
+                },
+                vertexShader: this.baseVertex,
+                fragmentShader: `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform sampler2D uVelocity;
+                    uniform sampler2D uSource;
+                    uniform float dt;
+                    uniform float dissipation;
+                    uniform vec2 texelSize;
+                    void main() {
+                        vec2 pos = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
+                        gl_FragColor = dissipation * texture2D(uSource, pos);
+                    }
+                `
+            });
+        }
+
+        getDivergenceShader() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    uVelocity: { value: null },
+                    texelSize: { value: new THREE.Vector2(1/this.simRes, 1/this.simRes) }
+                },
+                vertexShader: this.baseVertex,
+                fragmentShader: `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform sampler2D uVelocity;
+                    uniform vec2 texelSize;
+                    void main() {
+                        float L = texture2D(uVelocity, vUv - vec2(texelSize.x, 0.0)).x;
+                        float R = texture2D(uVelocity, vUv + vec2(texelSize.x, 0.0)).x;
+                        float T = texture2D(uVelocity, vUv + vec2(0.0, texelSize.y)).y;
+                        float B = texture2D(uVelocity, vUv - vec2(0.0, texelSize.y)).y;
+                        float div = 0.5 * (R - L + T - B);
+                        gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
+                    }
+                `
+            });
+        }
+
+        getJacobiShader() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    uPressure: { value: null },
+                    uDivergence: { value: null },
+                    texelSize: { value: new THREE.Vector2(1/this.simRes, 1/this.simRes) }
+                },
+                vertexShader: this.baseVertex,
+                fragmentShader: `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform sampler2D uPressure;
+                    uniform sampler2D uDivergence;
+                    uniform vec2 texelSize;
+                    void main() {
+                        float L = texture2D(uPressure, vUv - vec2(texelSize.x, 0.0)).x;
+                        float R = texture2D(uPressure, vUv + vec2(texelSize.x, 0.0)).x;
+                        float T = texture2D(uPressure, vUv + vec2(0.0, texelSize.y)).x;
+                        float B = texture2D(uPressure, vUv - vec2(0.0, texelSize.y)).x;
+                        float div = texture2D(uDivergence, vUv).x;
+                        float pressure = (L + R + B + T - div) * 0.25;
+                        gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);
+                    }
+                `
+            });
+        }
+
+        getGradientSubtractShader() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    uPressure: { value: null },
+                    uVelocity: { value: null },
+                    texelSize: { value: new THREE.Vector2(1/this.simRes, 1/this.simRes) }
+                },
+                vertexShader: this.baseVertex,
+                fragmentShader: `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform sampler2D uPressure;
+                    uniform sampler2D uVelocity;
+                    uniform vec2 texelSize;
+                    void main() {
+                        float L = texture2D(uPressure, vUv - vec2(texelSize.x, 0.0)).x;
+                        float R = texture2D(uPressure, vUv + vec2(texelSize.x, 0.0)).x;
+                        float T = texture2D(uPressure, vUv + vec2(0.0, texelSize.y)).x;
+                        float B = texture2D(uPressure, vUv - vec2(0.0, texelSize.y)).x;
+                        vec2 velocity = texture2D(uVelocity, vUv).xy;
+                        velocity -= 0.5 * vec2(R - L, T - B);
+                        gl_FragColor = vec4(velocity, 0.0, 1.0);
+                    }
+                `
+            });
+        }
+
+        getForceShader() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    uSource: { value: null },
+                    uPoint: { value: new THREE.Vector2() },
+                    uColor: { value: new THREE.Vector3() },
+                    uRadius: { value: 0.05 }
+                },
+                vertexShader: this.baseVertex,
+                fragmentShader: `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform sampler2D uSource;
+                    uniform vec2 uPoint;
+                    uniform vec3 uColor;
+                    uniform float uRadius;
+                    void main() {
+                        float d = distance(vUv, uPoint);
+                        float f = exp(-d * d / uRadius);
+                        vec4 base = texture2D(uSource, vUv);
+                        gl_FragColor = vec4(base.rgb + f * uColor, 1.0);
+                    }
+                `
+            });
+        }
+
+        getDisplayShader() {
+            return new THREE.ShaderMaterial({
+                uniforms: {
+                    uDensity: { value: null },
+                    uMask: { value: null }
+                },
+                vertexShader: this.baseVertex,
+                fragmentShader: `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform sampler2D uDensity;
+                    uniform sampler2D uMask;
+                    void main() {
+                        vec4 d = texture2D(uDensity, vUv);
+                        float mask = texture2D(uMask, vUv).r;
+                        
+                        // Lusion 风格色彩：基于密度的动态调色
+                        vec3 color1 = vec3(1.0, 0.1, 0.5); // Pink/Magenta
+                        vec3 color2 = vec3(0.1, 0.8, 1.0); // Cyan/Blue
+                        vec3 color3 = vec3(0.1, 0.1, 0.9); // Deep Blue
+                        
+                        float m = length(d.rgb);
+                        vec3 finalColor = mix(color3, color2, clamp(m * 2.0, 0.0, 1.0));
+                        finalColor = mix(finalColor, color1, clamp(m - 0.5, 0.0, 1.0));
+                        
+                        // 增加一些亮度变化
+                        finalColor *= (1.0 + m * 0.5);
+                        
+                        float alpha = smoothstep(0.01, 0.2, m) * mask;
+                        gl_FragColor = vec4(finalColor, alpha);
+                    }
+                `,
+                transparent: true
+            });
+        }
+
+        animate() {
+            requestAnimationFrame(() => this.animate());
+
+            if (!this.advectMat) {
+                this.advectMat = this.getAdvectShader();
+                this.divergenceMat = this.getDivergenceShader();
+                this.jacobiMat = this.getJacobiShader();
+                this.gradientSubtractMat = this.getGradientSubtractShader();
+                this.forceMat = this.getForceShader();
+                this.displayMat = this.getDisplayShader();
+            }
+
+            // 1. Advect
+            this.advectMat.uniforms.uVelocity.value = this.velocityField.read.texture;
+            this.advectMat.uniforms.uSource.value = this.velocityField.read.texture;
+            this.advectMat.uniforms.dissipation.value = 0.99;
+            this.renderQuad(this.advectMat, this.velocityField.write);
+            this.velocityField.swap();
+
+            this.advectMat.uniforms.uSource.value = this.density.read.texture;
+            this.advectMat.uniforms.dissipation.value = 0.97; // 墨水消失稍快
+            this.renderQuad(this.advectMat, this.density.write);
+            this.density.swap();
+
+            // 2. Add Force
+            const time = Date.now() * 0.002;
+            
+            // 始终添加微小的扰动
+            this.forceMat.uniforms.uPoint.value.set(
+                0.5 + Math.sin(time * 0.3) * 0.3,
+                0.5 + Math.cos(time * 0.5) * 0.3
+            );
+            this.forceMat.uniforms.uSource.value = this.velocityField.read.texture;
+            this.forceMat.uniforms.uColor.value.set(Math.sin(time) * 0.05, Math.cos(time) * 0.05, 0);
+            this.forceMat.uniforms.uRadius.value = 0.001;
+            this.renderQuad(this.forceMat, this.velocityField.write);
+            this.velocityField.swap();
+
+            if (this.velocity.length() > 0.0001) {
+                this.forceMat.uniforms.uPoint.value.copy(this.mouse);
+                
+                // Add Velocity
+                this.forceMat.uniforms.uSource.value = this.velocityField.read.texture;
+                this.forceMat.uniforms.uColor.value.set(this.velocity.x * 50.0, this.velocity.y * 50.0, 0);
+                this.forceMat.uniforms.uRadius.value = 0.0005;
+                this.renderQuad(this.forceMat, this.velocityField.write);
+                this.velocityField.swap();
+
+                // Add Density (Ink)
+                this.forceMat.uniforms.uSource.value = this.density.read.texture;
+                this.forceMat.uniforms.uColor.value.set(
+                    Math.sin(time) * 0.5 + 0.5,
+                    Math.cos(time * 0.7) * 0.5 + 0.5,
+                    Math.sin(time * 1.3) * 0.5 + 0.5
+                );
+                this.forceMat.uniforms.uRadius.value = 0.0003;
+                this.renderQuad(this.forceMat, this.density.write);
+                this.density.swap();
+                
+                this.velocity.multiplyScalar(0.9);
+            }
+
+            // 3. Pressure Solver (Navier-Stokes)
+            // Divergence
+            this.divergenceMat.uniforms.uVelocity.value = this.velocityField.read.texture;
+            this.renderQuad(this.divergenceMat, this.divergence);
+
+            // Jacobi Iterations
+            this.jacobiMat.uniforms.uDivergence.value = this.divergence.texture;
+            for (let i = 0; i < 40; i++) {
+                this.jacobiMat.uniforms.uPressure.value = this.pressure.read.texture;
+                this.renderQuad(this.jacobiMat, this.pressure.write);
+                this.pressure.swap();
+            }
+
+            // Gradient Subtract
+            this.gradientSubtractMat.uniforms.uPressure.value = this.pressure.read.texture;
+            this.gradientSubtractMat.uniforms.uVelocity.value = this.velocityField.read.texture;
+            this.renderQuad(this.gradientSubtractMat, this.velocityField.write);
+            this.velocityField.swap();
+
+            // 4. Display
+            this.displayMat.uniforms.uDensity.value = this.density.read.texture;
+            this.displayMat.uniforms.uMask.value = this.textTexture;
+            this.renderQuad(this.displayMat, null);
+        }
+    }
+
+    new FluidSimulation('fluid-canvas', 'about-us-title');
+</script>
+
+<script type="module" src="poker-animation/src/main.js"></script>
 
 <script type="module">
     import * as THREE from 'three';

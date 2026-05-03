@@ -151,8 +151,16 @@ function renderItems() {
     sellerItems.forEach(function(item) {
         var card = document.createElement('div');
         card.className = 'bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer';
+
+        var imageContent;
+        if (item.images && item.images.length > 0) {
+            imageContent = '<img src="' + item.images[0] + '" class="w-full h-full object-cover" alt="' + item.title + '">';
+        } else {
+            imageContent = '<div class="h-40 bg-gradient-to-br ' + item.bg + ' flex items-center justify-center text-5xl relative">' + item.emoji + '</div>';
+        }
+
         card.innerHTML =
-            '<div class="h-40 bg-gradient-to-br ' + item.bg + ' flex items-center justify-center text-5xl relative">' + item.emoji + '</div>' +
+            '<div class="h-40 relative overflow-hidden">' + imageContent + '</div>' +
             '<div class="p-3">' +
                 '<p class="text-sm text-gray-800 leading-snug line-clamp-2">' + item.title + '</p>' +
                 '<div class="flex items-center justify-between mt-2">' +
@@ -161,7 +169,7 @@ function renderItems() {
                 '</div>' +
             '</div>';
         card.addEventListener('click', function() {
-            window.location.href = 'product.html';
+            window.location.href = 'product.html?id=' + item.id;
         });
         grid.appendChild(card);
     });
@@ -343,14 +351,13 @@ renderReviews(reviews);
 // 从URL获取卖家信息
 var params = new URLSearchParams(window.location.search);
 var sellerName = params.get('seller');
-var sellerId = params.get('sellerId');
+var sellerId = params.get('id') || params.get('sellerId');
 
 // 从API加载卖家信息和商品
 (async function() {
     // 如果有sellerId，使用API加载
     if (sellerId) {
         try {
-            // 加载卖家信息
             var userResponse = await fetch('/api/users/' + sellerId, {
                 method: 'GET',
                 credentials: 'include'
@@ -370,8 +377,7 @@ var sellerId = params.get('sellerId');
                 }
             }
 
-            // 加载卖家的商品列表
-            var itemsResponse = await fetch('/api/market/items?sellerId=' + sellerId, {
+            var itemsResponse = await fetch('/api/market/users/' + sellerId + '/items', {
                 method: 'GET',
                 credentials: 'include'
             });
@@ -385,8 +391,9 @@ var sellerId = params.get('sellerId');
                             title: item.title,
                             price: item.price,
                             wants: item.wants || 0,
-                            emoji: '📦',
-                            bg: 'from-purple-200 to-pink-300'
+                            emoji: item.images && item.images.length > 0 ? '📷' : '📦',
+                            bg: 'from-purple-200 to-pink-300',
+                            images: item.images || []
                         };
                     });
                     document.getElementById('items-count').textContent = items.length;
@@ -397,7 +404,6 @@ var sellerId = params.get('sellerId');
             console.error('获取卖家信息失败:', err);
         }
     } else if (sellerName) {
-        // 如果只有名字，显示名字
         document.getElementById('seller-username').textContent = sellerName;
         document.getElementById('seller-avatar').textContent = sellerName.charAt(0).toUpperCase();
     }

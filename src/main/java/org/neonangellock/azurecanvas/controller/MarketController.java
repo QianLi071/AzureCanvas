@@ -107,6 +107,16 @@ public class MarketController {
         Page<Item> items = marketService.findItemsBySeller(currentUser, status, page, limit);
         return ResponseEntity.ok(items.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
     }
+    @GetMapping("/users/{sellerId}/items")
+    public ResponseEntity<List<ItemDTO>> getSpecifiedSellerItems(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit, @PathVariable UUID sellerId) {
+
+        User currentUser = userService.findById(sellerId);
+        Page<Item> items = marketService.findItemsBySeller(currentUser, status, page, limit);
+        return ResponseEntity.ok(items.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+    }
 
     @PostMapping("/item/{itemId}/images")
     public ResponseEntity<?> createItemImage(@PathVariable UUID itemId, @RequestBody Map<String, Object> request) {

@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = commentInput.value.trim();
     if (!text || !currentPostId) return;
     try {
-      const body = { content: text, isAnonymous: true };
+      const body = { content: text };
       if (replyingTo && replyingTo.id) body.parentId = parseInt(replyingTo.id) || null;
       const res = await fetch("/api/treeholes/posts/" + currentPostId + "/comments", {
         method: "POST",
@@ -352,6 +352,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const post = await Store.fetchPostFromApi(currentPostId);
         Render.renderComments(commentsList, commentCountEl, post, onReply);
         Render.updateNotifBadges();
+      } else {
+        const err = await res.json();
+        if (err.message === "NOT_LOGGED_IN") {
+          window.notify.show.show("请先登录后再评论", 'error');
+        } else {
+          window.notify.show.show("评论失败: " + (err.message || res.status), 'error');
+        }
       }
     } catch (e) {
       console.warn("addComment failed:", e);

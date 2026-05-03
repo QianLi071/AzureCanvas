@@ -359,7 +359,7 @@
 
     <!-- 正文 -->
     <textarea class="body-textarea" id="postTextInput"
-      placeholder="说点什么… 匿名分享，大家都不知道是你&#10;&#10;支持换行，尽情倾诉"></textarea>
+      placeholder="说点什么… 分享你的故事&#10;&#10;支持换行，尽情倾诉"></textarea>
     <div class="char-count"><span id="charCount">0</span> / 2000</div>
 
     <!-- 图片预览 -->
@@ -368,10 +368,6 @@
     <!-- 底部操作 -->
     <div class="editor-footer">
       <div class="footer-left">
-        <label class="anon-toggle">
-          <input type="checkbox" id="anonCheck" checked>
-          匿名发布
-        </label>
       </div>
       <div class="footer-right">
         <a class="btn" href="index.html">取消</a>
@@ -390,7 +386,7 @@
       <div class="panel-card-title"><i class="fas fa-shield-alt"></i> 发布规范</div>
       <div class="panel-card-body">
         <ul class="rule-list">
-          <li><span class="rule-num">1</span>内容匿名，请勿透露真实身份信息</li>
+          <li><span class="rule-num">1</span>内容真实，请勿发布虚假信息</li>
           <li><span class="rule-num">2</span>禁止发布违法、歧视或骚扰内容</li>
           <li><span class="rule-num">3</span>学术讨论请注明来源，尊重版权</li>
           <li><span class="rule-num">4</span>情感倾诉请保护他人隐私</li>
@@ -561,15 +557,17 @@
 
   // 提交
   document.getElementById("submitPostBtn").addEventListener("click", async () => {
+    const title = document.getElementById("postTitle").value.trim();
     const content = textarea.value.trim();
+
     if (!content) {
-      window.notify.show.show("内容不能为空", 'error');
+      window.notify.show.show("正文不能为空", 'error');
       return;
     }
 
     const submitBtn = document.getElementById("submitPostBtn");
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发布中...';
 
     try {
       let imageUuids = [];
@@ -580,16 +578,12 @@
           method: "POST",
           body: formData,
           headers: {
-            "Content-Type": "application/json",
             'X-XSRF-TOKEN': window.getCsrfToken()
           }
         });
-        if (!uploadRes.ok) ("图片上传失败");
+        if (!uploadRes.ok) throw new Error("图片上传失败");
         imageUuids = await uploadRes.json();
       }
-
-      const isAnon = document.getElementById("anonCheck").checked;
-      const titleInput = document.getElementById("postTitle").value.trim();
 
       // 1. 创建帖子
       const postRes = await fetch("/api/treeholes/posts", {
@@ -601,9 +595,8 @@
         credentials: "include",
         body: JSON.stringify({
           content,
-          title: titleInput || null,
-          category: selectedCategory,
-          isAnonymous: isAnon
+          title: title || null,
+          category: selectedCategory
         })
       });
 
@@ -643,6 +636,7 @@
 
     } catch (err) {
       window.notify.show.show(err.message, 'error');
+    } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布树洞';
     }
