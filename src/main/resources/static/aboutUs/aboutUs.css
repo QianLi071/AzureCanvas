@@ -1,0 +1,100 @@
+/* aboutUs.css */
+
+:root {
+    --primary-magenta: #FF00FF;
+    --laser-blue: #00FFFF;
+    --bg-dark: #050505;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html.lenis {
+    height: auto;
+}
+
+.lenis.lenis-smooth {
+    scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+    overflow: hidden;
+}
+
+body.immersive-about {
+    background: var(--bg-dark);
+    color: white;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+}
+
+#webgl-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.scroll-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+.hero-section {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+#about-us-title {
+    font-size: 15vw;
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+}
+
+.scroll-spacer {
+    height: 600vh; /* 为 5 张卡牌提供足够的滚动空间 */
+}
+
+/* 瀑布预览框保持原样 */
+.portal-section {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    position: relative;
+    z-index: 10;
+}
+
+#portal-preview-box {
+    width: 600px;
+    height: 350px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    cursor: pointer;
+    background: #000;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+/* 隐藏滚动条 */
+::-webkit-scrollbar {
+    display: none;
+}

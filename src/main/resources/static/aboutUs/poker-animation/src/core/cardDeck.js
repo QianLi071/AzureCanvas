@@ -16,9 +16,9 @@ var CardDeck = class {
         this.engine = engine;
         this.world = engine.world;
         this.options = {
-            width: CARD_APPEARANCE.width,
-            height: CARD_APPEARANCE.height,
-            depth: CARD_APPEARANCE.depth,
+            width: CARD_APPEARANCE.width * 1.5, // 整体放大 1.5 倍
+            height: CARD_APPEARANCE.height * 1.5,
+            depth: CARD_APPEARANCE.depth * 1.5,
             stackSpacing: CARD_APPEARANCE.stackSpacing,
             textureQuality: perf.textureQuality,
             ...options
@@ -49,64 +49,93 @@ var CardDeck = class {
     }
 
     /**
-     * 更新螺旋进度 (支持平滑展开和从外向内回收)
+     * 更新螺旋进度 (支持平滑展开)
      */
     setShuffleSpiralProgress(p) {
         if (this.isLocked) return;
         const total = this.cardsMesh.length;
         if (total === 0) return;
         
-        // 所有卡牌始终可见，背面朝上
+        // 缓入缓出
+        const easedP = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+
         this.cardsMesh.forEach(card => card.visible = true);
         
         for (let i = 0; i < total; i++) {
             const mesh = this.cardsMesh[i];
-            // 计算该卡牌在螺旋中的目标位置 (0.0 到 1.0)
             const targetT = (total - 1 - i) / (total - 1);
-            
-            // 核心逻辑：
-            // 当 p 增加时，卡牌从 targetT=0 (中心) 逐渐移动到其在螺旋中的 targetT 位置
-            const currentT = Math.min(targetT, p);
-            
+            const currentT = Math.min(targetT, easedP);
             const pos = this.getPointOnSpiral(currentT);
-            
-            // Y 轴堆叠感：没展开的牌叠在中心，展开的牌根据螺旋进度分布
-            const y = (p < targetT) ? i * 0.05 : i * 0.001;
-            
+            const y = (easedP < targetT) ? i * 0.05 : i * 0.001;
             mesh.position.set(pos.x, y, pos.z);
             mesh.rotation.set(Math.PI / 2, 0, -pos.angle);
         }
     }
 
     /**
-     * 从外向内回收螺旋
+     * 排队回收螺旋至正下方 (最多 5 张牌同时移动，直线轨迹)
      */
     collectSpiral(p) {
         if (this.isLocked) return;
         const total = this.cardsMesh.length;
         if (total === 0) return;
 
-        // p=0: 完整螺旋; p=1: 全部收回到中心
+        const bottomZ = 6;
+        const targetPos = { x: 0, z: bottomZ };
+        
+        // 限制并行数量为 5
+        // 我们需要重新定义每个卡牌在 p [0, 1] 轴上的活跃区间
+        const activeCount = 5;
+        const windowSize = activeCount / total; // 每个窗口在 p 轴上的占比
+        
         for (let i = 0; i < total; i++) {
             const mesh = this.cardsMesh[i];
             const targetT = (total - 1 - i) / (total - 1);
             
-            // 回收逻辑：从外向内。外圈的 targetT 接近 1.0
-            // 当 p 增加时，如果 p > (1.0 - targetT)，卡牌开始向中心收回
-            const collectThreshold = 1.0 - targetT;
-            let currentT = targetT;
+            // 计算该卡牌开始动作的 p 值
+            // 我们希望 i=0 (最外圈) 先动。
+            const startP = (i / total) * (1.0 - windowSize);
+            const endP = startP + windowSize;
             
-            if (p > collectThreshold) {
-                const collectProg = (p - collectThreshold) / (1.0 - collectThreshold);
-                currentT = MathUtils.lerp(targetT, 0, collectProg);
+            let cardProg = 0;
+            if (p > startP) {
+                cardProg = Math.max(0, Math.min(1, (p - startP) / windowSize));
+                // 使用缓入缓出函数
+                cardProg = cardProg < 0.5 ? 2 * cardProg * cardProg : 1 - Math.pow(-2 * cardProg + 2, 2) / 2;
             }
             
-            const pos = this.getPointOnSpiral(currentT);
-            const y = (p > collectThreshold) ? i * 0.02 : i * 0.001;
+            const spiralPos = this.getPointOnSpiral(targetT);
             
-            mesh.position.set(pos.x, y, pos.z);
-            mesh.rotation.set(Math.PI / 2, 0, -pos.angle);
+            mesh.position.x = MathUtils.lerp(spiralPos.x, targetPos.x, cardProg);
+            mesh.position.z = MathUtils.lerp(spiralPos.z, targetPos.z, cardProg);
+            mesh.position.y = MathUtils.lerp(i * 0.001, i * 0.02, cardProg);
+            mesh.rotation.z = MathUtils.lerp(-spiralPos.angle, 0, cardProg);
         }
+    }
+
+    /**
+     * 视图正下方单张展开为扇形
+     */
+    expandFanFromBottom(progress) {
+        const bottomZ = 6;
+        const radius = 8;
+        const arcAngle = Math.PI * 0.3;
+        const startAngle = -arcAngle / 2;
+        const total = this.cardsMesh.length;
+        const scale = 1.5;
+
+        // 缓入缓出
+        const easedP = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        this.cardsMesh.forEach((mesh, i) => {
+            const angle = (startAngle + (i / (total - 1)) * arcAngle) * easedP;
+            const x = Math.sin(angle) * radius;
+            const z = bottomZ - (Math.cos(angle) * radius) + radius; 
+            
+            mesh.position.set(x, i * 0.01, z);
+            mesh.rotation.set(Math.PI / 2, 0, angle);
+            mesh.scale.set(scale, scale, scale);
+        });
     }
 
     /**
@@ -137,8 +166,8 @@ var CardDeck = class {
             this.cardsBodies.push(body);
         });
 
-        // 取最后四张作为主角牌（因为在螺旋动画中最后四张在最上面）
-        this.mainCards = this.cardsMesh.slice(-4);
+        // 取最后五张作为主角牌（保证对称）
+        this.mainCards = this.cardsMesh.slice(-5);
         import_matter.default.World.add(this.world, this.cardsBodies);
     }
 
@@ -178,84 +207,104 @@ var CardDeck = class {
     }
 
     /**
-     * 轮流翻转动画
+     * 左右翻转动画 (Y轴翻转)
      */
     flipMainCards() {
         this.mainCards.forEach((card, idx) => {
             gsapWithCSS.to(card.rotation, {
-                x: -Math.PI / 2, // 翻转到正面
+                y: Math.PI, // 左右翻转 180 度
                 duration: 1.2,
-                delay: idx * 0.2, // 依次延迟
+                delay: idx * 0.15,
                 ease: "power2.inOut"
             });
         });
     }
 
     /**
-     * 史诗级“抽出”动画：突进至相机前再归位
+     * 5 张牌整体抽出至中心后，再缓慢散开 (仿图 1 -> 图 2 模式)
      */
     drawMainCards(progress) {
+        const bottomZ = 6;
+        const finalY = 2;
+        const finalZ = -2;
+        const baseScale = 1.5;
+
+        // 缓入缓出
+        const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const easedP = easeInOutCubic(progress);
+
         this.mainCards.forEach((card, idx) => {
-            // 每一个卡牌的独立进度，带延迟
-            const cardProg = Math.max(0, Math.min(1, (progress - idx * 0.1) / 0.7));
+            // 对称布局：idx 0,1,2,3,4 映射到 -2, -1, 0, 1, 2
+            const offsetIdx = idx - 2;
             
-            // 初始螺旋位置
-            const spiralPos = this.getPointOnSpiral((this.cardsMesh.length - 1 - (this.mainCards.length - 1 - idx)) / (this.cardsMesh.length - 1));
-            
-            // 突进逻辑：在 cardProg 0.0 -> 0.5 之间冲向相机，0.5 -> 1.0 缩小归位
-            let targetX, targetY, targetZ, targetScale;
-            
-            if (cardProg < 0.5) {
-                // 第一阶段：冲向相机 (突进)
-                const subProg = cardProg / 0.5;
-                targetX = MathUtils.lerp(spiralPos.x, 0, subProg);
-                targetY = MathUtils.lerp(0.5, 8, subProg); // 冲到高处（靠近相机）
-                targetZ = MathUtils.lerp(spiralPos.z, 5, subProg); // 冲向相机 Z 轴
-                targetScale = MathUtils.lerp(1, 2.5, subProg);
-            } else {
-                // 第二阶段：缩小归位
-                const subProg = (cardProg - 0.5) / 0.5;
+            // 图 2 模式的散开参数
+            const spreadX = offsetIdx * 3.5; // X 轴拉开距离
+            const spreadZ = -Math.abs(offsetIdx) * 0.8; // 两侧牌向后偏移，形成弧度
+            const spreadRotZ = offsetIdx * 0.15; // 两侧牌产生微小倾斜
+
+            let targetX, targetY, targetZ, targetRotZ;
+
+            // 阶段一：0.0 - 0.4 整体叠在一起抽出到屏幕中央 (对应图 1)
+            if (easedP <= 0.4) {
+                const subProg = easedP / 0.4;
                 targetX = 0;
-                targetY = MathUtils.lerp(8, idx * 0.05, subProg);
-                targetZ = MathUtils.lerp(5, 0, subProg);
-                targetScale = MathUtils.lerp(2.5, 1, subProg);
+                targetY = MathUtils.lerp(0.5, finalY, subProg);
+                targetZ = MathUtils.lerp(bottomZ, finalZ, subProg);
+                targetRotZ = 0;
+            } 
+            // 阶段二：0.4 - 1.0 在中央缓慢散开至图 2 模式
+            else {
+                const subProg = (easedP - 0.4) / 0.6;
+                targetX = MathUtils.lerp(0, spreadX, subProg);
+                targetY = finalY;
+                targetZ = MathUtils.lerp(finalZ, finalZ + spreadZ, subProg);
+                targetRotZ = MathUtils.lerp(0, spreadRotZ, subProg);
             }
             
             card.position.set(targetX, targetY, targetZ);
-            card.scale.set(targetScale, targetScale, targetScale);
-            card.rotation.set(Math.PI / 2, 0, 0); // 始终背面朝上，直到后续的 flip 逻辑
-        });
-
-        // 螺旋堆保持存在，不消失
-        this.cardsMesh.forEach(card => {
-            if (!this.mainCards.includes(card)) {
-                card.visible = true;
-                // 让非主角牌保持在中心堆叠状态
-                const fixedPos = this.getPointOnSpiral(1.0);
-                card.position.set(fixedPos.x, 0, fixedPos.z);
-            }
+            card.scale.set(baseScale, baseScale, baseScale);
+            card.rotation.set(Math.PI / 2, 0, targetRotZ); 
         });
     }
 
     /**
-     * 终极放大展示背面的 card.png
+     * 由 CSS Scroll-Driven Animation 驱动的整体更新逻辑
      */
-    finalZoomIn() {
-        this.mainCards.forEach((card, idx) => {
-            gsapWithCSS.to(card.scale, {
-                x: 1.5, y: 1.5, z: 1.5,
-                duration: 1.5,
-                ease: "expo.out",
-                delay: idx * 0.1
+    updateFromCSSProgress(p) {
+        if (this.isLocked) return;
+
+        // 阶段 1: 展开螺旋 (0% - 20%)
+        if (p <= 0.2) {
+            this.setShuffleSpiralProgress(p / 0.2);
+            this.isIdleAnimationEnabled = false;
+        } 
+        // 阶段 2: 排队收回至底堆 (20% - 45%) - 增加时长以体现排队感
+        else if (p > 0.2 && p <= 0.45) {
+            this.collectSpiral((p - 0.2) / 0.25);
+            this.isIdleAnimationEnabled = false;
+        }
+        // 阶段 3: 底堆展开为扇形 (45% - 65%)
+        else if (p > 0.45 && p <= 0.65) {
+            this.expandFanFromBottom((p - 0.45) / 0.2);
+            this.isIdleAnimationEnabled = false;
+        }
+        // 阶段 4: 5张牌整体抽出至中心后慢慢散开 (65% - 85%)
+        else if (p > 0.65 && p <= 0.85) {
+            this.drawMainCards((p - 0.65) / 0.2);
+            this.isIdleAnimationEnabled = false;
+        }
+        // 阶段 5: 左右翻转与展示 (85% - 100%)
+        else if (p > 0.85) {
+            this.isIdleAnimationEnabled = true;
+            this.mainCards.forEach((card, idx) => {
+                const flipProg = Math.max(0, Math.min(1, (p - 0.85 - idx * 0.02) / 0.1));
+                card.rotation.y = flipProg * Math.PI;
             });
-            // 稍微抬高一点，展示史诗感
-            gsapWithCSS.to(card.position, {
-                y: card.position.y + 1,
-                duration: 1.5,
-                ease: "expo.out",
-                delay: idx * 0.1
-            });
-        });
+            
+            const zoomProg = (p - 0.85) / 0.15;
+            const finalScale = 1.5 * (1.0 + zoomProg * 0.2); 
+            this.mainCards.forEach(card => card.scale.set(finalScale, finalScale, finalScale));
+        }
     }
 
     /**

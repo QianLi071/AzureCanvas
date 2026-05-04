@@ -92,7 +92,7 @@ public class EsTreeHoleServiceImpl implements EsTreeHoleService {
     @Scheduled(fixedRateString = "${es.sync.full-rate-ms:300000}")
     public void syncTreeHoleFromDb() {
         if (isSyncing) {
-            log.info("[ES-Sync] 全量同步已在进行中，跳过本次调度");
+            log.warn("[ES-Sync] 全量同步已在进行中，跳过本次调度");
             return;
         }
 
@@ -145,12 +145,12 @@ public class EsTreeHoleServiceImpl implements EsTreeHoleService {
     @Scheduled(cron = "${es.sync.incremental-cron:0 */15 * * * *}")
     public void incrementalSyncTreeHole() {
         if (isSyncing) {
-            log.info("[ES-Sync] 增量同步已在进行中，跳过本次调度");
+            log.warn("[ES-Sync] 增量同步已在进行中，跳过本次调度");
             return;
         }
 
         if (lastFullSyncTime == null) {
-            log.info("[ES-Sync] 尚未执行过全量同步，先执行全量同步");
+            log.warn("[ES-Sync] 尚未执行过全量同步，先执行全量同步");
             syncTreeHoleFromDb();
             return;
         }

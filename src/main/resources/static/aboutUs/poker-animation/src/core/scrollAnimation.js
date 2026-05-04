@@ -31,40 +31,42 @@ export class ScrollAnimation {
                     document.body.style.backgroundColor = `rgb(0, ${Math.floor(15 * (1 - bgProg))}, ${Math.floor(51 + (204 * bgProg))})`;
                 }
 
-                // 1. 展开螺旋阶段 (0% - 30%)
-                if (p <= 0.3) {
-                    const expandProg = p / 0.3;
+                // 1. 展开螺旋阶段 (0% - 20%)
+                if (p <= 0.2) {
+                    const expandProg = p / 0.2;
                     this.cardDeck.setShuffleSpiralProgress(expandProg);
                     this.cardDeck.isIdleAnimationEnabled = false;
                 } 
-                // 2. 从外向内回收阶段 (30% - 50%)
-                else if (p > 0.3 && p <= 0.5) {
-                    const collectProg = (p - 0.3) / 0.2;
+                // 2. 回收至正下方 (20% - 40%)
+                else if (p > 0.2 && p <= 0.4) {
+                    const collectProg = (p - 0.2) / 0.2;
                     this.cardDeck.collectSpiral(collectProg);
                     this.cardDeck.isIdleAnimationEnabled = false;
                 }
-                // 3. 史诗抽出主角牌阶段 (50% - 65%)
-                else if (p > 0.5 && p <= 0.65) {
-                    const drawProg = (p - 0.5) / 0.15;
+                // 3. 正下方展开为扇形 (40% - 60%)
+                else if (p > 0.4 && p <= 0.6) {
+                    const fanProg = (p - 0.4) / 0.2;
+                    this.cardDeck.expandFanFromBottom(fanProg, 0);
+                    this.cardDeck.isIdleAnimationEnabled = false;
+                }
+                // 4. 扇形放大 (60% - 70%)
+                else if (p > 0.6 && p <= 0.7) {
+                    const zoomProg = (p - 0.6) / 0.1;
+                    this.cardDeck.expandFanFromBottom(1.0, zoomProg);
+                    this.cardDeck.isIdleAnimationEnabled = false;
+                }
+                // 5. 扇形中央史诗抽出 (70% - 85%)
+                else if (p > 0.7 && p <= 0.85) {
+                    const drawProg = (p - 0.7) / 0.15;
                     this.cardDeck.drawMainCards(drawProg);
                     this.cardDeck.isIdleAnimationEnabled = false;
                 }
-                // 4. 扇形散开阶段 (65% - 85%)
-                else if (p > 0.65 && p <= 0.85) {
-                    const spreadProg = (p - 0.65) / 0.2;
-                    this.cardDeck.spreadMainCards(spreadProg);
-                    this.cardDeck.isIdleAnimationEnabled = false;
-                    
-                    if (p > 0.8 && this.currentState !== 1) {
-                        this.currentState = 1;
-                        this.cardDeck.flipMainCards();
-                    }
-                }
-                // 5. 完成阶段：开启呼吸律动并终极放大
+                // 6. 翻转与终极展示 (85% - 100%)
                 else if (p > 0.85) {
                     this.cardDeck.isIdleAnimationEnabled = true;
                     if (this.currentState !== 2) {
                         this.currentState = 2;
+                        this.cardDeck.flipMainCards();
                         this.cardDeck.finalZoomIn();
                     }
                 }

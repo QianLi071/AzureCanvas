@@ -29,17 +29,25 @@ async function startAnimation() {
 	topLight.position.set(0, 20, 0);
 	scene.add(topLight);
 	const engine = import_matter.default.Engine.create();
+// 初始化卡牌逻辑
 	const cardDeck = new CardDeck(scene, camera, engine);
 	cardDeck.initCards(deckData);
     
-    // 初始化滚动动画逻辑
-	new ScrollAnimation().init(cardDeck);
+    // 全量切换至 CSS Scroll-Driven Animation (SDA) 驱动，移除旧的 ScrollAnimation 类初始化
+	// new ScrollAnimation().init(cardDeck);
 
+	// 获取 CSS 变量驱动的进度
+	const proxy = document.getElementById('poker-proxy');
+	
 	const clock = new Clock();
 	function animate() {
 		requestAnimationFrame(animate);
 		import_matter.default.Engine.update(engine, 16);
 		
+		// 读取 CSS 变量并同步到滚动逻辑
+		const progress = parseFloat(getComputedStyle(proxy).getPropertyValue('--poker-progress')) || 0;
+		cardDeck.updateFromCSSProgress(progress);
+
 		// 更新卡牌律动动画
 		const dt = clock.getDelta();
 		cardDeck.updateIdleAnimation(dt);
@@ -111,5 +119,5 @@ async function startAnimation() {
 	};
 	if (btnDeal) btnDeal.onclick = () => cardDeck.dealThreeCards();
 }
-startAnimation().catch((err) => console.error("初始化失败:", err));
+startAnimation().catch((err) => console.error("初始化失败:", err)).then((e) => {console.log("success")});
 //#endregion

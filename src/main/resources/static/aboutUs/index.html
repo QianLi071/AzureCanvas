@@ -17,6 +17,41 @@
         }
     </script>
     <style>
+        /* --- CSS Scroll-Driven Animation 变量驱动 --- */
+        @property --poker-progress {
+            syntax: '<number>';
+            inherits: true;
+            initial-value: 0;
+        }
+
+        :root {
+            --poker-progress: 0;
+        }
+
+        .poker-section {
+            height: 400vh; /* 增加滚动长度以承载更复杂的序列 */
+            position: relative;
+            background: #000F33FF;
+            /* 关键：定义滚动驱动时间轴 */
+            view-timeline: --poker-timeline block;
+        }
+
+        #poker-proxy {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            /* 驱动 CSS 变量 */
+            animation: poker-sync linear both;
+            animation-timeline: --poker-timeline;
+            animation-range: entry 100% exit 100%;
+        }
+
+        @keyframes poker-sync {
+            from { --poker-progress: 0; }
+            to { --poker-progress: 1; }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -156,7 +191,7 @@
         }
 
         .poker-section {
-            height: 300vh; /* 为卡牌动画预留足够的滚动空间 */
+            height: 500vh; /* 为卡牌动画预留足够的滚动空间 */
             position: relative;
             background: #000F33FF;
         }
@@ -211,8 +246,9 @@
 </div>
 
 <div class="poker-section">
-    <div id="canvas-container" class="poker-iframe-wrapper"></div>
-</div>
+     <div id="poker-proxy"></div>
+     <div id="canvas-container" class="poker-iframe-wrapper"></div>
+ </div>
 
 <div class="spacer">
     <div class="sponsors-container">
