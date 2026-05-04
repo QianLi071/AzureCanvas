@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实践咨询 - MUST树洞</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  .practice-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 64px;
+    z-index: 10;
+    margin: 0 -0px;
+  }
+  .practice-tab {
+    flex: 1;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: var(--transition);
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .practice-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+  .practice-tab:hover:not(.active) {
+    background: var(--hover-bg);
+    color: var(--text);
+  }
+  .tab-panel { display: none; padding: 16px 0; }
+  .tab-panel.active { display: block; }
+  .practice-page-wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+  .recruit-square {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .recruit-square-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .recruit-square-title i { color: var(--text-muted); }
+
+  .team-card {
+    background: var(--bg);
+    border: 1px solid var(--border-muted);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .team-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .team-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .team-card-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--bg-inset);
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid var(--border-muted);
+  }
+  .team-card-badge.mine {
+    background: #fff3e0;
+    color: #e65100;
+    border-color: #ffcc80;
+  }
+  .team-card-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .team-card-intro {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .team-card-skills {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .applied-label {
+    font-size: 13px;
+    color: #4caf50;
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title i { color: #e05c00; }
+
+  .item-card {
+    background: var(--bg);
+    border: 1px solid var(--border-muted);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  .item-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .item-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .item-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    margin-right: 10px;
+  }
+  .heat-badge {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ff7043;
+    white-space: nowrap;
+  }
+  .item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .tag-chip {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--bg-inset);
+    color: var(--text-muted);
+    border: 1px solid var(--border-muted);
+  }
+  .item-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .deadline-label {
+    font-size: 12px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .deadline-label i { color: var(--text-muted); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+    padding: 24px;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-inset);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    transition: var(--transition);
+    box-sizing: border-box;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #888;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-actions .btn { flex: 1; }
+
+  body.night-mode .team-card-badge { background: var(--bg-inset); color: var(--text-muted); }
+  body.night-mode .team-card-badge.mine { background: rgba(230,81,0,0.15); color: #ffb74d; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-logo">
+    <button class="btn btn-sm" onclick="history.back()"><i class="fas fa-arrow-left"></i> 返回</button>
+  </div>
+  <div class="nav-search-center">
+    <div style="font-size:1.1rem;font-weight:700;color:var(--text)">实践咨询</div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-sm" id="nightToggle"><i class="fas fa-moon"></i></button>
+  </div>
+</nav>
+
+<div class="practice-tabs">
+  <button class="practice-tab" data-tab="group">课堂小组</button>
+  <button class="practice-tab" data-tab="competition">竞赛</button>
+  <button class="practice-tab" data-tab="internship">实习</button>
+</div>
+
+<div class="practice-page-wrap">
+<div class="tab-panel" id="panel-group">
+  <div id="recruit-group"></div>
+  <div class="section-title"><i class="fas fa-fire"></i> 热门课堂小组</div>
+  <div id="list-group"></div>
+</div>
+
+<div class="tab-panel" id="panel-competition">
+  <div id="recruit-competition"></div>
+  <div class="section-title"><i class="fas fa-fire"></i> 热门竞赛</div>
+  <div id="list-competition"></div>
+</div>
+
+<div class="tab-panel" id="panel-internship">
+  <div id="recruit-internship"></div>
+  <div class="section-title"><i class="fas fa-fire"></i> 热门实习</div>
+  <div id="list-internship"></div>
+</div>
+</div>
+
+<div class="modal-overlay" id="recruitModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">寻找队友</div>
+    <form id="recruitForm" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="fieldMajor">学院 / 专业</label>
+        <input class="form-input" id="fieldMajor" type="text" placeholder="例如：计算机学院 软件工程" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fieldGrade">年级</label>
+        <select class="form-select" id="fieldGrade">
+          <option value="大一">大一</option>
+          <option value="大二">大二</option>
+          <option value="大三">大三</option>
+          <option value="大四">大四</option>
+          <option value="研究生">研究生</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fieldSkills">擅长优势</label>
+        <textarea class="form-textarea" id="fieldSkills" placeholder="例如：擅长编程、数据分析、文案写作…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fieldIntro">自我介绍</label>
+        <textarea class="form-textarea" id="fieldIntro" placeholder="简单介绍一下自己…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="modalCancel">取消</button>
+        <button type="submit" class="btn btn-primary">发布招募</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var DATA = {
+    group: [
+      { id: 'g1', title: '数据结构课程设计', heat: 342, desc: '需要3-4人小组完成链表与树的综合项目', deadline: '2026-05-20', tags: ['计算机','编程'] },
+      { id: 'g2', title: '市场营销案例分析', heat: 289, desc: '分析真实企业营销策略，撰写报告', deadline: '2026-05-18', tags: ['商科','分析'] },
+      { id: 'g3', title: '英语演讲比赛备赛', heat: 201, desc: '校级英语演讲，需要搭档练习', deadline: '2026-05-15', tags: ['英语','演讲'] },
+      { id: 'g4', title: '物理实验报告合作', heat: 178, desc: '大学物理实验数据分析与报告撰写', deadline: '2026-05-25', tags: ['理工','实验'] }
+    ],
+    competition: [
+      { id: 'c1', title: '全国大学生数学建模竞赛', heat: 521, desc: '三人一组，解决实际数学建模问题，含丰厚奖金', deadline: '2026-09-01', tags: ['数学','建模','奖金'] },
+      { id: 'c2', title: '蓝桥杯程序设计大赛', heat: 445, desc: '个人或组队参赛，算法与编程能力竞技', deadline: '2026-06-15', tags: ['编程','算法'] },
+      { id: 'c3', title: '互联网+创新创业大赛', heat: 398, desc: '创业项目路演，校级选拔赛报名中', deadline: '2026-05-30', tags: ['创业','创新'] },
+      { id: 'c4', title: '全国英语演讲比赛', heat: 267, desc: '校内选拔，优胜者代表学校参加全国赛', deadline: '2026-05-10', tags: ['英语','演讲'] }
+    ],
+    internship: [
+      { id: 'i1', title: '腾讯暑期实习生招募', heat: 634, desc: '产品、技术、运营方向，提供住宿补贴', deadline: '2026-05-31', tags: ['互联网','技术','暑期'] },
+      { id: 'i2', title: '华为校园招聘实习', heat: 589, desc: '硬件/软件工程师实习，转正机会大', deadline: '2026-05-25', tags: ['硬件','软件'] },
+      { id: 'i3', title: '字节跳动Data实习', heat: 512, desc: '数据分析方向，需要Python/SQL基础', deadline: '2026-05-20', tags: ['数据','分析'] },
+      { id: 'i4', title: '本地政府机关实习', heat: 234, desc: '行政管理方向，积累政务经验', deadline: '2026-06-01', tags: ['政务','行政'] }
+    ]
+  };
+
+  var SAMPLE_TEAMS = {
+    group: [
+      { id: 'sg1', name: '李明 · 大三', major: '信息工程学院 计算机科学', grade: '大三', skills: '擅长算法设计、C++编程', intro: '希望找到认真负责的队友一起完成课设，有相关经验优先。' },
+      { id: 'sg2', name: '王芳 · 大二', major: '商学院 市场营销', grade: '大二', skills: '擅长PPT制作、数据分析', intro: '寻找有商科背景的同学合作案例分析，欢迎联系！' },
+      { id: 'sg3', name: '张伟 · 大一', major: '外国语学院 英语', grade: '大一', skills: '英语口语流利、逻辑清晰', intro: '备战演讲比赛，需要一位搭档互相练习，每天可安排1小时。' }
+    ],
+    competition: [
+      { id: 'sc1', name: '陈浩 · 大三', major: '数学学院 应用数学', grade: '大三', skills: '数学建模经验丰富，熟悉MATLAB', intro: '参加过省级建模竞赛，寻找编程能力强的队友组队冲国奖。' },
+      { id: 'sc2', name: '刘洋 · 大二', major: '计算机学院 软件工程', grade: '大二', skills: '算法竞赛经验，LeetCode 1800+', intro: '蓝桥杯备赛中，寻找志同道合的队友一起刷题备赛。' },
+      { id: 'sc3', name: '赵敏 · 大三', major: '创业学院 工商管理', grade: '大三', skills: '商业计划书撰写、路演经验', intro: '互联网+项目已有初步方案，需要技术方向同学加入。' }
+    ],
+    internship: [
+      { id: 'si1', name: '孙磊 · 大三', major: '计算机学院 人工智能', grade: '大三', skills: 'Python/Java开发，有项目经验', intro: '正在准备腾讯实习面试，寻找一起内推、互相模拟面试的伙伴。' },
+      { id: 'si2', name: '周婷 · 大四', major: '电子工程学院 通信工程', grade: '大四', skills: '嵌入式开发、硬件调试', intro: '华为实习意向，有相关经验，欢迎一起准备笔试。' },
+      { id: 'si3', name: '吴杰 · 研究生', major: '数据科学学院 统计学', grade: '研究生', skills: 'Python/SQL/数据可视化', intro: '字节数据实习备战，寻找一起刷SQL题和案例分析的同学。' }
+    ]
+  };
+
+  var currentTab = 'group';
+  var currentItemTitle = '';
+
+  // Night mode
+  function applyNightMode() {
+    var on = localStorage.getItem('th_night_mode') === '1';
+    document.body.classList.toggle('night-mode', on);
+    var icon = document.querySelector('#nightToggle i');
+    if (icon) icon.className = on ? 'fas fa-sun' : 'fas fa-moon';
+  }
+
+  document.getElementById('nightToggle').addEventListener('click', function () {
+    var on = localStorage.getItem('th_night_mode') === '1';
+    localStorage.setItem('th_night_mode', on ? '0' : '1');
+    applyNightMode();
+  });
+
+  applyNightMode();
+
+  // Tabs
+  function activateTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.practice-tab').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-panel').forEach(function (panel) {
+      panel.classList.toggle('active', panel.id === 'panel-' + tab);
+    });
+    renderRecruitSquare(tab);
+  }
+
+  document.querySelectorAll('.practice-tab').forEach(function (btn) {
+    btn.addEventListener('click', function () { activateTab(btn.dataset.tab); });
+  });
+
+  // Escape HTML
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Render item lists
+  function renderList(tab) {
+    var container = document.getElementById('list-' + tab);
+    container.innerHTML = '';
+    DATA[tab].forEach(function (item) {
+      var card = document.createElement('div');
+      card.className = 'item-card';
+      card.innerHTML =
+        '<div class="item-card-header">' +
+          '<span class="item-title">' + esc(item.title) + '</span>' +
+          '<span class="heat-badge">🔥 ' + item.heat + '</span>' +
+        '</div>' +
+        '<div class="item-tags">' +
+          item.tags.map(function (t) { return '<span class="tag-chip">' + esc(t) + '</span>'; }).join('') +
+        '</div>' +
+        '<div class="item-desc">' + esc(item.desc) + '</div>' +
+        '<div class="item-footer">' +
+          '<span class="deadline-label"><i class="fas fa-calendar-alt"></i> 截止 ' + esc(item.deadline) + '</span>' +
+          '<button class="btn btn-primary btn-sm" data-title="' + esc(item.title) + '">寻找队友</button>' +
+        '</div>';
+      container.appendChild(card);
+    });
+
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-title]');
+      if (btn) openModal(btn.dataset.title);
+    });
+  }
+
+  // Render recruit square
+  function renderRecruitSquare(tab) {
+    var container = document.getElementById('recruit-' + tab);
+    var stored = getStoredTeams(tab);
+    if (stored.length === 0) { container.innerHTML = ''; return; }
+
+    var html = '<div class="recruit-square"><div class="recruit-square-title"><i class="fas fa-users"></i> 招募广场</div>';
+
+    stored.forEach(function (team) { html += buildTeamCard(team, true); });
+    SAMPLE_TEAMS[tab].forEach(function (team) { html += buildTeamCard(team, false); });
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('[data-apply-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.dataset.applyId;
+        localStorage.setItem('practice_applied_' + id, '1');
+        btn.parentElement.innerHTML = '<span class="applied-label">申请已发送 ✓</span>';
+      });
+    });
+  }
+
+  function buildTeamCard(team, isMine) {
+    var applied = !isMine && localStorage.getItem('practice_applied_' + team.id) === '1';
+    var action = isMine
+      ? '<button class="btn btn-sm" onclick="alert(\'管理功能开发中\')">管理</button>'
+      : (applied
+          ? '<span class="applied-label">申请已发送 ✓</span>'
+          : '<button class="btn btn-primary btn-sm" data-apply-id="' + esc(team.id) + '">申请加入</button>');
+    return '<div class="team-card">' +
+      '<div class="team-card-header">' +
+        '<span class="team-card-name">' + esc(team.name || (team.major + ' · ' + team.grade)) + '</span>' +
+        '<span class="team-card-badge' + (isMine ? ' mine' : '') + '">' + (isMine ? '我的团队 · 队长' : '招募中') + '</span>' +
+      '</div>' +
+      '<div class="team-card-meta"><i class="fas fa-graduation-cap"></i> ' + esc(team.major) + ' &nbsp;|&nbsp; ' + esc(team.grade) + '</div>' +
+      (team.skills ? '<div class="team-card-skills"><i class="fas fa-star"></i> ' + esc(team.skills) + '</div>' : '') +
+      '<div class="team-card-intro">' + esc(team.intro) + '</div>' +
+      '<div>' + action + '</div>' +
+    '</div>';
+  }
+
+  // Modal
+  function openModal(title) {
+    currentItemTitle = title;
+    document.getElementById('modalTitle').textContent = '寻找队友 - ' + title;
+    document.getElementById('recruitForm').reset();
+    document.getElementById('recruitModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('recruitModal').classList.remove('open');
+  }
+
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('recruitModal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.getElementById('recruitForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var major = document.getElementById('fieldMajor').value.trim();
+    var grade = document.getElementById('fieldGrade').value;
+    var skills = document.getElementById('fieldSkills').value.trim();
+    var intro = document.getElementById('fieldIntro').value.trim();
+
+    if (!major) { document.getElementById('fieldMajor').focus(); return; }
+
+    var team = {
+      id: 'user_' + Date.now(),
+      name: major + ' · ' + grade,
+      major: major,
+      grade: grade,
+      skills: skills,
+      intro: intro || '暂无介绍'
+    };
+
+    var teams = getStoredTeams(currentTab);
+    teams.unshift(team);
+    localStorage.setItem('practice_teams_' + currentTab, JSON.stringify(teams));
+
+    closeModal();
+    renderRecruitSquare(currentTab);
+
+    var panel = document.getElementById('panel-' + currentTab);
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // LocalStorage helpers
+  function getStoredTeams(tab) {
+    try { return JSON.parse(localStorage.getItem('practice_teams_' + tab) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  // Init
+  ['group', 'competition', 'internship'].forEach(function (tab) { renderList(tab); });
+
+  var params = new URLSearchParams(window.location.search);
+  var tabParam = params.get('tab');
+  var defaultTab = ['group', 'competition', 'internship'].indexOf(tabParam) !== -1 ? tabParam : 'group';
+  activateTab(defaultTab);
+
+})();
+</script>
+</body>
+</html>

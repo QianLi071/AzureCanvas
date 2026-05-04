@@ -244,9 +244,23 @@
     <!-- 头像设置 -->
     <div class="settings-section" id="tab-avatar">
       <div class="form-group">
+        <label class="form-label">本地图片头像</label>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+          <div id="avatarImgPreview" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--bg-inset);font-size:1.5rem;font-weight:700;"></div>
+          <div>
+            <label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+              <i class="fas fa-upload"></i> 选择图片
+              <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+            </label>
+            <button class="btn btn-sm" id="clearAvatarImgBtn" style="margin-left:6px;">清除图片</button>
+            <div class="form-hint" style="margin-top:6px;">上传后将替代字母头像显示</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">头像字母</label>
         <input class="form-input" id="inputAvatarLetter" type="text" maxlength="1" placeholder="单个字符">
-        <div class="form-hint">显示在头像圆圈中的字符</div>
+        <div class="form-hint">未上传图片时显示在头像圆圈中的字符</div>
       </div>
       <div class="form-group">
         <label class="form-label">头像颜色</label>
@@ -358,6 +372,20 @@
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">主页背景图</label>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+          <div id="bgImgPreview" style="width:96px;height:60px;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;flex-shrink:0;background:var(--bg-inset);display:flex;align-items:center;justify-content:center;font-size:0.78rem;color:var(--text-muted);">预览</div>
+          <div>
+            <label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+              <i class="fas fa-image"></i> 选择背景图
+              <input type="file" id="bgFileInput" accept="image/*" style="display:none;">
+            </label>
+            <button class="btn btn-sm" id="clearBgBtn" style="margin-left:6px;">清除背景</button>
+            <div class="form-hint" style="margin-top:6px;">设置主页面的背景图片</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">字体大小</label>
         <div class="font-size-row">
           <span style="font-size:0.8rem;color:var(--text-muted);">小</span>
@@ -453,6 +481,75 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // 头像图片上传
+  const avatarImgPreview = document.getElementById("avatarImgPreview");
+  const avatarFileInput = document.getElementById("avatarFileInput");
+  let currentAvatarImg = localStorage.getItem("th_avatar_img") || "";
+
+  function renderAvatarImgPreview() {
+    if (currentAvatarImg) {
+      avatarImgPreview.innerHTML = `<img src="${currentAvatarImg}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      const letter = document.getElementById("inputAvatarLetter").value.trim().slice(0,1)
+        || document.getElementById("inputNickname").value.trim().slice(0,1) || "我";
+      const color = colorPicker.querySelector(".color-dot.selected")?.dataset.color || u.avatarColor || "#555";
+      avatarImgPreview.textContent = letter;
+      avatarImgPreview.style.background = color;
+    }
+  }
+  renderAvatarImgPreview();
+
+  avatarFileInput.addEventListener("change", () => {
+    const file = avatarFileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentAvatarImg = e.target.result;
+      renderAvatarImgPreview();
+      updatePreview();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("clearAvatarImgBtn").addEventListener("click", () => {
+    currentAvatarImg = "";
+    avatarFileInput.value = "";
+    renderAvatarImgPreview();
+    updatePreview();
+  });
+
+  // 背景图上传
+  const bgFileInput = document.getElementById("bgFileInput");
+  const bgImgPreview = document.getElementById("bgImgPreview");
+  let currentBgImg = localStorage.getItem("th_bg_img") || "";
+
+  function renderBgPreview() {
+    if (currentBgImg) {
+      bgImgPreview.innerHTML = `<img src="${currentBgImg}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+      bgImgPreview.innerHTML = "预览";
+      bgImgPreview.style.background = "var(--bg-inset)";
+    }
+  }
+  renderBgPreview();
+
+  bgFileInput.addEventListener("change", () => {
+    const file = bgFileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentBgImg = e.target.result;
+      renderBgPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("clearBgBtn").addEventListener("click", () => {
+    currentBgImg = "";
+    bgFileInput.value = "";
+    renderBgPreview();
+  });
+
   // 实时预览
   function updatePreview() {
     const letter = document.getElementById("inputAvatarLetter").value.trim().slice(0,1)
@@ -464,8 +561,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const age = document.getElementById("inputAge").value;
     const location = document.getElementById("inputLocation").value.trim();
 
-    document.getElementById("previewAvatar").textContent = letter;
-    document.getElementById("previewAvatar").style.background = color;
+    if (currentAvatarImg) {
+      document.getElementById("previewAvatar").innerHTML = `<img src="${currentAvatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      document.getElementById("previewAvatar").style.background = "none";
+    } else {
+      document.getElementById("previewAvatar").textContent = letter;
+      document.getElementById("previewAvatar").style.background = color;
+    }
+    renderAvatarImgPreview();
     document.getElementById("previewName").textContent = name;
     document.getElementById("previewBio").textContent = bio;
 
@@ -546,6 +649,18 @@ document.addEventListener("DOMContentLoaded", () => {
       bio: document.getElementById("inputBio").value.trim(),
       location: document.getElementById("inputLocation").value.trim(),
     });
+    // 保存头像图片
+    if (currentAvatarImg) {
+      localStorage.setItem("th_avatar_img", currentAvatarImg);
+    } else {
+      localStorage.removeItem("th_avatar_img");
+    }
+    // 保存背景图
+    if (currentBgImg) {
+      localStorage.setItem("th_bg_img", currentBgImg);
+    } else {
+      localStorage.removeItem("th_bg_img");
+    }
     // 保存通知/隐私/通用开关
     const prefs = {
       notifyComment: document.getElementById("notifyComment").checked,
