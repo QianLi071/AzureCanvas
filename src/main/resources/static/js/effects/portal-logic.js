@@ -1010,7 +1010,7 @@ if (progress >= 1.0 && !window._hasRedirected) {
     window._hasRedirected = true;
     // 可选：再留一点白屏时间（0~500ms）
     setTimeout(() => {
-        window.location.href = '/islands/index.html';   // 请根据实际部署路径调整
+        window.location.href = '../islands/index.html';   // 请根据实际部署路径调整
     }
     , 300);
             }
