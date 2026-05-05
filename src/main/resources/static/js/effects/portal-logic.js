@@ -846,14 +846,14 @@ scene.add(particles);
 
 // 加载音频文件
 // 1. 瀑布外音频
-audioLoader.load('/audio/waterfall_loop(outside).mp3', (buffer) => {
+audioLoader.load('../audios/portal/waterfall_loop(outside).mp3', (buffer) => {
     outsideSound.setBuffer(buffer);
     outsideSound.setLoop(true);
     outsideSound.setVolume(0.6);
 });
 
 // 2. 隧道内音频（带空间音频和滤镜）
-audioLoader.load('/audio/waterfall_loop.mp3', (buffer) => {
+audioLoader.load('../audios/portal/waterfall_loop.mp3', (buffer) => {
     tunnelSound.setBuffer(buffer);
     tunnelSound.setLoop(true);
     tunnelSound.setRefDistance(10);
@@ -864,7 +864,7 @@ audioLoader.load('/audio/waterfall_loop.mp3', (buffer) => {
 });
 
 // 3. 穿梭爆发音效
-audioLoader.load('/audio/teleport_splash.mp3', (buffer) => {
+audioLoader.load('../audios/portal/teleport_splash.mp3', (buffer) => {
     splashSound.setBuffer(buffer);
     splashSound.setVolume(0.6);
 });
