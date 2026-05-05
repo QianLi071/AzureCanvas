@@ -121,16 +121,12 @@
         const centerMarginX = 180;  // 避开中心区域宽度
         const centerMarginY = 150;  // 避开中心区域高度
         
-        // 方向：上、下、左、右、左上、右上、左下、右下
+        // 方向：仅保留上下左右，去掉斜向
         const dirs = [
             { dx: 1, dy: 0, name: 'right' },    // 右
             { dx: -1, dy: 0, name: 'left' },    // 左
             { dx: 0, dy: 1, name: 'down' },     // 下
-            { dx: 0, dy: -1, name: 'up' },      // 上
-            { dx: 1, dy: 1, name: 'downRight' },// 右下
-            { dx: -1, dy: 1, name: 'downLeft' },// 左下
-            { dx: 1, dy: -1, name: 'upRight' }, // 右上
-            { dx: -1, dy: -1, name: 'upLeft' }  // 左上
+            { dx: 0, dy: -1, name: 'up' }       // 上
         ];
         
         // 电路走线类
@@ -147,37 +143,19 @@
                 this.hasBranched = false;
             }
             
-            // 生长一格（横平竖直或45度）
+            // 生长一格（横平竖直）
             growStep(w, h, progress) {
                 if (this.points.length >= this.maxLength) return false;
                 
                 const last = this.points[this.points.length - 1];
                 
-                // 随机改变方向（保持电路感，不要太随机）
-                if (Math.random() < 0.15) {
-                    // 倾向于保持原有方向类型（水平/垂直/对角线）
-                    const currentType = Math.abs(this.currentDirIdx);
-                    let candidates = [];
-                    for (let i = 0; i < dirs.length; i++) {
-                        const d = dirs[i];
-                        const isHorizontal = (d.dx !== 0 && d.dy === 0);
-                        const isVertical = (d.dx === 0 && d.dy !== 0);
-                        const isDiagonal = (d.dx !== 0 && d.dy !== 0);
-                        if (currentType === 0 && isHorizontal) candidates.push(i);
-                        else if (currentType === 1 && isVertical) candidates.push(i);
-                        else if (currentType === 2 && isDiagonal) candidates.push(i);
-                        else candidates.push(i);
-                    }
-                    if (candidates.length > 0) {
-                        this.currentDirIdx = candidates[Math.floor(Math.random() * candidates.length)];
-                    } else {
-                        this.currentDirIdx = Math.floor(Math.random() * dirs.length);
-                    }
+                // 随机改变方向（仅限90度转弯）
+                if (Math.random() < 0.2) {
+                    this.currentDirIdx = Math.floor(Math.random() * dirs.length);
                 }
                 
                 const dir = dirs[this.currentDirIdx];
-                let stepLen = (dir.dx !== 0 && dir.dy !== 0) ? 12 : 18; // 对角线步长稍短
-                stepLen += Math.random() * 8;
+                let stepLen = 18 + Math.random() * 8; 
                 
                 let newX = last.x + dir.dx * stepLen;
                 let newY = last.y + dir.dy * stepLen;
@@ -213,11 +191,11 @@
                 this.length++;
                 
                 // 随机产生分支
-                if (!this.hasBranched && this.points.length > 5 && Math.random() < 0.08 * progress) {
+                if (!this.hasBranched && this.points.length > 5 && Math.random() < 0.1 * progress) {
                     this.hasBranched = true;
                     const branchWidth = this.width * 0.6;
                     const branchHue = this.colorHue + 15;
-                    const branchDir = (this.currentDirIdx + 2 + Math.floor(Math.random() * 3)) % dirs.length;
+                    const branchDir = (this.currentDirIdx + 1) % dirs.length;
                     const branch = new PCBTrace(newX, newY, branchDir, branchWidth, branchHue);
                     branch.maxLength = this.maxLength * 0.5;
                     this.branches.push(branch);
@@ -313,7 +291,7 @@
         function initTraces(w, h) {
             allTraces = [];
             
-            // 每个角落生成 3-5 束不同粗细的电路
+            // 每个角落增加至 8-12 束电路
             const corners = [
                 { x: 20, y: 20, baseAngle: 0, hues: [180, 195, 210] },           // 左上
                 { x: w - 20, y: 20, baseAngle: 1, hues: [195, 210, 225] },       // 右上
@@ -322,19 +300,18 @@
             ];
             
             for (let corner of corners) {
-                const count = 3 + Math.floor(Math.random() * 3);
+                const count = 8 + Math.floor(Math.random() * 5); // 增加数量
                 for (let i = 0; i < count; i++) {
-                    // 起始方向：从角落向中心的大致方向
                     let startDirIdx;
-                    if (corner.baseAngle === 0) startDirIdx = 3 + Math.floor(Math.random() * 3); // 右下/右/下
-                    else if (corner.baseAngle === 1) startDirIdx = 2 + Math.floor(Math.random() * 3); // 左下/左/下
-                    else if (corner.baseAngle === 2) startDirIdx = 0 + Math.floor(Math.random() * 3); // 左上/上/左
-                    else startDirIdx = 1 + Math.floor(Math.random() * 3); // 右上/右/上
+                    if (corner.baseAngle === 0) startDirIdx = Math.random() > 0.5 ? 0 : 2; // 右或下
+                    else if (corner.baseAngle === 1) startDirIdx = Math.random() > 0.5 ? 1 : 2; // 左或下
+                    else if (corner.baseAngle === 2) startDirIdx = Math.random() > 0.5 ? 1 : 3; // 左或上
+                    else startDirIdx = Math.random() > 0.5 ? 0 : 3; // 右或上
                     
-                    const width = 3 + Math.random() * 8;
-                    const hue = corner.hues[i % corner.hues.length] + (Math.random() - 0.5) * 20;
+                    const width = 2 + Math.random() * 6;
+                    const hue = corner.hues[i % corner.hues.length] + (Math.random() - 0.5) * 30;
                     const trace = new PCBTrace(corner.x, corner.y, startDirIdx, width, hue);
-                    trace.maxLength = 60 + Math.random() * 100;
+                    trace.maxLength = 100 + Math.random() * 150; // 增加长度
                     allTraces.push(trace);
                 }
             }
@@ -349,15 +326,15 @@
                 trace.collectSegments(allSegments);
             }
             
-            const targetCount = Math.floor(60 * brightness);
+            const targetCount = Math.floor(150 * brightness); // 增加粒子密度
             while (particles.length < targetCount) {
                 const seg = allSegments[Math.floor(Math.random() * allSegments.length)];
                 if (seg) {
                     particles.push({
                         seg: seg,
                         pos: Math.random(),
-                        speed: 0.008 + Math.random() * 0.015,
-                        size: 2 + Math.random() * 4
+                        speed: 0.01 + Math.random() * 0.02,
+                        size: 1.5 + Math.random() * 3
                     });
                 } else {
                     break;
@@ -377,7 +354,7 @@
                 const t = p.pos;
                 const hue = (p.seg.hue + t * 40) % 360;
                 
-                ctx.shadowBlur = 12;
+                ctx.shadowBlur = 10;
                 ctx.beginPath();
                 ctx.arc(x, y, p.size * brightness, 0, Math.PI * 2);
                 ctx.fillStyle = `hsla(${hue}, 95%, 65%, 0.9)`;
