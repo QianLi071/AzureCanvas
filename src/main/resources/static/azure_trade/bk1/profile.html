@@ -68,11 +68,11 @@
                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="contribution-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                         <div id="contribution-sub" class="ml-6 space-y-0.5">
-                            <a href="/treehole/index.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                            <a href="my-articles.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
                                 <span>我的文章</span>
                                 <span id="sidebar-article-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                             </a>
-                            <a href="/storymap/index.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                            <a href="my-maps.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
                                 <span>我的地图</span>
                                 <span id="sidebar-map-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">1</span>
                             </a>
@@ -83,6 +83,27 @@
                         </div>
                     </div>
 
+                    <!-- 我的点赞 -->
+                    <div>
+                        <div class="flex items-center justify-between px-4 py-2.5 text-gray-800 font-bold cursor-pointer hover:bg-gray-50 rounded-lg transition" id="like-toggle">
+                            <div class="flex items-center space-x-3"><span>👍</span><span>我的点赞</span></div>
+                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="like-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div id="like-sub" class="ml-6 space-y-0.5">
+                            <a href="my-likes.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>文章</span>
+                                <span id="sidebar-like-article-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="my-likes.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>动态</span>
+                                <span id="sidebar-like-moment-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="my-likes.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>地图</span>
+                                <span id="sidebar-like-map-count" class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                        </div>
+                    </div>
                 </nav>
                 <div class="mt-6 pt-4 border-t border-gray-100 space-y-2">
                     <a href="trade.html" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition font-medium text-sm">
@@ -151,11 +172,11 @@
 
                 <div class="flex items-center gap-8 px-6 h-12 border-t border-b border-gray-100 sticky top-14 bg-white z-40">
                     <div class="seller-tab relative h-full flex items-center cursor-pointer text-sm font-bold text-purple-600 transition-all" data-tab="items">
-                        <span>宝贝 <span class="text-gray-400 font-normal ml-0.5" id="items-count">0</span></span>
+                        <span>宝贝 <span class="text-gray-400 font-normal ml-0.5" id="items-count">51</span></span>
                         <div class="tab-bar absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-purple-600 rounded-full transition-all duration-300 opacity-100 scale-100"></div>
                     </div>
                     <div class="seller-tab relative h-full flex items-center cursor-pointer text-sm text-gray-500 hover:text-purple-600 transition-all" data-tab="reviews">
-                        <span>信用及评价 <span class="text-gray-400 font-normal ml-0.5" id="reviews-count-tab">0</span></span>
+                        <span>信用及评价 <span class="text-gray-400 font-normal ml-0.5" id="reviews-count-tab">29</span></span>
                         <div class="tab-bar absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-purple-600 rounded-full transition-all duration-300 opacity-0 scale-0"></div>
                     </div>
                 </div>
@@ -329,115 +350,37 @@ var myItems = [
     { title: '机械键盘 Cherry红轴 九成新 带灯', price: 180, wants: 5, emoji: '⌨️', bg: 'from-red-200 to-rose-300' }
 ];
 
-var demoReviews = [
+var reviews = [
     { name: '快乐同学', avatar: 'K', text: '发货很快，东西和描述一致，沟通非常愉快！而且卖家非常细心包装得很严实，下次还会再来的！', time: '2026-04-08 14:30', rating: 'good', role: 'buyer' },
     { name: '学霸小铺', avatar: 'X', text: '包装很好，没有损坏，非常满意。', time: '2026-04-06 09:15', rating: 'good', role: 'buyer' },
     { name: '佛系卖家', avatar: 'F', text: '同学人很好，面交很准时。', time: '2026-04-04 18:45', rating: 'good', role: 'seller' },
     { name: '挑剔的鱼', avatar: 'T', text: '有点小瑕疵，但考虑到是二手价格整体还行吧。', time: '2026-03-28 11:20', rating: 'medium', role: 'buyer' }
 ];
 
-var reviews = [];
-
 var grid = document.getElementById('profile-grid');
 var reviewsPanel = document.getElementById('reviews-panel');
 var reviewsList = document.getElementById('reviews-list');
 var tabs = document.querySelectorAll('.seller-tab');
-
-// 从API加载评价数据，API为空时使用demo数据
-async function loadReviews(filter) {
-    try {
-        var response = await fetch('/api/users/me', { credentials: 'include' });
-        if (!response.ok) { useDemoReviews(filter); return; }
-        var user = await response.json();
-        var userId = user.userId;
-
-        var url = '/api/market/users/' + userId + '/reviews';
-        if (filter && filter !== 'all') url += '?filter=' + filter;
-
-        var reviewRes = await fetch(url, { credentials: 'include' });
-        if (reviewRes.ok) {
-            var data = await reviewRes.json();
-            var apiReviews = (data.reviews || []).map(function(r) {
-                return {
-                    name: r.reviewerName || '匿名',
-                    avatar: r.reviewerAvatar ? '<img src="/resources/' + r.reviewerAvatar + '" class="w-12 h-12 rounded-full object-cover">' : (r.reviewerName || 'A').charAt(0).toUpperCase(),
-                    text: r.content || '',
-                    time: r.createdAt ? new Date(r.createdAt).toLocaleString('zh-CN') : '',
-                    rating: r.rating || 'good',
-                    role: r.role || 'buyer'
-                };
-            });
-            if (apiReviews.length > 0) {
-                reviews = apiReviews;
-                document.getElementById('count-all').textContent = data.countAll || 0;
-                document.getElementById('count-good').textContent = data.countGood || 0;
-                document.getElementById('count-buyer').textContent = data.countBuyer || 0;
-                document.getElementById('count-seller').textContent = data.countSeller || 0;
-                document.getElementById('reviews-count-tab').textContent = data.countAll || 0;
-                renderReviews(reviews);
-            } else {
-                useDemoReviews(filter);
-            }
-        } else {
-            useDemoReviews(filter);
-        }
-    } catch (err) {
-        console.error('加载评价失败:', err);
-        useDemoReviews(filter);
-    }
-}
-
-function useDemoReviews(filter) {
-    var filtered = demoReviews;
-    if (filter && filter !== 'all') {
-        if (filter === 'good' || filter === 'medium' || filter === 'bad') {
-            filtered = demoReviews.filter(function(r) { return r.rating === filter; });
-        } else {
-            filtered = demoReviews.filter(function(r) { return r.role === filter; });
-        }
-    }
-    reviews = filtered;
-    var countAll = demoReviews.length;
-    var countGood = demoReviews.filter(function(r) { return r.rating === 'good'; }).length;
-    var countBuyer = demoReviews.filter(function(r) { return r.role === 'buyer'; }).length;
-    var countSeller = demoReviews.filter(function(r) { return r.role === 'seller'; }).length;
-    document.getElementById('count-all').textContent = countAll;
-    document.getElementById('count-good').textContent = countGood;
-    document.getElementById('count-buyer').textContent = countBuyer;
-    document.getElementById('count-seller').textContent = countSeller;
-    document.getElementById('reviews-count-tab').textContent = countAll;
-    renderReviews(filtered);
-}
 
 function renderItems() {
     grid.innerHTML = '';
     myItems.forEach(function(item) {
         var card = document.createElement('div');
         card.className = 'bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer';
-
-        var imageContent;
-        if (item.images && item.images.length > 0) {
-            imageContent = '<img src="' + item.images[0] + '" class="w-full h-full object-cover" alt="' + item.title + '">';
-        } else {
-            imageContent = '<div class="h-40 bg-gradient-to-br ' + item.bg + ' flex items-center justify-center text-5xl relative">' + item.emoji + '</div>';
-        }
-
         card.innerHTML =
-            '<div class="h-40 relative overflow-hidden">' + imageContent + '</div>' +
+            '<div class="h-40 bg-gradient-to-br ' + item.bg + ' flex items-center justify-center text-5xl relative">' + item.emoji + '</div>' +
             '<div class="p-3">' +
                 '<p class="text-sm text-gray-800 leading-snug line-clamp-2">' + item.title + '</p>' +
                 '<div class="flex items-center justify-between mt-2">' +
                     '<span class="text-purple-600 font-black">¥' + item.price + '</span>' +
-                    '<span class="text-xs text-gray-400">' + (item.wants || 0) + '人想要</span>' +
+                    '<span class="text-xs text-gray-400">' + item.wants + '人想要</span>' +
                 '</div>' +
             '</div>';
 
+        // 👇 新增：添加点击跳转事件
         card.addEventListener('click', function() {
-            if (item.id) {
-                window.location.href = 'product.html?id=' + item.id;
-            } else {
-                window.location.href = 'product.html';
-            }
+            // 跳转到商品详情页（如果有具体的 id 也可以用 product.html?id=xxx）
+            window.location.href = 'product.html';
         });
 
         grid.appendChild(card);
@@ -501,7 +444,22 @@ function renderReviews(dataToRender) {
 var filterRadios = document.querySelectorAll('input[name="review_filter"]');
 filterRadios.forEach(function(radio) {
     radio.addEventListener('change', function(e) {
-        loadReviews(e.target.value);
+        var filterValue = e.target.value;
+        var filteredData = reviews;
+
+        if (filterValue === 'good') {
+            filteredData = reviews.filter(r => r.rating === 'good');
+        } else if (filterValue === 'medium') {
+            filteredData = reviews.filter(r => r.rating === 'medium');
+        } else if (filterValue === 'bad') {
+            filteredData = reviews.filter(r => r.rating === 'bad');
+        } else if (filterValue === 'buyer') {
+            filteredData = reviews.filter(r => r.role === 'buyer');
+        } else if (filterValue === 'seller') {
+            filteredData = reviews.filter(r => r.role === 'seller');
+        }
+
+        renderReviews(filteredData);
     });
 });
 
@@ -560,10 +518,22 @@ if(contributionToggle && contributionSub && contributionArrow) {
     });
 }
 
+// 我的点赞折叠逻辑
+var likeToggle = document.getElementById('like-toggle');
+var likeSub = document.getElementById('like-sub');
+var likeArrow = document.getElementById('like-arrow');
+if(likeToggle && likeSub && likeArrow) {
+    likeToggle.addEventListener('click', function() {
+        var hidden = likeSub.style.display === 'none';
+        likeSub.style.display = hidden ? '' : 'none';
+        likeArrow.classList.toggle('rotate-180', hidden);
+    });
+}
 
 // 初始化执行
 renderItems();
-loadReviews('all');
+updateFilterCounts();
+renderReviews(reviews);
 
 // 粉丝列表数据
 var followers = [
@@ -777,31 +747,6 @@ if (cachedProfile) applyProfileToPage(cachedProfile);
             var user = await response.json();
             saveProfileToStorage(user);
             applyProfileToPage(user);
-
-            // 加载用户发布的商品
-            try {
-                var itemsRes = await fetch('/api/market/users/me/items', { credentials: 'include' });
-                if (itemsRes.ok) {
-                    var items = await itemsRes.json();
-                    if (items && items.length > 0) {
-                        myItems = items.map(function(item) {
-                            return {
-                                id: item.itemId,
-                                title: item.title,
-                                price: item.price,
-                                wants: item.wants || 0,
-                                emoji: '📦',
-                                bg: 'from-purple-200 to-pink-300',
-                                images: item.images || []
-                            };
-                        });
-                        document.getElementById('items-count').textContent = items.length;
-                        renderItems();
-                    }
-                }
-            } catch (e) {
-                console.error('加载商品失败:', e);
-            }
         } else if (response.status === 401) {
             window.location.href = '/login?redirect=/azure_trade/trade';
         }

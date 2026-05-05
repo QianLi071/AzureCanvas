@@ -99,6 +99,56 @@ var chatName = document.getElementById('chat-name');
 var msgInput = document.getElementById('msg-input');
 var sendBtn = document.getElementById('send-btn');
 var activeChatId = null;
+var WORKER_URL = 'https://rewind9085.3361948361.workers.dev';
+var currentUser = 'me';
+
+// 加载会话列表
+async function loadConversations() {
+    try {
+        var resp = await fetch(WORKER_URL + '/msg/list?user=' + currentUser);
+        var remoteConvs = await resp.json();
+        // 把远程会话追加到写死列表后面（去重）
+        remoteConvs.forEach(function(rc) {
+            var exists = conversations.find(function(c) { return c.name === rc.name; });
+            if (!exists) conversations.push(rc);
+        });
+    } catch(e) {
+        console.warn('Worker 连接失败，使用本地数据');
+    }
+    renderChatList();
+}
+
+// 加载聊天记录
+async function loadHistory(partner) {
+    var resp = await fetch(WORKER_URL + '/msg/history?user=' + currentUser + '&partner=' + encodeURIComponent(partner));
+    var msgs = await resp.json();
+    chatMessages.innerHTML = '';
+    msgs.forEach(function(msg) { appendMessage(msg); });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// 发送消息
+async function sendMessageToWorker(to, text, product) {
+    await fetch(WORKER_URL + '/msg/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: currentUser, to, text, product })
+    });
+}
+
+sendBtn.addEventListener('click', function() {
+    var text = msgInput.value.trim();
+    if (!text || !activeChatId) return;
+    var conv = conversations.find(function(c) { return c.name === activeChatId; });
+    sendMessageToWorker(activeChatId, text).then(function() {
+        appendMessage({ from: 'me', text: text });
+        msgInput.value = '';
+        loadConversations();
+    });
+});
+
+loadConversations();
+
 
 var urlParams = new URLSearchParams(window.location.search);
 var sellerFromProduct = urlParams.get('seller');
@@ -128,18 +178,19 @@ function renderChatList() {
 }
 
 function openChat(conv) {
-    activeChatId = conv.id;
+    activeChatId = conv.name;
     chatName.textContent = conv.name;
     conv.unread = 0;
     renderChatList();
-    var history = chatHistory[conv.id] || [];
-    chatMessages.innerHTML = '';
-    if (history.length === 0) {
-        chatMessages.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-gray-300"><span class="text-4xl mb-2">💬</span><p class="text-sm">暂无消息，发送第一条吧</p></div>';
-        return;
+
+    // 写死的会话用本地数据，新会话从 Worker 加载
+    if (chatHistory[conv.id]) {
+        chatMessages.innerHTML = '';
+        chatHistory[conv.id].forEach(function(msg) { appendMessage(msg); });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    } else {
+        loadHistory(conv.name);
     }
-    history.forEach(function(msg) { appendMessage(msg); });
-    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function appendMessage(msg) {
@@ -168,22 +219,14 @@ msgInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendMe
 function sendMessage() {
     var text = msgInput.value.trim();
     if (!text || !activeChatId) return;
-    var msg = { from: 'me', text: text };
-    if (!chatHistory[activeChatId]) chatHistory[activeChatId] = [];
-    chatHistory[activeChatId].push(msg);
-    appendMessage(msg);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    msgInput.value = '';
-    var conv = conversations.find(function(c) { return c.id === activeChatId; });
-    if (conv) { conv.lastMsg = text; conv.time = '刚刚'; }
-    renderChatList();
+    sendMessageToWorker(activeChatId, text).then(function() {
+        appendMessage({ from: 'me', text: text });
+        msgInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        loadConversations();
+    });
 }
-
-renderChatList();
-if (sellerFromProduct) {
-    var t = conversations.find(function(c) { return c.name === sellerFromProduct; });
-    if (t) openChat(t);
-}
+loadConversations();
 </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

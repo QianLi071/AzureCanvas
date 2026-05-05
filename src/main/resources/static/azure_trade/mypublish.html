@@ -58,11 +58,11 @@
                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="contribution-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                         <div id="contribution-sub" class="ml-6 space-y-0.5">
-                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                            <a href="/treehole/index.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
                                 <span>我的文章</span>
                                 <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                             </a>
-                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                            <a href="/storymap/index.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
                                 <span>我的地图</span>
                                 <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">1</span>
                             </a>
@@ -73,27 +73,6 @@
                         </div>
                     </div>
 
-                    <!-- 我的点赞 -->
-                    <div>
-                        <div class="flex items-center justify-between px-4 py-2.5 text-gray-800 font-bold cursor-pointer hover:bg-gray-50 rounded-lg transition" id="like-toggle">
-                            <div class="flex items-center space-x-3"><span>👍</span><span>我的点赞</span></div>
-                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="like-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
-                        <div id="like-sub" class="ml-6 space-y-0.5">
-                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
-                                <span>文章</span>
-                                <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
-                            </a>
-                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
-                                <span>动态</span>
-                                <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
-                            </a>
-                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
-                                <span>地图</span>
-                                <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
-                            </a>
-                        </div>
-                    </div>
                 </nav>
                 <div class="mt-6 pt-4 border-t border-gray-100 space-y-2">
                     <a href="trade.html" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition font-medium text-sm">
@@ -112,12 +91,12 @@
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
                 <div class="flex overflow-x-auto hide-scrollbar border-b border-gray-100 bg-white">
                     <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm font-bold text-purple-600 relative" data-filter="all">
-                        全部
+                        全部 <span id="tab-count-all" class="text-xs text-purple-400 ml-0.5">0</span>
                         <div class="tab-bar absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full"></div>
                     </a>
-                    <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="selling">在售中</a>
-                    <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="sold">已卖出</a>
-                    <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="off">已下架</a>
+                    <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="selling">在售中 <span id="tab-count-selling" class="text-xs text-gray-400 ml-0.5">0</span></a>
+                    <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="sold">已卖出 <span id="tab-count-sold" class="text-xs text-gray-400 ml-0.5">0</span></a>
+                    <a href="#" class="pub-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="off">已下架 <span id="tab-count-off" class="text-xs text-gray-400 ml-0.5">0</span></a>
                 </div>
             </div>
             <p id="pub-count" class="text-xs text-gray-400 mb-3 px-1"></p>
@@ -125,7 +104,69 @@
         </main>
     </div>
 
+    <!-- 编辑商品弹窗 -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100 shrink-0">
+                <h2 class="text-xl font-black text-gray-900">编辑商品</h2>
+                <button id="edit-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <form id="edit-form" class="px-8 py-6 space-y-8 overflow-y-auto flex-1">
+                <input type="hidden" id="edit-item-id" value="">
+                <div class="space-y-5">
+                    <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">核心信息</h3>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2">商品名称 <span class="text-red-500">*</span></label>
+                        <input type="text" name="title" id="edit-title" required placeholder="请填写商品标题"
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2">商品类型</label>
+                        <select name="category" id="edit-category"
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none bg-white">
+                            <option value="">请选择分类</option>
+                            <option>手机/数码/电脑</option>
+                            <option>教材/考研/资料</option>
+                            <option>服饰/箱包/运动</option>
+                            <option>游戏/卡券/潮玩</option>
+                            <option>家具/家电/日用</option>
+                            <option>美妆/护肤/个护</option>
+                            <option>乐器/文具/手工</option>
+                            <option>代步/租赁/其他</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2">商品描述</label>
+                        <textarea name="description" id="edit-description" rows="4" placeholder="描述一下宝贝的来源、成色细节、转让原因..."
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none resize-none transition"></textarea>
+                    </div>
+                </div>
+                <div class="space-y-5">
+                    <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">定价与成色</h3>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2">商品定价 (元) <span class="text-red-500">*</span></label>
+                        <input type="number" name="price" id="edit-price" step="0.01" required placeholder="0.00"
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-2">成色 (0-100全新)</label>
+                        <input type="number" name="condition" id="edit-condition" min="0" max="100" placeholder="例如：95"
+                            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+                    </div>
+                </div>
+                <div class="pt-4 pb-2">
+                    <button type="submit" id="edit-submit-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl transition shadow-lg transform active:scale-[0.98]">
+                        确认上架
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-2.5 rounded-full shadow-lg text-sm z-[60] transition-all duration-300 opacity-0 -translate-y-4 pointer-events-none"></div>
+
 <script>
+var currentUsername = '';
 var pubItems = [
     { id:'p1', title:'出一套写代码用的机械键盘+鼠标套装', price:150, emoji:'⌨️', bg:'from-indigo-100 to-purple-200', wants:12, views:89, status:'selling', time:'2小时前' },
     { id:'p2', title:'高等数学同济第七版 上下册 几乎全新', price:15, emoji:'📘', bg:'from-blue-100 to-sky-200', wants:8, views:156, status:'selling', time:'5小时前' },
@@ -141,34 +182,60 @@ var statusMap = {
     off:     { text:'已下架', cls:'bg-red-50 text-red-400' }
 };
 
+function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.remove('opacity-0', '-translate-y-4');
+    t.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(function() {
+        t.classList.remove('opacity-100', 'translate-y-0');
+        t.classList.add('opacity-0', '-translate-y-4');
+    }, 2000);
+}
+
+function updateTabCounts() {
+    var allCount = pubItems.length;
+    var sellingCount = pubItems.filter(function(i) { return i.status === 'selling'; }).length;
+    var soldCount = pubItems.filter(function(i) { return i.status === 'sold'; }).length;
+    var offCount = pubItems.filter(function(i) { return i.status === 'off'; }).length;
+    document.getElementById('tab-count-all').textContent = allCount;
+    document.getElementById('tab-count-selling').textContent = sellingCount;
+    document.getElementById('tab-count-sold').textContent = soldCount;
+    document.getElementById('tab-count-off').textContent = offCount;
+}
+
+
 function renderPublished(filter) {
     var list = document.getElementById('pub-list');
     list.innerHTML = '';
     var items = filter === 'all' ? pubItems : pubItems.filter(function(i){ return i.status === filter; });
     document.getElementById('pub-count').textContent = '共 ' + items.length + ' 件宝贝';
+    updateTabCounts();
     items.forEach(function(item) {
         var s = statusMap[item.status];
         var btns = '';
         if (item.status === 'selling') {
-            btns = '<button class="px-4 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">下架</button>' +
-                   '<button class="px-4 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">编辑</button>' +
-                   '<button class="px-4 py-1.5 bg-purple-600 text-white rounded-full text-sm font-bold hover:bg-purple-700 shadow-sm transition">擦亮</button>';
+            btns = '<button class="btn-off px-4 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">下架</button>' +
+                   '<button class="btn-edit px-4 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">编辑</button>';
         } else if (item.status === 'sold') {
-            btns = '<button class="px-4 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">查看详情</button>';
+            btns = '<button class="btn-view px-4 py-1.5 border border-gray-300 text-gray-600 rounded-full text-sm hover:bg-gray-50 transition">查看详情</button>';
         } else {
-            btns = '<button class="px-4 py-1.5 border border-purple-300 text-purple-600 rounded-full text-sm hover:bg-purple-50 transition">重新上架</button>' +
-                   '<button class="px-4 py-1.5 border border-red-200 text-red-400 rounded-full text-sm hover:bg-red-50 transition">删除</button>';
+            btns = '<button class="btn-edit px-4 py-1.5 border border-purple-300 text-purple-600 rounded-full text-sm hover:bg-purple-50 transition">重新上架</button>' +
+                   '<button class="btn-delete px-4 py-1.5 border border-red-200 text-red-400 rounded-full text-sm hover:bg-red-50 transition">删除</button>';
         }
         var card = document.createElement('div');
         card.className = 'bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition';
+        var sellerLine = currentUsername ? '<p class="text-xs text-gray-400 mt-0.5">卖家：' + currentUsername + '</p>' : '';
         card.innerHTML =
-            '<div class="flex gap-4 mb-4">' +
+            '<a href="product.html?id=' + item.id + '" class="flex gap-4 mb-4 cursor-pointer">' +
                 '<div class="w-24 h-24 bg-gray-50 rounded-xl flex-shrink-0 overflow-hidden border border-gray-100">' +
-                    '<div class="w-full h-full bg-gradient-to-br ' + item.bg + ' flex items-center justify-center text-3xl">' + item.emoji + '</div>' +
+                    (item.images && item.images.length > 0
+                        ? '<img src="' + (item.images[0].startsWith('http') || item.images[0].startsWith('/') ? item.images[0] : '/resources/' + item.images[0]) + '" class="w-full h-full object-cover">'
+                        : '<div class="w-full h-full bg-gradient-to-br ' + item.bg + ' flex items-center justify-center text-3xl">' + item.emoji + '</div>') +
                 '</div>' +
                 '<div class="flex-1 flex flex-col justify-between min-w-0 py-1">' +
                     '<div class="flex justify-between items-start gap-4">' +
-                        '<h3 class="text-sm md:text-base text-gray-800 leading-snug line-clamp-2">' + item.title + '</h3>' +
+                        '<div class="min-w-0"><h3 class="text-sm md:text-base text-gray-800 leading-snug line-clamp-2">' + item.title + '</h3>' + sellerLine + '</div>' +
                         '<span class="text-[11px] px-2 py-0.5 rounded flex-shrink-0 ' + s.cls + '">' + s.text + '</span>' +
                     '</div>' +
                     '<div class="flex items-center justify-between mt-2">' +
@@ -180,13 +247,178 @@ function renderPublished(filter) {
                         '</div>' +
                     '</div>' +
                 '</div>' +
-            '</div>' +
+            '</a>' +
             '<div class="flex justify-end gap-3 pt-3 border-t border-gray-50">' + btns + '</div>';
+
+        // 按钮事件
+        var editBtn = card.querySelector('.btn-edit');
+        if (editBtn) editBtn.addEventListener('click', function(e) { e.stopPropagation(); openEditModal(item); });
+        var deleteBtn = card.querySelector('.btn-delete');
+        if (deleteBtn) deleteBtn.addEventListener('click', function(e) { e.stopPropagation(); deleteItem(item.id); });
+        var viewBtn = card.querySelector('.btn-view');
+        if (viewBtn) viewBtn.addEventListener('click', function(e) { e.stopPropagation(); window.location.href = 'product.html?id=' + item.id; });
+        var offBtn = card.querySelector('.btn-off');
+        if (offBtn) offBtn.addEventListener('click', function(e) { e.stopPropagation(); offShelfItem(item.id); });
+
         list.appendChild(card);
     });
 }
 
+// 下架商品
+async function offShelfItem(itemId) {
+    if (!confirm('确定要下架该商品吗？')) return;
+    try {
+        var res = await fetch('/api/market/items/' + itemId + '/off', { method: 'PUT', credentials: 'include' });
+        if (res.ok) {
+            showToast('已下架');
+            var item = pubItems.find(function(i) { return i.id === itemId; });
+            if (item) item.status = 'off';
+            renderPublished(currentFilter);
+        } else {
+            showToast('下架失败');
+        }
+    } catch (e) {
+        showToast('网络错误');
+    }
+}
+
+// 删除商品
+async function deleteItem(itemId) {
+    if (!confirm('确定要删除该商品吗？删除后不可恢复。')) return;
+    try {
+        var res = await fetch('/api/market/items/' + itemId, { method: 'DELETE', credentials: 'include' });
+        if (res.ok) {
+            showToast('已删除');
+            pubItems = pubItems.filter(function(i) { return i.id !== itemId; });
+            renderPublished(currentFilter);
+        } else {
+            showToast('删除失败');
+        }
+    } catch (e) {
+        showToast('网络错误');
+    }
+}
+
+// 编辑弹窗
+var editModal = document.getElementById('edit-modal');
+var editCloseBtn = document.getElementById('edit-close-btn');
+var editForm = document.getElementById('edit-form');
+
+function openEditModal(item) {
+    document.getElementById('edit-item-id').value = item.id;
+    document.getElementById('edit-title').value = item.title || '';
+    document.getElementById('edit-price').value = item.price || '';
+    document.getElementById('edit-description').value = item.description || '';
+    document.getElementById('edit-category').value = item.category || '';
+    document.getElementById('edit-condition').value = item.condition || '';
+    editModal.classList.remove('hidden');
+    editModal.classList.add('flex');
+}
+
+function closeEditModal() {
+    editModal.classList.add('hidden');
+    editModal.classList.remove('flex');
+}
+
+editCloseBtn.addEventListener('click', closeEditModal);
+editModal.addEventListener('click', function(e) { if (e.target === editModal) closeEditModal(); });
+
+editForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var itemId = document.getElementById('edit-item-id').value;
+    var data = {
+        title: document.getElementById('edit-title').value,
+        price: parseFloat(document.getElementById('edit-price').value),
+        description: document.getElementById('edit-description').value,
+        category: document.getElementById('edit-category').value,
+        condition: parseInt(document.getElementById('edit-condition').value) || null,
+        status: 'available'
+    };
+    try {
+        var res = await fetch('/api/market/items/' + itemId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            showToast('上架成功');
+            closeEditModal();
+            var item = pubItems.find(function(i) { return i.id === itemId; });
+            if (item) {
+                item.title = data.title;
+                item.price = data.price;
+                item.description = data.description;
+                item.category = data.category;
+                item.status = 'selling';
+            }
+            renderPublished(currentFilter);
+        } else {
+            showToast('操作失败，请重试');
+        }
+    } catch (err) {
+        showToast('网络错误');
+    }
+});
+
+var currentFilter = 'all';
 renderPublished('all');
+
+// 从API加载我发布的商品
+(async function() {
+    try {
+        var userRes = await fetch('/api/users/me', { credentials: 'include' });
+        if (userRes.ok) {
+            var user = await userRes.json();
+            currentUsername = user.username || '';
+        } else if (userRes.status === 401) {
+            window.location.href = '/login?redirect=/azure_trade/mypublish.html';
+            return;
+        }
+
+        var res = await fetch('/api/market/users/me/items', { credentials: 'include' });
+        if (res.ok) {
+            var items = await res.json();
+            if (items && items.length > 0) {
+                pubItems = items.map(function(item) {
+                    var status = 'selling';
+                    if (item.status === 'sold') status = 'sold';
+                    else if (item.status === 'off' || item.status === 'removed') status = 'off';
+                    else if (item.status === 'available') status = 'selling';
+
+                    var timeStr = '';
+                    if (item.createdAt) {
+                        var diff = Date.now() - new Date(item.createdAt).getTime();
+                        var hours = Math.floor(diff / 3600000);
+                        if (hours < 1) timeStr = '刚刚';
+                        else if (hours < 24) timeStr = hours + '小时前';
+                        else if (hours < 168) timeStr = Math.floor(hours / 24) + '天前';
+                        else timeStr = Math.floor(hours / 168) + '周前';
+                    }
+
+                    return {
+                        id: item.itemId,
+                        title: item.title,
+                        price: item.price,
+                        description: item.description || '',
+                        category: item.category || '',
+                        condition: item.condition || '',
+                        emoji: '📦',
+                        bg: 'from-purple-200 to-pink-300',
+                        wants: item.wants || 0,
+                        views: item.views || 0,
+                        status: status,
+                        time: timeStr,
+                        images: item.images || []
+                    };
+                });
+                renderPublished(currentFilter);
+            }
+        }
+    } catch (err) {
+        console.error('加载发布商品失败:', err);
+    }
+})();
 
 // Tab switching
 document.querySelectorAll('.pub-tab').forEach(function(tab) {
@@ -204,7 +436,8 @@ document.querySelectorAll('.pub-tab').forEach(function(tab) {
         bar.className = 'tab-bar absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full';
         tab.style.position = 'relative';
         tab.appendChild(bar);
-        renderPublished(tab.getAttribute('data-filter'));
+        currentFilter = tab.getAttribute('data-filter');
+        renderPublished(currentFilter);
     });
 });
 
@@ -227,18 +460,6 @@ if(contributionToggle && contributionSub && contributionArrow) {
         var hidden = contributionSub.style.display === 'none';
         contributionSub.style.display = hidden ? '' : 'none';
         contributionArrow.classList.toggle('rotate-180', hidden);
-    });
-}
-
-// 我的点赞 展开/收起
-var likeToggle = document.getElementById('like-toggle');
-var likeSub = document.getElementById('like-sub');
-var likeArrow = document.getElementById('like-arrow');
-if(likeToggle && likeSub && likeArrow) {
-    likeToggle.addEventListener('click', function() {
-        var hidden = likeSub.style.display === 'none';
-        likeSub.style.display = hidden ? '' : 'none';
-        likeArrow.classList.toggle('rotate-180', hidden);
     });
 }
 

@@ -31,7 +31,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     let bgMusic, scrollSound;
     const audioLoader = new THREE.AudioLoader();
     const listener = new THREE.AudioListener();
-    let isMuted = localStorage.getItem('skyland_muted') === 'true';
+    let isMuted = false;//localStorage.getItem('skyland_muted') === 'true';
     // 开场动画状态
     let introCameraState = { theta: 0, phi: Math.PI * 0.15, radius: 80, height: 60 };
     const INTRO_FIRST_ISLAND_POS = { x: 30, y: 5, z: 30 };
@@ -194,7 +194,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         audioLoader.load('../audios/skyland/skyland_loop.ogg', (buffer) => {
             bgMusic.setBuffer(buffer);
             bgMusic.setLoop(true);
-            bgMusic.setVolume(isMuted ? 0 : 0.3);
+            bgMusic.setVolume(isMuted ? 0 : 1);
             
             // Interaction to start
             const startMusic = () => {
@@ -210,7 +210,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         audioLoader.load('../audios/skyland/scroll.ogg', (buffer) => {
             scrollSound.setBuffer(buffer);
             scrollSound.setLoop(false);
-            scrollSound.setVolume(0.4);
+            scrollSound.setVolume(1);
         });
 
         // Cleanup resources

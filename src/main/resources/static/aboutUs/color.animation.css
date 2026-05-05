@@ -1,0 +1,12 @@
+.poker-section {
+    height: 400vh; /* 增加滚动长度以承载更复杂的序列 */
+    position: relative;
+    background: #000F33FF;
+    /* 关键：定义滚动驱动时间轴 */
+    view-timeline: --poker-timeline scroll();
+}
+
+@keyframes sky-change {
+    40% { background: #000F33FF; }
+    60% { background: rgb(99, 84, 187); }
+}

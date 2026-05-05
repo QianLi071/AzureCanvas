@@ -1,9 +1,18 @@
 /* aboutUs.css */
 
+@font-face {
+    font-family: 'Aeonik';
+    src: url('../fonts/Aeonik-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
 :root {
     --primary-magenta: #FF00FF;
     --laser-blue: #00FFFF;
     --bg-dark: #050505;
+    --energy-green: #00ff88;
+    --energy-blue: #0088ff;
 }
 
 * {
@@ -80,6 +89,7 @@ body.immersive-about {
     text-transform: uppercase;
 }
 
+
 .scroll-spacer {
     height: 700vh; /* 为 5 张卡牌提供足够的滚动空间 */
 }
@@ -117,9 +127,10 @@ body.immersive-about {
     justify-content: center;
     align-items: center;
     gap: 30px;
-    padding: 100px 20px;
+    padding: 100px 20px 200px; /* 增加底部间距给电线 */
     flex-wrap: wrap;
     perspective: 1000px;
+    position: relative;
 }
 
 .team-card {
@@ -140,6 +151,7 @@ body.immersive-about {
     position: relative;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 2;
 }
 
 .team-card:hover {
@@ -193,6 +205,143 @@ body.immersive-about {
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.7);
     font-style: italic;
+}
+
+/* --- GitHub 连接器样式 --- */
+.github-connector-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: -150px;
+    padding-bottom: 150px;
+    z-index: 1;
+}
+
+#wire-svg {
+    position: absolute;
+    top: -500px;
+    left: 0;
+    width: 100%;
+    height: 500px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.wire-path {
+    fill: none;
+    stroke: rgba(0, 255, 255, 0.2);
+    stroke-width: 4;
+    stroke-linecap: square;
+    filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.3));
+}
+
+.energy-pulse {
+    fill: none;
+    stroke: url(#energyGradient);
+    stroke-width: 4;
+    stroke-dasharray: 40, 200;
+    stroke-linecap: square;
+    animation: energy-flow 2s linear infinite;
+    filter: drop-shadow(0 0 12px var(--energy-green)) drop-shadow(0 0 4px var(--energy-blue));
+}
+
+@keyframes energy-flow {
+    0% { stroke-dashoffset: 240; }
+    100% { stroke-dashoffset: 0; }
+}
+
+.github-hub {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.github-hub:hover {
+    transform: scale(1.2);
+    border-color: var(--laser-blue);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.github-hub i {
+    font-size: 50px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.github-hub:hover i {
+    color: var(--laser-blue);
+}
+
+/* 悬停浮现内容 */
+.github-hover-content {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s ease;
+    width: 200px;
+    justify-content: center;
+}
+
+.github-hub:hover .github-hover-content {
+    opacity: 1;
+    transform: translateY(-20px);
+}
+
+.project-preview {
+    position: absolute;
+    left: -180px;
+    width: 150px;
+    height: 150px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 4px solid var(--laser-blue);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    transform: translateX(-30px);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.github-hub:hover .project-preview {
+    transform: translateX(0);
+}
+
+.project-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.star-me-text {
+    position: absolute;
+    right: -180px;
+    font-family: 'Aeonik', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    transform: translateX(30px);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    white-space: nowrap;
+}
+
+.github-hub:hover .star-me-text {
+    transform: translateX(0);
 }
 
 /* 3D 飞入动画辅助类 */

@@ -98,7 +98,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
             if (data.success) {
                 window.notify.show('Login successful! Accessing system...', 'success');
-                startSuccessSequence();
+                startSuccessSequence(false); // Pass false for login
             } else {
                 handleLoginError(data.message || 'Authentication failed');
             }
@@ -189,7 +189,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
     });
 
     skipBtn.addEventListener('click', () => {
-        startSuccessSequence();
+        startSuccessSequence(true); // Pass true for registration
     });
 
     activateBtn.addEventListener('click', async () => {
@@ -200,10 +200,10 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
         // Here you would normally upload the avatar
         // For now, we just proceed to success sequence
-        startSuccessSequence();
+        startSuccessSequence(true); // Pass true for registration
     });
 
-    function startSuccessSequence() {
+    function startSuccessSequence(isRegistration = false) {
         // Hide dialog if visible
         if (avatarDialog.classList.contains('show')) {
             avatarDialog.classList.remove('show');
@@ -213,14 +213,14 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         }
 
         // Apply 3D exit animation to the active form/dialog container
-        const target = avatarDialog.style.display !== 'none' ? avatarDialog : authForm;
+        const target = (avatarDialog.style.display !== 'none' && avatarDialog.classList.contains('show')) ? avatarDialog : authForm;
         target.classList.add('form-exit-anim');
 
         // Start 3D sequence
-        runComplex3DSequence();
+        runComplex3DSequence(isRegistration);
     }
 
-    async function runComplex3DSequence() {
+    async function runComplex3DSequence(isRegistration) {
         const tunnel = window.laserTunnel;
         if (!tunnel) return;
 
@@ -239,11 +239,67 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         // Enhance tunnel effects
         tunnel.isLoginSuccessful = true;
 
-        // Increase lasers
+        if (!isRegistration) {
+            // Short sequence for Login
+            // Wait for audio to finish or at least play for a while
+            await new Promise(r => {
+                accessGrantedAudio.onended = r;
+                setTimeout(r, 2500); // Fallback/Max wait
+            });
 
-        await new Promise(r => setTimeout(r, 2000));
+            // Move camera to exit
+            // We'll accelerate the cameraSpeed which is used in the tunnel's animate loop
+            gsap.to(tunnel, {
+                cameraSpeed: 250,
+                duration: 2.5,
+                ease: 'power2.in'
+            });
 
-        // Phase 2: Initializing Profile (2D DOM Update)
+            // FOV effect for speed sensation
+            gsap.to(tunnel.camera, {
+                fov: 140,
+                duration: 2.5,
+                ease: 'power2.in',
+                onUpdate: () => tunnel.camera.updateProjectionMatrix()
+            });
+
+            // Fade out the "Access Granted" overlay
+            gsap.to(statusOverlay, { 
+                opacity: 0, 
+                duration: 1,
+                delay: 1
+            });
+
+            // Wait for the camera to reach the "exit" area
+            await new Promise(r => setTimeout(r, 2200));
+
+            // Final white out transition
+            const whiteOverlay = document.createElement('div');
+            Object.assign(whiteOverlay.style, {
+                position: 'fixed',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                background: 'white',
+                zIndex: '5000',
+                opacity: '0',
+                pointerEvents: 'none'
+            });
+            document.body.appendChild(whiteOverlay);
+
+            await gsap.to(whiteOverlay, { 
+                opacity: 1, 
+                duration: 0.6,
+                ease: 'power1.in'
+            });
+
+            // Redirect to the system
+            window.location.href = '../islands/index.html';
+            return;
+        }
+
+        // Phase 2: Initializing Profile (2D DOM Update) - Only for Registration
         await restoreBackupAudio.play();
 
         // Animated text swap

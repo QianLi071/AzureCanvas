@@ -24,7 +24,7 @@ async function startAnimation() {
 	const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 1e3);
 	camera.position.set(0, 15, .1);
 	camera.lookAt(0, 0, 0);
-	const renderer = new WebGLRenderer({ antialias: perf.antialias });
+	const renderer = new WebGLRenderer({ antialias: perf.antialias, alpha: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.setPixelRatio(window.devicePixelRatio);
 	document.getElementById("canvas-container").appendChild(renderer.domElement);

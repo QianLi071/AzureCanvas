@@ -61,11 +61,11 @@
                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="contribution-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                         <div id="contribution-sub" class="ml-6 space-y-0.5">
-                            <a href="/treehole/index.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
                                 <span>我的文章</span>
                                 <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
                             </a>
-                            <a href="/storymap/index.html" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
                                 <span>我的地图</span>
                                 <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">1</span>
                             </a>
@@ -76,6 +76,27 @@
                         </div>
                     </div>
 
+                    <!-- 我的点赞 -->
+                    <div>
+                        <div class="flex items-center justify-between px-4 py-2.5 text-gray-800 font-bold cursor-pointer hover:bg-gray-50 rounded-lg transition" id="like-toggle">
+                            <div class="flex items-center space-x-3"><span>👍</span><span>我的点赞</span></div>
+                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform rotate-180" id="like-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div id="like-sub" class="ml-6 space-y-0.5">
+                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>文章</span>
+                                <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>动态</span>
+                                <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                            <a href="#" class="flex items-center justify-between px-4 py-2 text-gray-500 hover:text-purple-600 hover:bg-gray-50 rounded-lg transition">
+                                <span>地图</span>
+                                <span class="text-xs text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full">0</span>
+                            </a>
+                        </div>
+                    </div>
                 </nav>
                 <div class="mt-6 pt-4 border-t border-gray-100 space-y-2">
                     <a href="trade.html" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-50 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition font-medium text-sm">
@@ -102,13 +123,14 @@
                 </div>
 
                 <div class="flex overflow-x-auto hide-scrollbar border-b border-gray-100 bg-white">
-                    <a href="#" class="sale-tab flex-none px-5 py-3.5 text-sm font-bold text-purple-600 relative" data-filter="all">
+                    <a href="#" class="flex-none px-5 py-3.5 text-sm font-bold text-purple-600 relative">
                         全部
-                        <div class="tab-bar absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full"></div>
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full"></div>
                     </a>
-                    <a href="#" class="sale-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="pending">待买家付款</a>
-                    <a href="#" class="sale-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="shipping">待发货</a>
-                    <a href="#" class="sale-tab flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition" data-filter="shipped">已发货</a>
+                    <a href="#" class="flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">待买家付款</a>
+                    <a href="#" class="flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">待发货 <span class="text-red-500 text-xs font-bold">1</span></a>
+                    <a href="#" class="flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">已发货</a>
+                    <a href="#" class="flex-none px-5 py-3.5 text-sm text-gray-600 hover:text-purple-600 transition">退款/售后</a>
                 </div>
             </div>
 
@@ -188,72 +210,6 @@
     </div>
 
 <script>
-// 卖出的订单数据
-var salesItems = [
-    { buyer:'林北的测试账号', title:'出一套写代码用的机械键盘+鼠标套装', price:150, emoji:'💻', bg:'from-indigo-100 to-purple-200', status:'shipping', statusText:'买家已付款，待发货', statusCls:'text-red-500', badge:'刚刚拍下', message:'学长，可以今天下午在图书馆面交吗？' },
-    { buyer:'计算机系大一萌新', title:'【已出】C语言程序设计(第四版) 谭浩强', price:5, emoji:'📚', bg:'from-green-100 to-teal-200', status:'done', statusText:'交易成功', statusCls:'text-gray-500', badge:'', message:'谢谢学长！' }
-];
-
-var allCards = document.querySelectorAll('.space-y-4 > div');
-var searchInput = document.querySelector('input[placeholder="搜索买家昵称或商品"]');
-var searchBtn = document.querySelector('button.text-gray-600.font-bold');
-
-function doSearch() {
-    var keyword = searchInput.value.trim().toLowerCase();
-    salesItems.forEach(function(item, idx) {
-        var card = allCards[idx];
-        if (!card) return;
-        if (!keyword) {
-            card.style.display = '';
-        } else {
-            var match = item.buyer.toLowerCase().indexOf(keyword) !== -1 ||
-                        item.title.toLowerCase().indexOf(keyword) !== -1;
-            card.style.display = match ? '' : 'none';
-        }
-    });
-}
-
-if (searchBtn) searchBtn.addEventListener('click', doSearch);
-if (searchInput) {
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') doSearch();
-    });
-    searchInput.addEventListener('input', function() {
-        if (!searchInput.value.trim()) {
-            allCards.forEach(function(c) { c.style.display = ''; });
-        }
-    });
-}
-
-// Tab switching
-document.querySelectorAll('.sale-tab').forEach(function(tab) {
-    tab.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.querySelectorAll('.sale-tab').forEach(function(t) {
-            t.classList.remove('text-purple-600', 'font-bold');
-            t.classList.add('text-gray-600');
-            var bar = t.querySelector('.tab-bar');
-            if (bar) bar.remove();
-        });
-        tab.classList.remove('text-gray-600');
-        tab.classList.add('text-purple-600', 'font-bold');
-        var bar = document.createElement('div');
-        bar.className = 'tab-bar absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-purple-600 rounded-full';
-        tab.style.position = 'relative';
-        tab.appendChild(bar);
-        var filter = tab.getAttribute('data-filter');
-        salesItems.forEach(function(item, idx) {
-            var card = allCards[idx];
-            if (!card) return;
-            if (filter === 'all') {
-                card.style.display = '';
-            } else {
-                card.style.display = item.status === filter ? '' : 'none';
-            }
-        });
-    });
-});
-
 // 我的交易 展开/收起
 var toggle = document.getElementById('trade-toggle');
 var sub = document.getElementById('trade-sub');
@@ -273,6 +229,18 @@ if(contributionToggle && contributionSub && contributionArrow) {
         var hidden = contributionSub.style.display === 'none';
         contributionSub.style.display = hidden ? '' : 'none';
         contributionArrow.classList.toggle('rotate-180', hidden);
+    });
+}
+
+// 我的点赞 展开/收起
+var likeToggle = document.getElementById('like-toggle');
+var likeSub = document.getElementById('like-sub');
+var likeArrow = document.getElementById('like-arrow');
+if(likeToggle && likeSub && likeArrow) {
+    likeToggle.addEventListener('click', function() {
+        var hidden = likeSub.style.display === 'none';
+        likeSub.style.display = hidden ? '' : 'none';
+        likeArrow.classList.toggle('rotate-180', hidden);
     });
 }
 

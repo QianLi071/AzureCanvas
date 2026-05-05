@@ -358,7 +358,7 @@ var sellerId = params.get('id') || params.get('sellerId');
     // 如果有sellerId，使用API加载
     if (sellerId) {
         try {
-            var userResponse = await fetch('/api/users/' + sellerId, {
+            var userResponse = await fetch('/api/user/' + sellerId, {
                 method: 'GET',
                 credentials: 'include'
             });

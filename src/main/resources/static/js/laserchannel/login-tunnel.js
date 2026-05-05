@@ -79,15 +79,32 @@ class LaserTunnel {
         this.audioLoader.load('../audios/login/login_loop.ogg', (buffer) => {
             this.outsideSound.setBuffer(buffer);
             this.outsideSound.setLoop(true);
-            this.outsideSound.setVolume(1);
+            this.outsideSound.setVolume(1.0);
+            
+            // Try to play immediately if context is running
+            if (this.listener.context.state === 'running') {
+                this.outsideSound.play();
+            }
         });
-        if (this.listener.context.state === 'suspended') {
-            this.listener.context.resume();
-        }
 
-        if (this.outsideSound.buffer && !this.outsideSound.isPlaying) {
-            this.outsideSound.play();
-        }
+        // Global interaction listener to resume audio context
+        const resumeAudio = () => {
+            if (this.listener.context.state === 'suspended') {
+                this.listener.context.resume().then(() => {
+                    if (this.outsideSound.buffer && !this.outsideSound.isPlaying) {
+                        this.outsideSound.play();
+                    }
+                });
+            } else if (this.outsideSound.buffer && !this.outsideSound.isPlaying) {
+                this.outsideSound.play();
+            }
+            // Remove listeners after first interaction
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('keydown', resumeAudio);
+        };
+
+        window.addEventListener('click', resumeAudio);
+        window.addEventListener('keydown', resumeAudio);
     }
 
     async loadEnvironment() {

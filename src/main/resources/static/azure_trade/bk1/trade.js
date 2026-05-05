@@ -96,8 +96,7 @@ function createApiCard(item, index) {
     card.style.animationDelay = (index % apiState.limit) * 50 + 'ms';
     
     var gradient = getRandomGradient();
-    var rawCoverUrl = item.images && item.images.length > 0 ? item.images[0] : null;
-    var coverUrl = rawCoverUrl ? (rawCoverUrl.startsWith('http') || rawCoverUrl.startsWith('/') ? rawCoverUrl : '/resources/' + rawCoverUrl) : null;
+    var coverUrl = item.images && item.images.length > 0 ? item.images[0] : null;
     var itemId = item.itemId || item.id;
     
     var imageHtml;
@@ -170,7 +169,7 @@ function renderApiItems(items, append) {
 // ========== 加载更多商品 ==========
 async function loadMoreItems() {
     if (apiState.isLoading || !apiState.hasMore) return;
-
+    
     var loadingIndicator = document.getElementById('loading-indicator');
     if (!loadingIndicator) {
         loadingIndicator = document.createElement('div');
@@ -180,11 +179,11 @@ async function loadMoreItems() {
         recommendGrid.parentElement.appendChild(loadingIndicator);
     }
     loadingIndicator.style.display = 'flex';
-
+    
     var result = await fetchItemsFromApi(apiState.page, apiState.currentCategory, apiState.currentSearch);
-
+    
     loadingIndicator.style.display = 'none';
-
+    
     if (result.items.length > 0) {
         if (apiState.page === 1) {
             apiState.items = result.items;
@@ -194,13 +193,7 @@ async function loadMoreItems() {
         renderApiItems(result.items, apiState.page > 1);
         apiState.page++;
     }
-
-    // API returned empty on first page - fall back to seed data
-    if (apiState.page === 1 && result.items.length === 0) {
-        console.log('[Fallback] API returned empty, using local seed data');
-        renderRecommend(null);
-    }
-
+    
     if (!result.hasMore) {
         showFeedEndMessage();
     }
@@ -302,22 +295,6 @@ function renderCards(list) {
     });
 }
 
-// ========== ES 搜索 API ==========
-async function searchItemsES(keyword, page, limit) {
-    try {
-        var params = new URLSearchParams({ keyword: keyword, page: page || 1, limit: limit || 20 });
-        var response = await fetch('/api/market/search/es?' + params.toString(), {
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (!response.ok) throw new Error('ES search failed');
-        return await response.json();
-    } catch (error) {
-        console.warn('[ES Search] 搜索失败，跳转本地搜索:', error);
-        return null;
-    }
-}
-
 // ========== 搜索 → 跳转 search.html ==========
 function doSearch() {
     var keyword = searchInput.value.trim();
@@ -373,32 +350,6 @@ function shuffle(arr) {
 
 function renderRecommend(seedFilter) {
     recommendGrid.innerHTML = '';
-
-    var fixedCard = document.createElement('div');
-    fixedCard.className = 'trade-recommend-card';
-    fixedCard.style.breakInside = 'avoid';
-    fixedCard.style.marginBottom = '1rem';
-    fixedCard.innerHTML =
-        '<div class="h-44 overflow-hidden"><img src="images/shanhuadi.jpg" class="w-full h-full object-cover" alt="演出票务"></div>' +
-        '<div class="p-3 flex flex-col flex-1">' +
-            '<div class="mb-1"><span class="trade-badge trade-badge--hot">演出票务</span> <span class="trade-badge trade-badge--fresh">内场票</span></div>' +
-            '<p class="text-sm text-gray-800 leading-snug line-clamp-2">原价出 山花地 孙睿扬 王宁 内场svip全票 序号前100进场确认</p>' +
-            '<div class="mt-auto pt-2">' +
-                '<div class="flex items-center justify-between">' +
-                    '<span class="trade-price text-base">¥361</span>' +
-                    '<span class="text-xs text-gray-400">5人想要</span>' +
-                '</div>' +
-                '<div class="flex items-center mt-2 space-x-1.5">' +
-                    '<div class="w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-[10px] text-purple-600 font-bold">票</div>' +
-                    '<span class="text-xs text-gray-500">票务小铺</span>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
-    fixedCard.addEventListener('click', function () {
-        window.location.href = 'product.html?fixed=1';
-    });
-    recommendGrid.appendChild(fixedCard);
-
     var pool = seedFilter ? seedFilter : getAllSeeds();
     var picked = shuffle(pool).slice(0, 8);
     picked.forEach(function (seed) {
@@ -969,126 +920,4 @@ const submit_logic = function () {
             resetBtn();
         }
     });
-}
-
-// ========== MarketController API 工具函数 ==========
-
-/**
- * 收藏商品
- * @param {string} itemId
- * @returns {Promise<boolean>}
- */
-async function favoriteItem(itemId) {
-    try {
-        var response = await fetch('/api/market/items/favorite?itemId=' + encodeURIComponent(itemId), {
-            method: 'POST',
-            credentials: 'include'
-        });
-        return response.ok;
-    } catch (error) {
-        console.error('收藏失败:', error);
-        return false;
-    }
-}
-
-/**
- * 获取当前用户收藏列表
- * @returns {Promise<Array>}
- */
-async function getFavoriteItems() {
-    try {
-        var response = await fetch('/api/market/items/favorites', {
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (!response.ok) return [];
-        return await response.json();
-    } catch (error) {
-        console.error('获取收藏列表失败:', error);
-        return [];
-    }
-}
-
-/**
- * 获取所有商品分类
- * @returns {Promise<Array>}
- */
-async function getCategories() {
-    try {
-        var response = await fetch('/api/market/categories', {
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (!response.ok) return [];
-        return await response.json();
-    } catch (error) {
-        console.error('获取分类失败:', error);
-        return [];
-    }
-}
-
-/**
- * 联系卖家
- * @param {string} sellerId
- * @param {string} message
- * @param {string} itemId
- * @returns {Promise<Object|null>}
- */
-async function contactSeller(sellerId, message, itemId) {
-    try {
-        var response = await fetch('/api/market/' + encodeURIComponent(sellerId) + '/contact', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message, itemId: itemId })
-        });
-        if (!response.ok) return null;
-        return await response.json();
-    } catch (error) {
-        console.error('联系卖家失败:', error);
-        return null;
-    }
-}
-
-/**
- * 删除商品
- * @param {string} itemId
- * @returns {Promise<boolean>}
- */
-async function deleteItem(itemId) {
-    try {
-        var response = await fetch('/api/market/items/' + encodeURIComponent(itemId), {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        return response.ok;
-    } catch (error) {
-        console.error('删除商品失败:', error);
-        return false;
-    }
-}
-
-/**
- * 获取当前用户的商品列表
- * @param {string} [status]
- * @param {number} [page]
- * @param {number} [limit]
- * @returns {Promise<Array>}
- */
-async function getMyItems(status, page, limit) {
-    try {
-        var params = new URLSearchParams();
-        if (status) params.set('status', status);
-        if (page) params.set('page', page);
-        if (limit) params.set('limit', limit);
-        var response = await fetch('/api/market/users/me/items?' + params.toString(), {
-            method: 'GET',
-            credentials: 'include'
-        });
-        if (!response.ok) return [];
-        return await response.json();
-    } catch (error) {
-        console.error('获取我的商品失败:', error);
-        return [];
-    }
 }

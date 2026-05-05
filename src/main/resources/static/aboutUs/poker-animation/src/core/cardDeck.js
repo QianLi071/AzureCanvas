@@ -1,5 +1,5 @@
 import { __toESM } from "../../_virtual/_rolldown/runtime.js";
-import { BoxGeometry, MathUtils, Mesh, MeshStandardMaterial, Vector3, TextureLoader } from "three";
+import { BoxGeometry, MathUtils, Mesh, MeshStandardMaterial, Vector3, TextureLoader, Color } from "three";
 import { require_matter } from "../../node_modules/matter-js/build/matter.js";
 import { gsapWithCSS } from "../../node_modules/gsap/index.js";
 import { CARD_APPEARANCE } from "../config/cardConfig.js";
@@ -89,7 +89,7 @@ var CardDeck = class {
             <style>
                 #core-developer-title .title-cn {
                     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                    font-size: 3rem;
+                    font-size: 6rem;
                     font-weight: 700;
                     color: #ffffff;
                     text-shadow: 
@@ -101,7 +101,7 @@ var CardDeck = class {
                 }
                 #core-developer-title .title-en {
                     font-family: 'Inter', 'Courier New', monospace;
-                    font-size: 1.5rem;
+                    font-size: 3rem;
                     font-weight: 300;
                     color: rgba(200, 220, 255, 0.9);
                     text-shadow: 
@@ -112,7 +112,7 @@ var CardDeck = class {
                 }
             </style>
             <div class="title-cn">核心开发者</div>
-            <div class="title-en">core developer</div>
+            <div class="title-en">CORE DEVELOPER</div>
         `;
         
         Object.assign(titleContainer.style, {
@@ -535,11 +535,42 @@ var CardDeck = class {
     }
 
     /**
+     * 根据滚动进度更新场景背景颜色
+     * 同步 index.html 中的 sky-change 动画逻辑
+     */
+    updateBackgroundColor(p) {
+        if (!this.scene) return;
+        
+        const startColor = new Color('#000F33');
+        const endColor = new Color('#003bbe');
+        
+        let lerpFactor = 0;
+        if (p <= 0.4) {
+            lerpFactor = 0;
+        } else if (p >= 0.7) {
+            lerpFactor = 1;
+        } else {
+            // 0.4 - 0.7 之间进行线性插值
+            lerpFactor = (p - 0.4) / 0.3;
+        }
+        
+        // 如果 scene.background 还没有被初始化为 Color 对象，则初始化它
+        if (!(this.scene.background instanceof Color)) {
+            this.scene.background = new Color();
+        }
+        
+        this.scene.background.copy(startColor).lerp(endColor, lerpFactor);
+    }
+
+    /**
      * 由 CSS Scroll-Driven Animation 驱动的整体更新逻辑
      * 时间线：平衡的节奏分配
      */
     updateFromCSSProgress(p) {
         if (this.isLocked) return;
+
+        // 同步背景颜色
+        this.updateBackgroundColor(p);
 
         // 阶段 1: 展开螺旋 (0% - 12%)
         if (p <= 0.12) {
@@ -753,9 +784,17 @@ var CardDeck = class {
             card.position.set(currentX, currentY, currentZ);
             card.scale.set(currentScale, currentScale, currentScale);
             
-            // 保持翻面状态显示团队成员信息
+            // 平滑翻面：从背面 (y=0) 过渡到正面 (y=PI)
+            const flipProgress = adjustedProgress < 0.3 
+                ? adjustedProgress / 0.3  // 前30%快速翻面
+                : 1;
+            
+            const flipEase = flipProgress < 0.5 
+                ? 4 * flipProgress * flipProgress * flipProgress 
+                : 1 - Math.pow(-2 * flipProgress + 2, 3) / 2;
+                
             card.rotation.x = Math.PI / 2;
-            card.rotation.y = Math.PI;
+            card.rotation.y = flipEase * Math.PI; // 0 → PI 平滑过渡
             card.rotation.z = currentRotZ;
             
             // 动态渲染层级（逐渐降低）

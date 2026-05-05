@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AzureCanvas - Login</title>
+    <link rel="stylesheet" href="../css/color_scheme/colors.dark_mode.css">
+    <link rel="stylesheet" href="../css/color_scheme/colors.primary.css">
+    <link rel="stylesheet" href="../css/app.major.css">
+    <link rel="stylesheet" href="../css/attributes.texts.css">
+    <link rel="stylesheet" href="../css/cube/cube.navcards.css">
+    <link rel="stylesheet" href="../css/cube/login.btn.css">
+    <link rel="stylesheet" href="../css/index.cube.css">
     <style>
         body {
             margin: 0;
@@ -11,6 +18,107 @@
             overflow: hidden;
             background-color: #050505;
             font-family: 'Aeonik', sans-serif;
+        }
+
+        /* 顶部导航栏适配登录页 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 15px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000; /* 确保在最上层 */
+            box-sizing: border-box;
+        }
+
+        .nav-left .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-logo i {
+            font-size: 2rem;
+            color: #00ffff;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
+        }
+
+        .nav-logo .azurecanvas {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-item {
+            position: relative;
+            padding: 8px 18px;
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-color: #00ffff;
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -150%;
+            width: 100%;
+            height: 200%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+
+        .nav-item:hover::after {
+            left: 150%;
+            transition: all 0.6s ease;
+        }
+
+        .avatar-small {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
         }
 
         /* 预加载页面样式 */
@@ -96,6 +204,7 @@
             height: 100%;
             z-index: 1;
         }
+        /* 登录卡片适配导航栏 */
         .login-overlay {
             position: relative;
             z-index: 10;
@@ -104,6 +213,7 @@
             align-items: center;
             height: 100vh;
             pointer-events: none;
+            padding-top: 80px; /* 为导航栏留出空间 */
         }
         .login-card {
             background: rgba(255, 255, 255, 0.05);
@@ -430,6 +540,22 @@
     </script>
 </head>
 <body>
+<!-- 顶部导航栏 -->
+<div class="top-nav">
+    <div class="nav-left">
+        <div class="nav-logo" onclick="window.location.href='../index.html'" style="cursor: pointer;">
+            <i class="fas fa-university"></i>
+            <span class="azurecanvas">AzureCanvas</span>
+        </div>
+    </div>
+    <div class="nav-right">
+        <div class="nav-item" onclick="window.location.href='../index.html'"><i class="fas fa-home"></i>首页</div>
+        <div class="nav-item"><i class="fas fa-search"></i>搜索</div>
+        <div class="nav-item"><i class="fas fa-bell"></i>消息</div>
+        <div class="avatar-small" id="userAvatar">Guest</div>
+    </div>
+</div>
+
 <!-- 预加载动画页面 -->
 <div id="preloader">
     <div class="preloader-content">

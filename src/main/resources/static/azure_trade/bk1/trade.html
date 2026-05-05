@@ -637,10 +637,10 @@
     </div>
 
     <div class="space-y-5">
-        <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">定价与成色</h3>
-
+        <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">定价与交易</h3>
+        
         <div>
-            <label class="block text-sm text-gray-600 mb-2">商品定价 (元)
+            <label class="block text-sm text-gray-600 mb-2">商品定价 (元) 
                 <span class="text-red-500">*</span></label>
             <input type="number" name="price" id="itemPrice" step="0.01" required placeholder="0.00"
                 class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
@@ -651,32 +651,32 @@
             <input type="number" name="condition" id="itemCondition" min="0" max="100" required placeholder="例如：95"
                 class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
         </div>
-    </div>
 
-    <div class="space-y-5">
-        <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">交易地点</h3>
-
-        <div>
-            <label class="block text-sm text-gray-600 mb-2 flex items-center justify-between">
-                <span>交易地点</span>
-                <button type="button" id="openMapBtn" class="text-xs text-purple-600 hover:text-purple-800 bg-purple-50 px-2 py-1 rounded transition">
-                    📍 在校园地图上选址
-                </button>
-            </label>
-            <input type="text" id="itemLocation" name="address" placeholder="如：南区宿舍、图书馆正门（可手动输入或地图选点）"
-                class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
-
-            <div id="mini-map-container" class="hidden mt-3 border border-gray-200 rounded-lg overflow-hidden relative">
-                <div id="mini-map" style="height: 250px; width: 100%;"></div>
-                <div class="absolute bottom-2 right-2 z-[1000]">
-                    <button type="button" id="confirmLocationBtn" class="bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm shadow hover:bg-purple-700">
-                        确认坐标
+        <div class="space-y-5">
+            <h3 class="text-sm font-bold text-purple-600 border-b border-purple-50 pb-2">定价与交易</h3>
+    
+            <div>
+                <label class="block text-sm text-gray-600 mb-2 flex items-center justify-between">
+                    <span>交易地点</span>
+                    <button type="button" id="openMapBtn" class="text-xs text-purple-600 hover:text-purple-800 bg-purple-50 px-2 py-1 rounded transition">
+                        📍 在校园地图上选址
                     </button>
+                </label>
+                <input type="text" id="itemLocation" name="address" placeholder="如：南区宿舍、图书馆正门（可手动输入或地图选点）"
+                    class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+        
+                <div id="mini-map-container" class="hidden mt-3 border border-gray-200 rounded-lg overflow-hidden relative">
+                    <div id="mini-map" style="height: 250px; width: 100%;"></div>
+                    <div class="absolute bottom-2 right-2 z-[1000]">
+                        <button type="button" id="confirmLocationBtn" class="bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm shadow hover:bg-purple-700">
+                            确认坐标
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <input type="hidden" id="itemLat" value="">
-            <input type="hidden" id="itemLng" value="">
+                <input type="hidden" id="itemLat" value="">
+                <input type="hidden" id="itemLng" value="">
+            </div>
         </div>
     </div>
 
@@ -694,9 +694,9 @@
             </label>
 
             <label class="flex items-center justify-between cursor-pointer group">
-                <span class="text-sm text-gray-700 group-hover:text-purple-600 transition">是否同意以物易物</span>
+                <span class="text-sm text-gray-700 group-hover:text-purple-600 transition">是否包邮</span>
                 <div class="relative">
-                    <input type="checkbox" id="isShippingFree" name="allowBarter" class="sr-only peer">
+                    <input type="checkbox" id="isShippingFree" name="isShippingFree" class="sr-only peer">
                     <div class="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-purple-500 transition"></div>
                     <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
                 </div>
@@ -737,7 +737,7 @@
         let marker = null;
         let geocoder = null;
         // 澳门科技大学的大致中心点坐标 (高德使用的是 GCJ-02 坐标系，这里我做了一点微调)
-        const CAMPUS_CENTER = [113.557700, 22.137400];
+        const CAMPUS_CENTER = [113.565800, 22.152800];
         const CAMPUS_DATA = [
         { name: "澳门科技大学D座会议厅", lat:22.148303, lng:113.570687 }, // 高德是 [经度lng, 纬度lat] 的顺序！
         { name: "澳门科技大学O座(教学大楼)", lat: 22.148318, lng: 113.571546 },
