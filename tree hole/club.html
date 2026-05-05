@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>社团大舞台 - MUST树洞</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .club-page { max-width: 860px; margin: 0 auto; padding: 24px 20px; }
+    .club-hero {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 28px 28px 20px;
+      display: flex; align-items: flex-start; gap: 20px; margin-bottom: 20px;
+    }
+    .club-hero-emblem {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--bg-inset); border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem; flex-shrink: 0;
+    }
+    .club-hero-info { flex: 1; }
+    .club-hero-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+    .club-hero-desc { font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+    .club-hero-stats { display: flex; gap: 20px; }
+    .club-stat { font-size: 0.85rem; color: var(--text-muted); }
+    .club-stat strong { color: var(--text); font-size: 1rem; }
+    .club-join-btn {
+      flex-shrink: 0; padding: 8px 22px;
+      background: var(--text); color: #fff; border: none;
+      border-radius: var(--radius); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: var(--transition); font-family: inherit;
+    }
+    .club-join-btn:hover { background: #333; }
+    .club-join-btn.joined { background: var(--bg-inset); color: var(--text); border: 1px solid var(--border); }
+
+    /* tabs */
+    .club-tabs {
+      display: flex; gap: 0; background: var(--bg);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      overflow: hidden; margin-bottom: 20px;
+    }
+    .club-tab {
+      flex: 1; padding: 12px 8px; text-align: center;
+      font-size: 0.92rem; font-weight: 500; cursor: pointer;
+      border: none; background: none; color: var(--text-muted);
+      transition: var(--transition); font-family: inherit;
+      border-right: 1px solid var(--border);
+    }
+    .club-tab:last-child { border-right: none; }
+    .club-tab:hover { background: var(--hover-bg); color: var(--text); }
+    .club-tab.active { background: var(--bg-inset); color: var(--text); font-weight: 600; }
+
+    /* tab panels */
+    .club-panel { display: none; }
+    .club-panel.active { display: block; }
+
+    /* intro panel */
+    .intro-section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+    .intro-section-title { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; border-bottom: 1px solid var(--border-muted); padding-bottom: 8px; }
+    .leader-card { display: flex; align-items: center; gap: 14px; }
+    .leader-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--bg-inset); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; flex-shrink: 0; }
+    .leader-info .leader-name { font-weight: 600; font-size: 1rem; }
+    .leader-info .leader-meta { font-size: 0.82rem; color: var(--text-muted); }
+    .members-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .member-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-inset); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 600; cursor: default; position: relative; }
+    .member-avatar:hover::after { content: attr(data-name); position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; white-space: nowrap; pointer-events: none; }
+
+    /* activity panel */
+    .activity-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+    .activity-date-block { flex-shrink: 0; text-align: center; background: var(--bg-inset); border-radius: var(--radius); padding: 8px 14px; border: 1px solid var(--border-muted); }
+    .activity-month { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; }
+    .activity-day { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .activity-info { flex: 1; }
+    .activity-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .activity-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .activity-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 10px; }
+    .activity-spots { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+    .spots-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+    .spots-fill { height: 100%; background: var(--text); border-radius: 2px; transition: width 0.4s ease; }
+    .book-btn { padding: 6px 18px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg); font-size: 0.85rem; cursor: pointer; transition: var(--transition); font-family: inherit; color: var(--text); white-space: nowrap; }
+    .book-btn:hover { background: var(--text); color: #fff; border-color: var(--text); }
+    .book-btn.booked { background: var(--bg-inset); color: var(--text-muted); cursor: default; }
+
+    /* forum panel */
+    .forum-input-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 14px; }
+    .forum-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.92rem; background: var(--bg-subtle); color: var(--text); resize: none; outline: none; font-family: inherit; min-height: 72px; transition: var(--transition); }
+    .forum-input:focus { background: var(--bg); border-color: #888; }
+    .forum-input-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .forum-post-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 10px; }
+    .forum-post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .forum-post-body { font-size: 0.95rem; line-height: 1.7; margin-bottom: 10px; }
+    .forum-post-actions { display: flex; gap: 4px; padding-top: 8px; border-top: 1px solid var(--border-muted); }
+    .forum-comments { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-muted); display: none; }
+    .forum-comments.open { display: block; }
+    .forum-comment-item { padding: 6px 0; border-bottom: 1px solid var(--border-muted); font-size: 0.875rem; }
+    .forum-comment-item:last-child { border-bottom: none; }
+    .forum-comment-author { font-weight: 600; margin-right: 6px; }
+    .forum-comment-input-row { display: flex; gap: 8px; margin-top: 10px; }
+    .forum-comment-input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.85rem; background: var(--bg-subtle); color: var(--text); outline: none; font-family: inherit; }
+    .forum-comment-input:focus { background: var(--bg); border-color: #888; }
+
+    /* chat panel */
+    .chat-apply-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px 20px; text-align: center; }
+    .chat-apply-icon { font-size: 2.8rem; margin-bottom: 14px; }
+    .chat-apply-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .chat-apply-sub { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; }
+    .chat-apply-btn { padding: 10px 32px; background: var(--text); color: #fff; border: none; border-radius: var(--radius); font-size: 0.95rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: var(--transition); }
+    .chat-apply-btn:hover { background: #333; }
+    .chat-apply-btn:disabled { background: var(--bg-inset); color: var(--text-muted); cursor: default; }
+    .chat-status { margin-top: 14px; font-size: 0.85rem; color: var(--text-muted); min-height: 20px; }
+    .chat-room { display: none; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .chat-room.open { display: flex; flex-direction: column; }
+    .chat-room-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+    .chat-online-dot { width: 8px; height: 8px; border-radius: 50%; background: #2da44e; }
+    .chat-messages { height: 320px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { display: flex; gap: 10px; align-items: flex-end; }
+    .chat-msg-mine { flex-direction: row-reverse; }
+    .chat-msg-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-inset); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; flex-shrink: 0; }
+    .chat-bubble { padding: 8px 14px; border-radius: 18px; font-size: 0.88rem; max-width: 65%; line-height: 1.5; }
+    .chat-bubble-theirs { background: var(--bg-inset); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .chat-bubble-mine { background: var(--text); color: #fff; border-bottom-right-radius: 4px; }
+    .chat-input-bar { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
+    .chat-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9rem; background: var(--bg-subtle); color: var(--text); outline: none; font-family: inherit; }
+    .chat-input:focus { background: var(--bg); border-color: #888; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-logo">
+    <button class="btn btn-sm" onclick="history.back()" style="font-weight:400"><i class="fas fa-arrow-left"></i> 返回</button>
+  </div>
+  <div class="nav-search-center">
+    <div style="font-size:1.1rem;font-weight:700;color:var(--text)">社团大舞台</div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-sm" id="nightBtn"><i class="fas fa-moon"></i></button>
+  </div>
+</nav>
+
+<div class="club-page">
+  <!-- club hero -->
+  <div class="club-hero" id="clubHero">
+    <div class="club-hero-emblem" id="heroEmblem"></div>
+    <div class="club-hero-info">
+      <div class="club-hero-name" id="heroName"></div>
+      <div class="club-hero-desc" id="heroDesc"></div>
+      <div class="club-hero-stats">
+        <div class="club-stat"><strong id="heroMemberCount"></strong> 成员</div>
+        <div class="club-stat"><strong id="heroActivityCount"></strong> 近期活动</div>
+      </div>
+    </div>
+    <button class="club-join-btn" id="joinBtn">+ 加入社团</button>
+  </div>
+
+  <!-- tabs -->
+  <div class="club-tabs">
+    <button class="club-tab active" data-tab="intro"><i class="fas fa-info-circle"></i> 社团介绍</button>
+    <button class="club-tab" data-tab="activity"><i class="fas fa-calendar-alt"></i> 活动预约</button>
+    <button class="club-tab" data-tab="forum"><i class="fas fa-comments"></i> 社团论坛</button>
+    <button class="club-tab" data-tab="chat"><i class="fas fa-comment-dots"></i> 社团聊天</button>
+  </div>
+
+  <!-- intro panel -->
+  <div class="club-panel active" id="panel-intro">
+    <div class="intro-section">
+      <div class="intro-section-title">社团简介</div>
+      <div id="introFullDesc" style="font-size:0.95rem;line-height:1.8;color:var(--text)"></div>
+    </div>
+    <div class="intro-section">
+      <div class="intro-section-title">现任负责人</div>
+      <div class="leader-card">
+        <div class="leader-avatar" id="leaderAvatar"></div>
+        <div class="leader-info">
+          <div class="leader-name" id="leaderName"></div>
+          <div class="leader-meta" id="leaderMeta"></div>
+        </div>
+      </div>
+    </div>
+    <div class="intro-section">
+      <div class="intro-section-title">社团成员</div>
+      <div class="members-row" id="membersRow"></div>
+    </div>
+  </div>
+
+  <!-- activity panel -->
+  <div class="club-panel" id="panel-activity">
+    <div id="activityList"></div>
+  </div>
+
+  <!-- forum panel -->
+  <div class="club-panel" id="panel-forum">
+    <div class="forum-input-card">
+      <textarea class="forum-input" id="forumInput" placeholder="在社团论坛发布内容…"></textarea>
+      <div class="forum-input-footer">
+        <button class="btn btn-primary btn-sm" id="forumPostBtn">发布</button>
+      </div>
+    </div>
+    <div id="forumList"></div>
+  </div>
+
+  <!-- chat panel -->
+  <div class="club-panel" id="panel-chat">
+    <div class="chat-apply-box" id="chatApplyBox">
+      <div class="chat-apply-icon">💬</div>
+      <div class="chat-apply-title">加入社团聊天室</div>
+      <div class="chat-apply-sub">申请通过社团管理员审核后，即可与社团成员实时聊天</div>
+      <button class="chat-apply-btn" id="chatApplyBtn">申请加入</button>
+      <div class="chat-status" id="chatStatus"></div>
+    </div>
+    <div class="chat-room" id="chatRoom">
+      <div class="chat-room-header">
+        <div class="chat-online-dot"></div>
+        <span id="chatRoomTitle"></span>
+        <span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto" id="chatOnlineCount"></span>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-bar">
+        <input class="chat-input" id="chatInput" placeholder="发送消息…" autocomplete="off">
+        <button class="btn btn-primary btn-sm" id="chatSendBtn">发送</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLUBS = [
+  {
+    id:0, name:'学生总会', emoji:'🏛️',
+    desc:'学生总会是学校最高学生自治组织，负责统筹协调各学生社团活动，维护学生权益，组织各类校园文化活动。每年举办迎新晚会、毕业晚会、运动会等大型活动，是同学们展示自我的重要舞台。',
+    leader:{name:'张明远', grade:'大三', dept:'计算机学院'},
+    members:['李','王','陈','刘','赵','孙','周','吴','郑','冯'],
+    memberCount:120,
+    activities:[
+      {id:1,title:'五四青年节文艺汇演',date:'2026-05-04',time:'19:00',location:'大礼堂',desc:'庆祝五四青年节，展示青春风采',spots:200,booked:156},
+      {id:2,title:'学生代表大会',date:'2026-05-15',time:'14:00',location:'行政楼报告厅',desc:'讨论学生权益相关议题',spots:100,booked:88},
+    ],
+    chatMsgs:[
+      {from:'张明远',text:'大家好，欢迎加入学生总会聊天室！',mine:false},
+      {from:'王晓燕',text:'五四晚会的节目单出来了吗？',mine:false},
+      {from:'陈志远',text:'正在排练中，下周公布！',mine:false},
+    ]
+  },
+  {
+    id:1, name:'羽毛球社', emoji:'🏸',
+    desc:'羽毛球社成立于2010年，是学校最活跃的体育社团之一。定期举办校内联赛，欢迎各水平球友加入，共同享受羽毛球运动的乐趣。',
+    leader:{name:'林晓峰', grade:'大二', dept:'体育学院'},
+    members:['黄','郑','何','高','林','梁','郭','罗','韩','唐'],
+    memberCount:85,
+    activities:[
+      {id:1,title:'春季羽毛球联赛',date:'2026-05-10',time:'09:00',location:'体育馆3号场',desc:'单打双打混双全面开赛',spots:64,booked:48},
+      {id:2,title:'新生入社训练营',date:'2026-05-20',time:'15:00',location:'体育馆',desc:'基础技术培训，欢迎零基础新生',spots:30,booked:12},
+    ],
+    chatMsgs:[
+      {from:'林晓峰',text:'本周六上午9点联赛，大家准时到场！',mine:false},
+      {from:'黄志强',text:'好的，我带球拍来',mine:false},
+    ]
+  },
+  {
+    id:2, name:'乒乓球社', emoji:'🏓',
+    desc:'乒乓球社致力于推广乒乓球运动，定期组织训练和比赛，培养同学们的竞技精神和团队合作能力。',
+    leader:{name:'赵小明', grade:'大三', dept:'工程学院'},
+    members:['钱','孙','李','周','吴','郑','王','冯','陈','褚'],
+    memberCount:60,
+    activities:[
+      {id:1,title:'校际乒乓球友谊赛',date:'2026-05-12',time:'14:00',location:'体育馆乒乓室',desc:'与兄弟院校切磋球技',spots:20,booked:18},
+    ],
+    chatMsgs:[
+      {from:'赵小明',text:'友谊赛名单已确定，请查收通知',mine:false},
+    ]
+  },
+  {
+    id:3, name:'国学社', emoji:'📜',
+    desc:'国学社以弘扬中华优秀传统文化为宗旨，开展经典诵读、书法、茶艺、汉服等活动，让同学们感受传统文化的魅力。',
+    leader:{name:'苏雅文', grade:'大四', dept:'文学院'},
+    members:['卫','蒋','沈','韩','杨','朱','秦','尤','许','何'],
+    memberCount:45,
+    activities:[
+      {id:1,title:'端午节传统文化体验',date:'2026-05-31',time:'10:00',location:'文化广场',desc:'包粽子、做香囊、写书法',spots:50,booked:32},
+      {id:2,title:'《论语》读书会',date:'2026-05-08',time:'19:00',location:'图书馆研讨室',desc:'共读经典，交流心得',spots:20,booked:15},
+    ],
+    chatMsgs:[
+      {from:'苏雅文',text:'端午活动材料已备好，欢迎大家参与！',mine:false},
+      {from:'卫晨曦',text:'太期待了，我已经报名了',mine:false},
+    ]
+  },
+  {
+    id:4, name:'户外运动协会', emoji:'🏕️',
+    desc:'户外运动协会组织徒步、露营、攀岩等户外活动，培养同学们的探险精神和环保意识，享受大自然的美好。',
+    leader:{name:'吴浩然', grade:'大二', dept:'地理学院'},
+    members:['施','张','孔','曹','严','华','金','魏','陶','姜'],
+    memberCount:72,
+    activities:[
+      {id:1,title:'周末徒步登山活动',date:'2026-05-09',time:'07:00',location:'学校南门集合',desc:'目的地：附近山峰，全程约8km',spots:30,booked:28},
+      {id:2,title:'夏季露营活动',date:'2026-06-01',time:'16:00',location:'郊外营地',desc:'两天一夜，体验野外生存',spots:25,booked:10},
+    ],
+    chatMsgs:[
+      {from:'吴浩然',text:'周末徒步还有2个名额，快来报名！',mine:false},
+      {from:'施晓雨',text:'装备清单发一下？',mine:false},
+      {from:'吴浩然',text:'已发到群文件，记得带防晒和水',mine:false},
+    ]
+  },
+  {
+    id:5, name:'舞蹈联盟', emoji:'💃',
+    desc:'舞蹈联盟汇聚了热爱舞蹈的同学，涵盖街舞、现代舞、民族舞等多种风格，定期举办演出和交流活动。',
+    leader:{name:'林美琪', grade:'大三', dept:'艺术学院'},
+    members:['戚','谢','邹','喻','柏','水','窦','章','云','苏'],
+    memberCount:95,
+    activities:[
+      {id:1,title:'校园舞蹈大赛',date:'2026-05-22',time:'18:30',location:'大礼堂',desc:'各风格舞蹈同台竞技',spots:300,booked:245},
+      {id:2,title:'街舞公开课',date:'2026-05-07',time:'19:00',location:'活动中心',desc:'零基础入门，感受街舞魅力',spots:40,booked:38},
+    ],
+    chatMsgs:[
+      {from:'林美琪',text:'大赛排练时间：每天晚上7-9点，活动中心',mine:false},
+      {from:'戚雨晴',text:'好的，我今晚到',mine:false},
+    ]
+  },
+  {
+    id:6, name:'音乐学会', emoji:'🎵',
+    desc:'音乐学会是学校最具影响力的艺术社团，涵盖声乐、器乐、合唱等方向，每年举办多场音乐会和演出。',
+    leader:{name:'陈乐天', grade:'大四', dept:'音乐学院'},
+    members:['潘','葛','奚','范','彭','郎','鲁','韦','昌','马'],
+    memberCount:110,
+    activities:[
+      {id:1,title:'春季音乐会',date:'2026-05-18',time:'19:30',location:'音乐厅',desc:'声乐器乐联合演出',spots:150,booked:142},
+      {id:2,title:'吉他入门工作坊',date:'2026-05-11',time:'15:00',location:'音乐楼204',desc:'从零开始学吉他',spots:15,booked:9},
+    ],
+    chatMsgs:[
+      {from:'陈乐天',text:'音乐会节目单已定，大家最后冲刺！',mine:false},
+      {from:'潘晓月',text:'好期待，票还有吗？',mine:false},
+      {from:'陈乐天',text:'还有少量票，找我领',mine:false},
+    ]
+  },
+  {
+    id:7, name:'IEEE学生分会', emoji:'⚡',
+    desc:'IEEE学生分会是国际电气电子工程师学会在校学生组织，致力于推动电子、计算机、通信等领域的学术交流与技术创新。',
+    leader:{name:'刘科远', grade:'大三', dept:'电子信息学院'},
+    members:['苗','凤','花','方','俞','任','袁','柳','酆','鲍'],
+    memberCount:68,
+    activities:[
+      {id:1,title:'嵌入式系统开发讲座',date:'2026-05-06',time:'19:00',location:'工程楼报告厅',desc:'业界专家分享实战经验',spots:80,booked:75},
+      {id:2,title:'电子设计竞赛培训',date:'2026-05-13',time:'14:00',location:'实验楼301',desc:'备战全国大学生电子设计竞赛',spots:25,booked:20},
+    ],
+    chatMsgs:[
+      {from:'刘科远',text:'讲座嘉宾已确认，来自华为研究院',mine:false},
+      {from:'苗志远',text:'太强了！我已经报名了',mine:false},
+    ]
+  }
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+
+// ===== init =====
+const params = new URLSearchParams(location.search);
+const clubId = parseInt(params.get('id') || '0');
+const club = CLUBS.find(c => c.id === clubId) || CLUBS[0];
+
+// night mode
+const nightBtn = document.getElementById('nightBtn');
+const isNight = localStorage.getItem('th_night_mode') === '1';
+if (isNight) document.body.classList.add('night-mode');
+nightBtn.addEventListener('click', () => {
+  document.body.classList.toggle('night-mode');
+  localStorage.setItem('th_night_mode', document.body.classList.contains('night-mode') ? '1' : '0');
+});
+
+// populate hero
+document.getElementById('heroEmblem').textContent = club.emoji;
+document.getElementById('heroName').textContent = club.name;
+document.getElementById('heroDesc').textContent = club.desc.slice(0, 60) + '…';
+document.getElementById('heroMemberCount').textContent = club.memberCount;
+document.getElementById('heroActivityCount').textContent = club.activities.length;
+document.getElementById('chatRoomTitle').textContent = club.name + ' 聊天室';
+document.getElementById('chatOnlineCount').textContent = Math.floor(Math.random()*8+3) + ' 人在线';
+
+// join btn
+const joinKey = 'club_joined_' + club.id;
+const joinBtn = document.getElementById('joinBtn');
+function updateJoinBtn() {
+  const joined = localStorage.getItem(joinKey);
+  joinBtn.textContent = joined ? '✓ 已加入' : '+ 加入社团';
+  joinBtn.className = 'club-join-btn' + (joined ? ' joined' : '');
+}
+updateJoinBtn();
+joinBtn.addEventListener('click', () => {
+  const joined = localStorage.getItem(joinKey);
+  if (joined) localStorage.removeItem(joinKey);
+  else localStorage.setItem(joinKey, '1');
+  updateJoinBtn();
+});
+
+// tabs
+document.querySelectorAll('.club-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.club-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.club-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ===== intro =====
+document.getElementById('introFullDesc').textContent = club.desc;
+const ldr = club.leader;
+document.getElementById('leaderAvatar').textContent = ldr.name[0];
+document.getElementById('leaderName').textContent = ldr.name;
+document.getElementById('leaderMeta').textContent = ldr.dept + ' · ' + ldr.grade;
+const membersRow = document.getElementById('membersRow');
+club.members.forEach(m => {
+  const el = document.createElement('div');
+  el.className = 'member-avatar';
+  el.textContent = m;
+  el.setAttribute('data-name', m + '同学');
+  membersRow.appendChild(el);
+});
+
+// ===== activities =====
+const activityList = document.getElementById('activityList');
+const bookedKey = 'club_booked_' + club.id;
+let bookedSet = new Set(JSON.parse(localStorage.getItem(bookedKey) || '[]'));
+
+function renderActivities() {
+  activityList.innerHTML = club.activities.map(act => {
+    const d = new Date(act.date);
+    const month = d.toLocaleString('zh', {month:'short'});
+    const day = d.getDate();
+    const pct = Math.round(act.booked / act.spots * 100);
+    const isBooked = bookedSet.has(act.id);
+    return `<div class="activity-card">
+      <div class="activity-date-block">
+        <div class="activity-month">${month}</div>
+        <div class="activity-day">${day}</div>
+      </div>
+      <div class="activity-info">
+        <div class="activity-title">${act.title}</div>
+        <div class="activity-meta">
+          <span><i class="fas fa-clock" style="margin-right:4px"></i>${act.time}</span>
+          <span><i class="fas fa-map-marker-alt" style="margin-right:4px"></i>${act.location}</span>
+        </div>
+        <div class="activity-desc">${act.desc}</div>
+        <div class="activity-spots">
+          已报名 ${act.booked}/${act.spots} 人
+          <div class="spots-bar"><div class="spots-fill" style="width:${pct}%"></div></div>
+        </div>
+      </div>
+      <button class="book-btn ${isBooked ? 'booked' : ''}" data-act-id="${act.id}">
+        ${isBooked ? '✓ 已预约' : '预约'}
+      </button>
+    </div>`;
+  }).join('');
+  activityList.querySelectorAll('.book-btn:not(.booked)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.actId);
+      bookedSet.add(id);
+      localStorage.setItem(bookedKey, JSON.stringify([...bookedSet]));
+      const act = club.activities.find(a => a.id === id);
+      if (act) act.booked = Math.min(act.booked + 1, act.spots);
+      renderActivities();
+    });
+  });
+}
+renderActivities();
+
+// ===== forum =====
+const forumKey = 'club_forum_' + club.id;
+function getForumPosts() { return JSON.parse(localStorage.getItem(forumKey) || '[]'); }
+function saveForumPosts(posts) { localStorage.setItem(forumKey, JSON.stringify(posts)); }
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderForum() {
+  const posts = getForumPosts();
+  const forumList = document.getElementById('forumList');
+  if (!posts.length) {
+    forumList.innerHTML = '<div class="empty-tip">还没有帖子，来发第一条吧</div>';
+    return;
+  }
+  forumList.innerHTML = posts.slice().reverse().map((p, ri) => {
+    const i = posts.length - 1 - ri;
+    const commentsHtml = (p.comments || []).map(c =>
+      `<div class="forum-comment-item"><span class="forum-comment-author">${escHtml(c.author)}</span>${escHtml(c.text)}</div>`
+    ).join('');
+    return `<div class="forum-post-card" data-idx="${i}">
+      <div class="forum-post-header">
+        <div class="avatar" style="width:36px;height:36px;font-size:0.85rem">${escHtml(p.author[0])}</div>
+        <div><div style="font-weight:600;font-size:0.92rem">${escHtml(p.author)}</div><div style="font-size:0.75rem;color:var(--text-muted)">${p.time}</div></div>
+      </div>
+      <div class="forum-post-body">${escHtml(p.text)}</div>
+      <div class="forum-post-actions">
+        <button class="action-btn forum-like-btn" data-idx="${i}"><i class="far fa-heart"></i> ${p.likes||0}</button>
+        <button class="action-btn forum-cmt-btn" data-idx="${i}"><i class="far fa-comment"></i> ${(p.comments||[]).length} 评论</button>
+      </div>
+      <div class="forum-comments" id="forum-cmt-${i}">
+        ${commentsHtml}
+        <div class="forum-comment-input-row">
+          <input class="forum-comment-input" placeholder="写评论…" data-idx="${i}">
+          <button class="btn btn-sm" data-cmt-idx="${i}">发送</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  forumList.querySelectorAll('.forum-like-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      const posts2 = getForumPosts();
+      posts2[idx].likes = (posts2[idx].likes || 0) + 1;
+      saveForumPosts(posts2);
+      renderForum();
+    });
+  });
+  forumList.querySelectorAll('.forum-cmt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      const box = document.getElementById('forum-cmt-' + idx);
+      box.classList.toggle('open');
+    });
+  });
+  forumList.querySelectorAll('[data-cmt-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.cmtIdx);
+      const input = forumList.querySelector(`.forum-comment-input[data-idx="${idx}"]`);
+      const text = input.value.trim();
+      if (!text) return;
+      const posts2 = getForumPosts();
+      if (!posts2[idx].comments) posts2[idx].comments = [];
+      posts2[idx].comments.push({ author: '我', text });
+      saveForumPosts(posts2);
+      renderForum();
+      const box = document.getElementById('forum-cmt-' + idx);
+      if (box) box.classList.add('open');
+    });
+  });
+}
+renderForum();
+
+document.getElementById('forumPostBtn').addEventListener('click', () => {
+  const input = document.getElementById('forumInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const posts = getForumPosts();
+  posts.push({ author: '我', text, time: new Date().toLocaleString('zh'), likes: 0, comments: [] });
+  saveForumPosts(posts);
+  input.value = '';
+  renderForum();
+});
+
+// ===== chat =====
+const chatApplyBtn = document.getElementById('chatApplyBtn');
+const chatStatus = document.getElementById('chatStatus');
+const chatApplyBox = document.getElementById('chatApplyBox');
+const chatRoom = document.getElementById('chatRoom');
+const chatApprovedKey = 'club_chat_approved_' + club.id;
+
+function openChatRoom() {
+  chatApplyBox.style.display = 'none';
+  chatRoom.classList.add('open');
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = club.chatMsgs.map(m => `
+    <div class="chat-msg ${m.mine ? 'chat-msg-mine' : ''}">
+      <div class="chat-msg-avatar">${m.from[0]}</div>
+      <div class="chat-bubble ${m.mine ? 'chat-bubble-mine' : 'chat-bubble-theirs'}">${escHtml(m.text)}</div>
+    </div>`).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+if (localStorage.getItem(chatApprovedKey)) openChatRoom();
+
+chatApplyBtn.addEventListener('click', () => {
+  chatApplyBtn.disabled = true;
+  chatStatus.textContent = '申请已提交，等待管理员审核…';
+  setTimeout(() => {
+    chatStatus.textContent = '✓ 申请已通过！正在进入聊天室…';
+    setTimeout(() => {
+      localStorage.setItem(chatApprovedKey, '1');
+      openChatRoom();
+    }, 800);
+  }, 2000);
+});
+
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+function sendChatMsg() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg chat-msg-mine';
+  div.innerHTML = `<div class="chat-msg-avatar">我</div><div class="chat-bubble chat-bubble-mine">${escHtml(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  chatInput.value = '';
+}
+chatSendBtn.addEventListener('click', sendChatMsg);
+chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMsg(); });
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>

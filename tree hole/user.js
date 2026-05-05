@@ -12,11 +12,20 @@ window.UserModule = (function () {
     const btn = document.getElementById("userAvatarBtn");
     if (!btn) return;
     const u = Store.currentUser;
-    btn.textContent = u.avatarLetter || "我";
-    btn.style.background = u.avatarColor || "#555";
+    const avatarImg = localStorage.getItem("th_avatar_img");
+    if (avatarImg) {
+      btn.textContent = "";
+      btn.style.backgroundImage = `url(${avatarImg})`;
+      btn.style.backgroundSize = "cover";
+      btn.style.backgroundPosition = "center";
+      btn.style.background = `url(${avatarImg}) center/cover`;
+    } else {
+      btn.textContent = u.avatarLetter || "我";
+      btn.style.backgroundImage = "";
+      btn.style.background = u.avatarColor || "#555";
+    }
   }
 
-  // openSettings kept for compatibility but now navigates to settings.html
   function openSettings() {
     window.location.href = "settings.html";
   }

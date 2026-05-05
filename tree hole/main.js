@@ -1,28 +1,57 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ===== 0. 进入动画（仅首次访问显示）+ 欢迎弹窗 =====
-  const splash = document.getElementById("splashScreen");
+  // ===== 0. 加载画面 =====
+  const loadingScreen = document.getElementById("loadingScreen");
   const welcomeModal = document.getElementById("welcomeModal");
   const isFirstVisit = !localStorage.getItem("th_visited");
+  const loadingBar = document.getElementById("loadingBar");
+  const loadingStatus = document.getElementById("loadingStatus");
+  const loadingWelcome = document.getElementById("loadingWelcome");
 
-  if (!isFirstVisit) {
-    // 非首次：直接隐藏 splash，不播放动画
-    splash.style.display = "none";
-  } else {
-    // 首次：播放银河穿梭动画
-    localStorage.setItem("th_visited", "1");
-    startGalaxy();
+  // 启动粒子背景
+  startLoadingParticles();
+
+  // 模拟加载进度
+  const steps = [
+    { pct: 20, text: "初始化数据…" },
+    { pct: 50, text: "加载帖子…" },
+    { pct: 75, text: "渲染界面…" },
+    { pct: 95, text: "即将完成…" },
+  ];
+  let stepIdx = 0;
+  const stepTimer = setInterval(() => {
+    if (stepIdx < steps.length) {
+      loadingBar.style.width = steps[stepIdx].pct + "%";
+      loadingStatus.textContent = steps[stepIdx].text;
+      stepIdx++;
+    } else {
+      clearInterval(stepTimer);
+    }
+  }, 320);
+
+  function finishLoading() {
+    clearInterval(stepTimer);
+    loadingBar.style.width = "100%";
+    loadingStatus.style.opacity = "0";
+    loadingWelcome.classList.add("show");
     setTimeout(() => {
-      splash.classList.add("fade-out");
+      if (window._stopLoadingParticles) window._stopLoadingParticles();
+      loadingScreen.classList.add("fade-out");
       setTimeout(() => {
-        splash.style.display = "none";
-        welcomeModal.classList.add("open");
-      }, 800);
-    }, 2800);
+        loadingScreen.style.display = "none";
+        if (isFirstVisit) {
+          localStorage.setItem("th_visited", "1");
+          welcomeModal.classList.add("open");
+        }
+      }, 700);
+    }, 900);
   }
 
-  function startGalaxy() {
-    const canvas = document.getElementById("galaxyCanvas");
+  // 最短显示 1.6s，之后等页面就绪
+  setTimeout(finishLoading, 1600);
+
+  function startLoadingParticles() {
+    const canvas = document.getElementById("loadingCanvas");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     let W = canvas.width = window.innerWidth;
@@ -32,87 +61,71 @@ document.addEventListener("DOMContentLoaded", () => {
       H = canvas.height = window.innerHeight;
     });
 
-    // 星星
-    const STAR_COUNT = 320;
+    const STAR_COUNT = 260;
     const stars = Array.from({ length: STAR_COUNT }, () => ({
       x: Math.random() * W, y: Math.random() * H,
-      z: Math.random() * W,
-      pz: 0
+      z: Math.random() * W, pz: 0
     }));
     stars.forEach(s => s.pz = s.z);
 
-    // 流星
     const meteors = [];
-    function spawnMeteor() {
+    const meteorTimer = setInterval(() => {
       meteors.push({
         x: Math.random() * W, y: Math.random() * H * 0.5,
-        vx: 6 + Math.random() * 6, vy: 3 + Math.random() * 3,
-        len: 80 + Math.random() * 120, life: 1
+        vx: 5 + Math.random() * 5, vy: 2 + Math.random() * 3,
+        len: 80 + Math.random() * 100, life: 1
       });
-    }
-    setInterval(spawnMeteor, 900);
+    }, 1000);
 
+    let running = true;
     let frame = 0;
     function draw() {
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      if (!running) return;
+      ctx.fillStyle = "rgba(13,17,23,0.2)";
       ctx.fillRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2, speed = 5;
 
-      const cx = W / 2, cy = H / 2;
-      const speed = 6;
-
-      // 星场穿梭
       stars.forEach(s => {
-        s.pz = s.z;
-        s.z -= speed;
+        s.pz = s.z; s.z -= speed;
         if (s.z <= 0) { s.x = Math.random() * W; s.y = Math.random() * H; s.z = W; s.pz = W; }
-
         const sx = (s.x - cx) * (W / s.z) + cx;
         const sy = (s.y - cy) * (W / s.z) + cy;
         const px = (s.x - cx) * (W / s.pz) + cx;
         const py = (s.y - cy) * (W / s.pz) + cy;
-        const size = Math.max(0.3, (1 - s.z / W) * 2.5);
         const bright = 1 - s.z / W;
-
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(sx, sy);
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(sx, sy);
         ctx.strokeStyle = `rgba(${180 + Math.floor(bright*75)},${200 + Math.floor(bright*55)},255,${bright})`;
-        ctx.lineWidth = size;
-        ctx.stroke();
+        ctx.lineWidth = Math.max(0.3, bright * 2); ctx.stroke();
       });
 
-      // 流星
       for (let i = meteors.length - 1; i >= 0; i--) {
         const m = meteors[i];
-        m.x += m.vx; m.y += m.vy; m.life -= 0.018;
-        if (m.life <= 0 || m.x > W + 200 || m.y > H + 200) { meteors.splice(i, 1); continue; }
-        const grad = ctx.createLinearGradient(m.x - m.vx * (m.len / 8), m.y - m.vy * (m.len / 8), m.x, m.y);
-        grad.addColorStop(0, `rgba(255,255,255,0)`);
-        grad.addColorStop(1, `rgba(200,230,255,${m.life * 0.9})`);
-        ctx.beginPath();
-        ctx.moveTo(m.x - m.vx * (m.len / 8), m.y - m.vy * (m.len / 8));
-        ctx.lineTo(m.x, m.y);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        m.x += m.vx; m.y += m.vy; m.life -= 0.02;
+        if (m.life <= 0 || m.x > W + 200) { meteors.splice(i, 1); continue; }
+        const grad = ctx.createLinearGradient(m.x - m.vx * 10, m.y - m.vy * 10, m.x, m.y);
+        grad.addColorStop(0, "rgba(255,255,255,0)");
+        grad.addColorStop(1, `rgba(168,216,255,${m.life * 0.85})`);
+        ctx.beginPath(); ctx.moveTo(m.x - m.vx * 10, m.y - m.vy * 10); ctx.lineTo(m.x, m.y);
+        ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
       }
 
-      // 星云光晕
-      if (frame % 2 === 0) {
-        const gx = cx + Math.sin(frame * 0.008) * 120;
-        const gy = cy + Math.cos(frame * 0.006) * 80;
-        const nebula = ctx.createRadialGradient(gx, gy, 0, gx, gy, 260);
-        nebula.addColorStop(0, "rgba(80,60,160,0.06)");
-        nebula.addColorStop(0.5, "rgba(40,80,180,0.03)");
+      if (frame % 3 === 0) {
+        const gx = cx + Math.sin(frame * 0.007) * 100;
+        const gy = cy + Math.cos(frame * 0.005) * 70;
+        const nebula = ctx.createRadialGradient(gx, gy, 0, gx, gy, 240);
+        nebula.addColorStop(0, "rgba(80,60,160,0.05)");
         nebula.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = nebula;
-        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = nebula; ctx.fillRect(0, 0, W, H);
       }
-
       frame++;
       requestAnimationFrame(draw);
     }
     draw();
+
+    window._stopLoadingParticles = () => {
+      running = false;
+      clearInterval(meteorTimer);
+    };
   }
 
   document.getElementById("welcomeCloseBtn").addEventListener("click", () => {
@@ -176,9 +189,12 @@ document.addEventListener("DOMContentLoaded", () => {
     messageView.classList.add("active");
   }
 
-  // ===== 热搜榜 =====
+  // ===== 热搜榜（前3 + 更多）=====
+  let hotShowAll = false;
   function renderHotSearch() {
     const el = document.getElementById("hotSearchList");
+    const moreEl = document.getElementById("hotSearchMore");
+    const moreBtn = document.getElementById("hotMoreBtn");
     if (!el) return;
     const posts = Store.getFilteredPosts("all", "");
     const ranked = [...posts]
@@ -186,18 +202,43 @@ document.addEventListener("DOMContentLoaded", () => {
       .sort((a, b) => b.heat - a.heat)
       .slice(0, 10);
     const heatLabels = ["沸", "热", "热", "热", "热"];
-    el.innerHTML = ranked.map((item, i) => `
+    const makeItem = (item, i) => `
       <div class="hot-item" data-id="${item.id}">
         <span class="hot-rank ${i===0?"top1":i===1?"top2":i===2?"top3":""}">${i+1}</span>
         <span class="hot-text">${Render.escapeHtml(item.text)}</span>
         <span class="hot-heat">${i < 5 ? heatLabels[i] : ""} ${item.heat}</span>
-      </div>`).join("");
-    el.querySelectorAll(".hot-item").forEach(item => {
-      item.addEventListener("click", () => showDetail(item.dataset.id));
+      </div>`;
+    el.innerHTML = ranked.slice(0, 5).map((item, i) => makeItem(item, i)).join("");
+    if (moreEl) {
+      moreEl.innerHTML = ranked.slice(5).map((item, i) => makeItem(item, i + 5)).join("");
+      moreEl.style.display = hotShowAll ? "block" : "none";
+    }
+    if (moreBtn) {
+      moreBtn.style.display = ranked.length > 5 ? "flex" : "none";
+      moreBtn.innerHTML = hotShowAll
+        ? '<i class="fas fa-chevron-up"></i> 收起'
+        : '<i class="fas fa-chevron-down"></i> 更多热搜';
+    }
+    [el, moreEl].forEach(container => {
+      if (!container) return;
+      container.querySelectorAll(".hot-item").forEach(item => {
+        item.addEventListener("click", () => showDetail(item.dataset.id));
+      });
     });
   }
 
-  // ===== 6. Feed 刷新（仅真实帖子，不自动轮询）=====
+  // 更多热搜按钮
+  const hotMoreBtn = document.getElementById("hotMoreBtn");
+  if (hotMoreBtn) {
+    hotMoreBtn.addEventListener("click", () => {
+      hotShowAll = !hotShowAll;
+      renderHotSearch();
+    });
+  }
+
+  // ===== 6. Feed 刷新（前3条 + 展开更多）=====
+  let feedExpanded = false;
+  let feedOffset = 0;
 
   function refreshFeed() {
     const posts = Store.getFilteredPosts(window._curCategory, window._curQuery);
@@ -209,9 +250,50 @@ document.addEventListener("DOMContentLoaded", () => {
       searchResultsBar.classList.remove("visible");
     }
 
-    Render.renderFeed(feedContainer, emptyFeedMsg, posts, showDetail);
+    const displayPosts = feedExpanded ? posts : posts.slice(feedOffset, feedOffset + 3);
+    Render.renderFeed(feedContainer, emptyFeedMsg, displayPosts, showDetail);
     animateNewCards();
     renderHotSearch();
+
+    // update expand button
+    const expandBtn = document.getElementById("feedExpandBtn");
+    if (expandBtn) {
+      if (feedExpanded) {
+        expandBtn.innerHTML = '<i class="fas fa-chevron-up"></i> 收起';
+      } else {
+        const remaining = posts.length - (feedOffset + 3);
+        expandBtn.innerHTML = remaining > 0
+          ? `<i class="fas fa-chevron-down"></i> 展开更多 (${remaining})`
+          : '<i class="fas fa-chevron-down"></i> 展开更多';
+        expandBtn.style.display = posts.length > 3 ? "flex" : "none";
+      }
+    }
+  }
+
+  // 刷新按钮（换一批）
+  const feedRefreshBtn = document.getElementById("feedRefreshBtn");
+  if (feedRefreshBtn) {
+    feedRefreshBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (feedExpanded) return;
+      const posts = Store.getFilteredPosts(window._curCategory, window._curQuery);
+      feedOffset = (feedOffset + 3) % Math.max(posts.length, 1);
+      // spin icon
+      const icon = feedRefreshBtn.querySelector("i");
+      if (icon) { icon.style.transition = "transform 0.4s"; icon.style.transform = "rotate(360deg)"; setTimeout(() => { icon.style.transition = ""; icon.style.transform = ""; }, 400); }
+      refreshFeed();
+    });
+  }
+
+  // 展开/收起按钮
+  const feedExpandBtn = document.getElementById("feedExpandBtn");
+  if (feedExpandBtn) {
+    feedExpandBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      feedExpanded = !feedExpanded;
+      if (!feedExpanded) feedOffset = 0;
+      refreshFeed();
+    });
   }
 
   // ===== 7. 帖子卡片入场动画 =====
@@ -415,20 +497,38 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // 头像悬停气泡
+    // 头像悬停气泡（fixed 定位，覆盖所有内容）
     (root || document).querySelectorAll(".avatar-popover-wrap").forEach(wrap => {
       const avatar = wrap.querySelector(".avatar");
       const popover = wrap.querySelector(".author-popover");
       if (!avatar || !popover) return;
       let timer;
+
+      function positionPopover() {
+        const rect = avatar.getBoundingClientRect();
+        const pw = 200, ph = 160;
+        let left = rect.left;
+        let top = rect.bottom + 6;
+        // 防止超出右边界
+        if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+        // 防止超出下边界，改为显示在头像上方
+        if (top + ph > window.innerHeight - 8) top = rect.top - ph - 6;
+        popover.style.left = left + "px";
+        popover.style.top = top + "px";
+      }
+
       avatar.addEventListener("mouseenter", () => {
         clearTimeout(timer);
+        positionPopover();
         popover.classList.add("visible");
       });
-      wrap.addEventListener("mouseleave", () => {
+      avatar.addEventListener("mouseleave", () => {
         timer = setTimeout(() => popover.classList.remove("visible"), 200);
       });
       popover.addEventListener("mouseenter", () => clearTimeout(timer));
+      popover.addEventListener("mouseleave", () => {
+        timer = setTimeout(() => popover.classList.remove("visible"), 200);
+      });
     });
   };
   document.getElementById("backBtn").addEventListener("click", showHome);
@@ -469,6 +569,57 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("userAvatarBtn").addEventListener("click", () => {
     window.location.href = "settings.html";
   }, true);
+
+  // ===== 深夜模式 =====
+  const nightBtn = document.getElementById("nightModeBtn");
+  let isNightMode = localStorage.getItem("th_night_mode") === "1";
+
+  function applyNightMode(on) {
+    document.body.classList.toggle("night-mode", on);
+    if (nightBtn) {
+      nightBtn.innerHTML = on
+        ? '<i class="fas fa-sun"></i> 白天模式'
+        : '<i class="fas fa-moon"></i> 深夜模式';
+    }
+  }
+  applyNightMode(isNightMode);
+
+  if (nightBtn) {
+    nightBtn.addEventListener("click", () => {
+      isNightMode = !isNightMode;
+      localStorage.setItem("th_night_mode", isNightMode ? "1" : "0");
+      applyNightMode(isNightMode);
+    });
+  }
+
+  // ===== 主页背景图 =====
+  const bgImg = localStorage.getItem("th_bg_img");
+  if (bgImg) {
+    document.body.style.backgroundImage = `url(${bgImg})`;
+    document.body.classList.add("has-bg-img");
+  }
+
+  // ===== 用户头像图片 =====
+  const avatarImg = localStorage.getItem("th_avatar_img");
+  const userAvatarBtn = document.getElementById("userAvatarBtn");
+  if (avatarImg && userAvatarBtn) {
+    userAvatarBtn.textContent = "";
+    userAvatarBtn.style.backgroundImage = `url(${avatarImg})`;
+    userAvatarBtn.style.backgroundSize = "cover";
+    userAvatarBtn.style.backgroundPosition = "center";
+  }
+
+  // 首页输入栏小头像
+  const homeAvatarSm = document.getElementById("homeAvatarSm");
+  if (homeAvatarSm) {
+    if (avatarImg) {
+      homeAvatarSm.innerHTML = `<img src="${avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      const u = Store.currentUser;
+      homeAvatarSm.textContent = u.avatarLetter || "";
+      if (u.avatarColor) homeAvatarSm.style.background = u.avatarColor;
+    }
+  }
 
   // ===== 16. 初始渲染 =====
   refreshFeed();
