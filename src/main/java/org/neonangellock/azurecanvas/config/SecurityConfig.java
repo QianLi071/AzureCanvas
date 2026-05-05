@@ -47,10 +47,11 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/api/users/**")
                         .ignoringRequestMatchers("/api/v1/images/**")
                         .ignoringRequestMatchers("/api/treeholes/**")
+                        .ignoringRequestMatchers("/api/knowledge/**")
                         .csrfTokenRepository(new CookieCsrfTokenRepository())
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**", "/css/**", "/js/**", "/images/**", "/cube/**", "/api/robots/**", "/admin/**", "/auth/**", "/forum/**", "/waterfall/**", "/models/**", "/textures/**")
+                        .requestMatchers("/**", "/css/**", "/js/**", "/images/**", "/cube/**", "/api/robots/**", "/admin/**", "/auth/**", "/forum/**", "/waterfall/**", "/models/**", "/textures/**", "/api/knowledge/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

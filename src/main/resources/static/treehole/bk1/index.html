@@ -337,15 +337,33 @@
   </aside>
 
 </div>
-
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="importmap">
+  {
+      "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+      }
+  }
+</script>
+<script src="../js/notifications.js"></script>
+<script>
+  window.notify.show = new NotificationManager();
+</script>
+<script type="module">
+  import { initLiquidEffect } from "../js/effects/liquid/liquid.js";
+  initLiquidEffect();
+</script>
 <!-- ===== 脚本加载（顺序：数据层→渲染层→功能模块→入口）===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="store.js"></script>
 <script src="render.js"></script>
 <script src="user.js"></script>
 <script src="message.js"></script>
 <script src="main.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="pet.js"></script>
+<script src="daynight.changer.js"></script>
+<script src="../js/security.util.js"></script>
+<script src="../js/app/treehole/daynight.changer.js"></script>
 <script>
 // ===== 社团九宫格展开逻辑 =====
 (function () {

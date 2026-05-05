@@ -44,9 +44,9 @@
       <div class="nav-search">
         <i class="fas fa-search search-icon"></i>
         <input type="text" id="searchInput" placeholder="搜索帖子内容或作者…" autocomplete="off">
-<!--        <button class="search-button" id="searchButton">-->
-<!--          <i class="fas fa-search"></i>-->
-<!--        </button>-->
+        <button class="search-button" id="searchButton">
+          <i class="fas fa-search"></i>
+        </button>
       </div>
     </div>
 
@@ -208,6 +208,38 @@
 
     <!-- 右侧栏 -->
     <aside class="right-sidebar">
+      <div class="widget pet-widget">
+        <div class="widget-title pet-widget-title">
+          <i class="fas fa-paw" style="color:#e05c00;margin-right:5px;"></i>树洞宠物
+          <div class="pet-type-toggle">
+            <button class="pet-type-btn active" id="petCatBtn" title="猫猫">🐱</button>
+            <button class="pet-type-btn" id="petDogBtn" title="狗狗">🐶</button>
+          </div>
+        </div>
+        <div class="pet-canvas-wrap">
+          <canvas id="petCanvas"></canvas>
+          <div class="pet-mood-bar">
+            <span class="pet-name" id="petName">小橘</span>
+            <div class="pet-mood-icons">
+              <span title="心情" id="petMoodIcon">😊</span>
+              <span title="饱食度" id="petHungerIcon">🍖</span>
+            </div>
+          </div>
+          <div class="pet-speech-bubble" id="petSpeech"></div>
+        </div>
+        <div class="pet-actions">
+          <button class="pet-action-btn" id="petFeedBtn" title="喂食"><i class="fas fa-drumstick-bite"></i> 喂食</button>
+          <button class="pet-action-btn" id="petPlayBtn" title="玩耍"><i class="fas fa-gamepad"></i> 玩耍</button>
+          <button class="pet-action-btn" id="petSleepBtn" title="休息"><i class="fas fa-moon"></i> 休息</button>
+        </div>
+        <div class="pet-chat-area">
+          <div class="pet-chat-log" id="petChatLog"></div>
+          <div class="pet-chat-input-row">
+            <input class="pet-chat-input" id="petChatInput" placeholder="和宠物说说话…" autocomplete="off">
+            <button class="btn btn-sm btn-primary" id="petChatSend">发送</button>
+          </div>
+        </div>
+      </div>
       <!-- 热搜榜 -->
       <div class="widget">
         <div class="widget-title hot-title"><i class="fas fa-fire" style="color:#e05c00;margin-right:5px;"></i>热搜榜</div>
@@ -251,6 +283,8 @@
   <script src="user.js"></script>
   <script src="message.js"></script>
   <script src="main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="pet.js"></script>
   <script src="daynight.changer.js"></script>
   <script src="../js/security.util.js"></script>
   <script src="../js/app/treehole/daynight.changer.js"></script>

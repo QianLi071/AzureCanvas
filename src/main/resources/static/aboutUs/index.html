@@ -292,6 +292,7 @@
         }
     </style>
     <link rel="stylesheet" href="aboutUs.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="immersive-about">
 
@@ -378,50 +379,78 @@
         </div>
     </div>
 
+
     <div class="team-section">
-        <div class="team-card card-team-1" data-github="https://github.com/AzureCanvas">
+        <div class="team-card card-team-1" data-github="https://github.com/NeonAngelThreads">
             <div class="card-inner">
                 <div class="avatar-wrapper">
                     <img src="team/222498847.jpg" alt="Azure Explorer">
                 </div>
+                <h1 class="nickname">NeonAngelThreads</h1>
                 <h3 class="nickname">Azure Explorer</h3>
                 <p class="philosophy">探索未知的蔚蓝，代码编织梦想。</p>
             </div>
         </div>
-        <div class="team-card card-team-2" data-github="https://github.com/AzureCanvas">
-            <div class="card-inner">
-                <div class="avatar-wrapper">
-                    <img src="team/257989705.jpg" alt="Canvas Master">
-                </div>
-                <h3 class="nickname">Canvas Master</h3>
-                <p class="philosophy">画布之上，皆为世界，逻辑之下，尽是灵魂。</p>
-            </div>
-        </div>
-        <div class="team-card card-team-3" data-github="https://github.com/AzureCanvas">
-            <div class="card-inner">
-                <div class="avatar-wrapper">
-                    <img src="team/184054109.jpg" alt="Void Architect">
-                </div>
-                <h3 class="nickname">Void Architect</h3>
-                <p class="philosophy">在虚无中构建秩序，于代码间寻觅真理。</p>
-            </div>
-        </div>
-        <div class="team-card card-team-4" data-github="https://github.com/AzureCanvas">
-            <div class="card-inner">
-                <div class="avatar-wrapper">
-                    <img src="team/184193429.png" alt="Pixel Wizard">
-                </div>
-                <h3 class="nickname">Pixel Wizard</h3>
-                <p class="philosophy">像素虽小，可纳乾坤；代码无形，力拔千钧。</p>
-            </div>
-        </div>
-        <div class="team-card card-team-5" data-github="https://github.com/AzureCanvas">
+        <div class="team-card card-team-5" data-github="https://github.com/QianLi071">
             <div class="card-inner">
                 <div class="avatar-wrapper">
                     <img src="team/258174284.png" alt="Logic Weaver">
                 </div>
+                <h1 class="nickname">QianLi071</h1>
                 <h3 class="nickname">Logic Weaver</h3>
                 <p class="philosophy">织就逻辑的长河，跨越算法的山巅。</p>
+            </div>
+        </div>
+        <div class="team-card card-team-3" data-github="https://github.com/SHENQUE520">
+            <div class="card-inner">
+                <div class="avatar-wrapper">
+                    <img src="team/184054109.jpg" alt="Void Architect">
+                </div>
+                <h1 class="nickname">SHENQUE520</h1>
+                <h3 class="nickname">Void Architect</h3>
+                <p class="philosophy">在虚无中构建秩序，于代码间寻觅真理。</p>
+            </div>
+        </div>
+        <div class="team-card card-team-2" data-github="https://github.com/Yolanda9085">
+            <div class="card-inner">
+                <div class="avatar-wrapper">
+                    <img src="team/257989705.jpg" alt="Canvas Master">
+                </div>
+                <h1 class="nickname">Yolanda9085</h1>
+                <h3 class="nickname">Canvas Master</h3>
+                <p class="philosophy">画布之上，皆为世界，逻辑之下，尽是灵魂。</p>
+            </div>
+        </div>
+        <div class="team-card card-team-4" data-github="https://github.com/WYK300">
+            <div class="card-inner">
+                <div class="avatar-wrapper">
+                    <img src="team/184193429.png" alt="Pixel Wizard">
+                </div>
+                <h1 class="nickname">WYK300</h1>
+                <h3 class="nickname">Pixel Wizard</h3>
+                <p class="philosophy">像素虽小，可纳乾坤；代码无形，力拔千钧。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="github-connector-container">
+        <svg id="wire-svg" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="energyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="var(--energy-green)" />
+                    <stop offset="100%" stop-color="var(--energy-blue)" />
+                </linearGradient>
+            </defs>
+            <!-- 路径由 JS 动态生成 -->
+        </svg>
+
+        <div class="github-hub" onclick="window.open('https://github.com/NeonAngelThreads/AzureCanvas/', '_blank')">
+            <i class="fab fa-github"></i>
+            <div class="github-hover-content">
+                <div class="project-preview">
+                    <img src="../../../../../demo/devlogs/project.png" alt="Project Preview">
+                </div>
+                <div class="star-me-text">Star Me</div>
             </div>
         </div>
     </div>
@@ -1171,6 +1200,72 @@ new FluidSimulation('fluid-canvas');
         });
     });
 </script>
+<script>
+    function updateWires() {
+        const svg = document.getElementById('wire-svg');
+        const hub = document.querySelector('.github-hub');
+        const cards = document.querySelectorAll('.team-card');
+        const container = document.querySelector('.github-connector-container');
 
+        if (!svg || !hub || cards.length === 0) return;
+
+        // 清空现有路径
+        const existingPaths = svg.querySelectorAll('.wire-path, .energy-pulse');
+        existingPaths.forEach(p => p.remove());
+
+        const hubRect = hub.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+
+        // 更新 SVG 的 viewBox
+        svg.setAttribute('viewBox', `0 0 ${svgRect.width} ${svgRect.height}`);
+
+        // Hub 的中心点（相对于 SVG）
+        const hubX = hubRect.left + hubRect.width / 2 - svgRect.left;
+        const hubY = hubRect.top - svgRect.top;
+
+        cards.forEach((card, index) => {
+            const cardRect = card.getBoundingClientRect();
+
+            // 卡牌底部中心点（相对于 SVG）
+            const startX = cardRect.left + cardRect.width / 2 - svgRect.left;
+            const startY = cardRect.bottom - svgRect.top;
+
+            // 创建直角路径
+            // 路径逻辑：先向下走一段，再水平走到 Hub 上方，再向下走到 Hub
+            const midY = startY + (hubY - startY) * (0.4 + index * 0.1); // 错开高度避免重叠
+
+            const pathD = `M ${startX} ${startY}
+                           L ${startX} ${midY}
+                           L ${hubX} ${midY}
+                           L ${hubX} ${hubY}`;
+
+            // 基础背景线
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathD);
+            path.setAttribute('class', 'wire-path');
+            svg.appendChild(path);
+
+            // 能量脉冲线
+            const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            pulse.setAttribute('d', pathD);
+            pulse.setAttribute('class', 'energy-pulse');
+            // 错开动画时间
+            pulse.style.animationDelay = `${index * 0.5}s`;
+            svg.appendChild(pulse);
+        });
+    }
+
+    // 初始化和窗口调整时更新
+    window.addEventListener('load', updateWires);
+    window.addEventListener('resize', updateWires);
+    // 监听滚动，因为某些动画可能会改变元素位置
+    window.addEventListener('scroll', () => {
+        requestAnimationFrame(updateWires);
+    });
+
+    // 初始调用一次
+    setTimeout(updateWires, 1000);
+</script>
 </body>
 </html>

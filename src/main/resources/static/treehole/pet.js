@@ -1,5 +1,4 @@
 // pet.js — 树洞宠物 3D 模块（Three.js r128）
-
 (function () {
   'use strict';
 
