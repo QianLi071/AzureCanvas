@@ -6,7 +6,6 @@
     <title>About Us - AzureCanvas Immersive</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <!-- 引入 Lenis 平滑滚动库 -->
     <script src="libs/lenis.js"></script>
     <script type="importmap">
         {
@@ -29,24 +28,11 @@
         }
 
         .poker-section {
-            z-index: 1000;
-            height: 500vh; /* 为卡牌动画预留足够的滚动空间 */
+            height: 400vh; /* 增加滚动长度以承载更复杂的序列 */
             position: relative;
             background: #000F33FF;
-            /* --- CSS Scroll-Driven Animation 修复 --- */
+            /* 关键：定义滚动驱动时间轴 */
             view-timeline: --poker-timeline block;
-            animation: sky-change linear both;
-            animation-timeline: --poker-timeline;
-            /* 设定动画范围：当该 section 进入视口一定距离后开始变色 */
-            animation-range: entry 100% exit 100%;
-        }
-
-        @keyframes sky-change {
-            0% { background: #000F33FF; }
-            /* 在滚动到中间部分时变色 */
-            40% { background: #000F33FF; }
-            70% { background: #003bbe; } 
-            100% { background: #003bbe; }
         }
 
         #poker-proxy {
@@ -201,9 +187,9 @@
         .spiral-title {
             position: absolute;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            /* 修改为始终可见，取消动态位移 */
+            opacity: 1 !important;
+            transform: none !important;
             pointer-events: none;
             z-index: 10;
         }
@@ -217,43 +203,43 @@
             display: block;
             font-weight: 700;
             line-height: 1.3;
-            background: linear-gradient(135deg, #ffa07a 0%, #ffd700 50%, #fff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: none;
-            filter: drop-shadow(0 2px 8px rgba(255, 160, 122, 0.4));
+            /* 修改为纯白色 */
+            background: none;
+            -webkit-text-fill-color: white;
+            color: white;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
         }
         
-        /* 标题位置：右-左-右 */
+        /* 标题位置：分布在螺线上、中、下 */
         .title-right-1 {
-            right: -15%;
-            top: 18%;
+            right: 15%;
+            top: 15%;
             text-align: right;
-            max-width: 200px;
+            max-width: 400px;
         }
         .title-right-1 .title-line {
-            font-size: clamp(14px, 3vw, 24px);
+            font-size: clamp(20px, 4vw, 36px);
         }
         
         .title-left-1 {
-            left: -12%;
-            top: 48%;
+            left: 10%;
+            top: 45%;
             text-align: left;
-            max-width: 160px;
+            max-width: 400px;
         }
         .title-left-1 .title-line {
-            font-size: clamp(13px, 2.8vw, 22px);
+            font-size: clamp(20px, 4vw, 36px);
         }
         
         .title-right-2 {
-            right: -10%;
+            right: 15%;
             top: 75%;
             text-align: right;
-            max-width: 180px;
+            max-width: 400px;
         }
         .title-right-2 .title-line {
-            font-size: clamp(15px, 3.2vw, 26px);
+            font-size: clamp(20px, 4vw, 36px);
         }
         .spacer {
             height: 100vh;
@@ -266,7 +252,11 @@
             position: relative;
         }
 
-
+        .poker-section {
+            height: 500vh; /* 为卡牌动画预留足够的滚动空间 */
+            position: relative;
+            background: #000F33FF;
+        }
 
         .poker-iframe-wrapper {
             position: sticky;
@@ -302,7 +292,6 @@
         }
     </style>
     <link rel="stylesheet" href="aboutUs.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="immersive-about">
 
@@ -316,7 +305,6 @@
 <div class="top-spacer">
     <div class="header-section">
         <canvas id="fluid-canvas"></canvas>
-        <h1 class="hero">Creative Developer</h1>
         <h1 id="about-us-title">About us</h1>
     </div>
 </div>
@@ -324,11 +312,10 @@
 <div class="poker-section">
      <div id="poker-proxy"></div>
      <div id="canvas-container" class="poker-iframe-wrapper"></div>
-</div>
+ </div>
 
 <div class="spacer">
     <div class="sponsors-container">
-        <!-- 第一列：向左滚动 -->
         <div class="marquee-row">
             <div class="marquee-content">
                 <div class="sponsor-item">GitHub</div>
@@ -345,7 +332,6 @@
                 <div class="sponsor-item">GoldWave</div>
             </div>
         </div>
-        <!-- 第二列：向右滚动 -->
         <div class="marquee-row reverse">
             <div class="marquee-content">
                 <div class="sponsor-item">WebStorm</div>
@@ -377,98 +363,70 @@
             <path id="spiralPath" d="m 68.181817,16.363636 c -3.459103,3.882689 -5.577674,8.937854 -5.920328,14.126617 -0.342654,5.188762 1.092755,10.478624 4.011238,14.782474 3.336848,4.920808 8.467722,8.435947 13.998337,10.617962 5.530616,2.182016 11.473643,3.116865 17.394104,3.661879 5.920464,0.545013 11.875284,0.715834 17.775894,1.444984 5.90062,0.72915 11.80153,2.041119 17.10439,4.72972 5.26379,2.66879 9.8255,6.659803 13.33048,11.407961 3.50497,4.748157 5.96261,10.241185 7.36081,15.974849 2.79641,11.467328 1.32629,23.700428 -2.69129,34.799008 -4.22496,11.67147 -11.28499,22.3581 -20.6384,30.5182 -9.3534,8.1601 -21.00918,13.7375 -33.296009,15.50023 -12.28683,1.76273 -25.162214,-0.3566 -36.048514,-6.31998 -10.886301,-5.96338 -19.676316,-15.79682 -24.017076,-27.42572 -2.652495,-7.10603 -3.652721,-14.87437 -2.489416,-22.36958 1.163306,-7.49521 4.538273,-14.69114 9.845681,-20.109893 5.307408,-5.418753 12.567114,-8.977391 20.136079,-9.469558 7.568965,-0.492167 15.365348,2.183282 20.780382,7.494484 3.827906,3.754507 6.404643,8.704207 7.591972,13.932927 1.187328,5.22871 1.016627,10.72377 -0.184468,15.94933 -2.402189,10.45114 -8.773056,19.59292 -16.134774,27.39047 -7.862901,8.32841 -16.978854,15.44059 -24.448398,24.12353 -3.734771,4.34148 -7.053288,9.08458 -9.408548,14.3047 -2.355261,5.22011 -3.726379,10.94004 -3.506692,16.66268 0.236457,6.15948 2.315606,12.17454 5.517293,17.44182 3.201687,5.26729 7.498738,9.81352 12.271198,13.71464 9.544921,7.80223 20.878296,13.0226 31.626113,19.06122 10.747818,6.03861 21.316237,13.27508 27.849227,23.72976 3.2665,5.22734 5.43346,11.20729 5.77639,17.36176 0.34292,6.15447 -1.20791,12.47663 -4.76749,17.50897 -0.26253,0.37115 -0.5354,0.73498 -0.81819,1.09093" fill="none" stroke="url(#myGradient)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         
-        <!-- 动态标题：右-左-右 依次出现 -->
         <div class="spiral-title title-right-1" data-title-index="1">
             <span class="title-line">Redefining</span>
-            <span class="title-line">Immersive</span>
-            <span class="title-line">Web Experience</span>
+            <span class="title-line">Step into the Infinite</span>
+            <span class="sub-title">踏入无限</span>
         </div>
         <div class="spiral-title title-left-1" data-title-index="2">
-            <span class="title-line">Everything</span>
-            <span class="title-line">is possible</span>
+            <span class="title-line">Explore the Uncharted World</span>
+            <span class="sub-title">探索未知的世界</span>
         </div>
         <div class="spiral-title title-right-2" data-title-index="3">
-            <span class="title-line">come with me！</span>
+            <span class="title-line">Journey into the Azure</span>
+            <span class="sub-title">向蔚蓝深处进发</span>
         </div>
     </div>
 
     <div class="team-section">
-        <div class="team-card card-team-1" data-github="https://github.com/NeonAngelThreads">
+        <div class="team-card card-team-1" data-github="https://github.com/AzureCanvas">
             <div class="card-inner">
                 <div class="avatar-wrapper">
                     <img src="team/222498847.jpg" alt="Azure Explorer">
                 </div>
-                <h1 class="nickname">NeonAngelThreads</h1>
                 <h3 class="nickname">Azure Explorer</h3>
                 <p class="philosophy">探索未知的蔚蓝，代码编织梦想。</p>
             </div>
         </div>
-        <div class="team-card card-team-5" data-github="https://github.com/QianLi071">
-            <div class="card-inner">
-                <div class="avatar-wrapper">
-                    <img src="team/258174284.png" alt="Logic Weaver">
-                </div>
-                <h1 class="nickname">QianLi071</h1>
-                <h3 class="nickname">Logic Weaver</h3>
-                <p class="philosophy">织就逻辑的长河，跨越算法的山巅。</p>
-            </div>
-        </div>
-        <div class="team-card card-team-3" data-github="https://github.com/SHENQUE520">
-            <div class="card-inner">
-                <div class="avatar-wrapper">
-                    <img src="team/184054109.jpg" alt="Void Architect">
-                </div>
-                <h1 class="nickname">SHENQUE520</h1>
-                <h3 class="nickname">Void Architect</h3>
-                <p class="philosophy">在虚无中构建秩序，于代码间寻觅真理。</p>
-            </div>
-        </div>
-        <div class="team-card card-team-2" data-github="https://github.com/Yolanda9085">
+        <div class="team-card card-team-2" data-github="https://github.com/AzureCanvas">
             <div class="card-inner">
                 <div class="avatar-wrapper">
                     <img src="team/257989705.jpg" alt="Canvas Master">
                 </div>
-                <h1 class="nickname">Yolanda9085</h1>
                 <h3 class="nickname">Canvas Master</h3>
                 <p class="philosophy">画布之上，皆为世界，逻辑之下，尽是灵魂。</p>
             </div>
         </div>
-        <div class="team-card card-team-4" data-github="https://github.com/WYK300">
+        <div class="team-card card-team-3" data-github="https://github.com/AzureCanvas">
+            <div class="card-inner">
+                <div class="avatar-wrapper">
+                    <img src="team/184054109.jpg" alt="Void Architect">
+                </div>
+                <h3 class="nickname">Void Architect</h3>
+                <p class="philosophy">在虚无中构建秩序，于代码间寻觅真理。</p>
+            </div>
+        </div>
+        <div class="team-card card-team-4" data-github="https://github.com/AzureCanvas">
             <div class="card-inner">
                 <div class="avatar-wrapper">
                     <img src="team/184193429.png" alt="Pixel Wizard">
                 </div>
-                <h1 class="nickname">WYK300</h1>
                 <h3 class="nickname">Pixel Wizard</h3>
                 <p class="philosophy">像素虽小，可纳乾坤；代码无形，力拔千钧。</p>
             </div>
         </div>
-    </div>
-
-    <div class="github-connector-container">
-        <svg id="wire-svg" preserveAspectRatio="none">
-            <defs>
-                <linearGradient id="energyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="var(--energy-green)" />
-                    <stop offset="100%" stop-color="var(--energy-blue)" />
-                </linearGradient>
-            </defs>
-            <!-- 路径由 JS 动态生成 -->
-        </svg>
-
-        <div class="github-hub" onclick="window.open('https://github.com/NeonAngelThreads/AzureCanvas/', '_blank')">
-            <i class="fab fa-github"></i>
-            <div class="github-hover-content">
-                <div class="project-preview">
-                    <img src="../../../../../demo/devlogs/project.png" alt="Project Preview">
+        <div class="team-card card-team-5" data-github="https://github.com/AzureCanvas">
+            <div class="card-inner">
+                <div class="avatar-wrapper">
+                    <img src="team/258174284.png" alt="Logic Weaver">
                 </div>
-                <div class="star-me-text">Star Me</div>
+                <h3 class="nickname">Logic Weaver</h3>
+                <p class="philosophy">织就逻辑的长河，跨越算法的山巅。</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 瀑布外景移植区域保持不变 -->
 <div class="portal-section">
     <div id="portal-preview-box"></div>
 </div>
@@ -1147,35 +1105,12 @@ new FluidSimulation('fluid-canvas');
             const drawLength = drawProgress * pathLength;
             path.style.strokeDashoffset = pathLength - drawLength;
             
-            // 控制三个标题依次出现（右-左-右）
+            // 静态需求，移除此处的标题动态控制逻辑
+            /*
             const titles = document.querySelectorAll('.spiral-title');
             const progress = self.progress;
-            
-            // 标题1（右侧）：进度 10%-25% 时出现
-            if (progress >= 0.10 && progress < 0.35) {
-                titles[0].classList.add('visible');
-            } else if (progress < 0.10) {
-                titles[0].classList.remove('visible');
-            }
-            
-            // 标题2（左侧）：进度 30%-50% 时出现
-            if (progress >= 0.30 && progress < 0.60) {
-                titles[1].classList.add('visible');
-            } else if (progress < 0.30) {
-                titles[1].classList.remove('visible');
-            }
-            
-            // 标题3（右侧）：进度 55%-75% 时出现
-            if (progress >= 0.55 && progress <= 1) {
-                titles[2].classList.add('visible');
-            } else if (progress < 0.55) {
-                titles[2].classList.remove('visible');
-            }
-            
-            // 滚动回去时隐藏所有标题
-            if (progress < 0.05) {
-                titles.forEach(t => t.classList.remove('visible'));
-            }
+            ...
+            */
         }
     });
 
@@ -1237,72 +1172,5 @@ new FluidSimulation('fluid-canvas');
     });
 </script>
 
-<script>
-    function updateWires() {
-        const svg = document.getElementById('wire-svg');
-        const hub = document.querySelector('.github-hub');
-        const cards = document.querySelectorAll('.team-card');
-        const container = document.querySelector('.github-connector-container');
-        
-        if (!svg || !hub || cards.length === 0) return;
-
-        // 清空现有路径
-        const existingPaths = svg.querySelectorAll('.wire-path, .energy-pulse');
-        existingPaths.forEach(p => p.remove());
-
-        const hubRect = hub.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        const svgRect = svg.getBoundingClientRect();
-        
-        // 更新 SVG 的 viewBox
-        svg.setAttribute('viewBox', `0 0 ${svgRect.width} ${svgRect.height}`);
-
-        // Hub 的中心点（相对于 SVG）
-        const hubX = hubRect.left + hubRect.width / 2 - svgRect.left;
-        const hubY = hubRect.top - svgRect.top;
-
-        cards.forEach((card, index) => {
-            const cardRect = card.getBoundingClientRect();
-            
-            // 卡牌底部中心点（相对于 SVG）
-            const startX = cardRect.left + cardRect.width / 2 - svgRect.left;
-            const startY = cardRect.bottom - svgRect.top;
-
-            // 创建直角路径
-            // 路径逻辑：先向下走一段，再水平走到 Hub 上方，再向下走到 Hub
-            const midY = startY + (hubY - startY) * (0.4 + index * 0.1); // 错开高度避免重叠
-            
-            const pathD = `M ${startX} ${startY} 
-                           L ${startX} ${midY} 
-                           L ${hubX} ${midY} 
-                           L ${hubX} ${hubY}`;
-
-            // 基础背景线
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', pathD);
-            path.setAttribute('class', 'wire-path');
-            svg.appendChild(path);
-
-            // 能量脉冲线
-            const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            pulse.setAttribute('d', pathD);
-            pulse.setAttribute('class', 'energy-pulse');
-            // 错开动画时间
-            pulse.style.animationDelay = `${index * 0.5}s`;
-            svg.appendChild(pulse);
-        });
-    }
-
-    // 初始化和窗口调整时更新
-    window.addEventListener('load', updateWires);
-    window.addEventListener('resize', updateWires);
-    // 监听滚动，因为某些动画可能会改变元素位置
-    window.addEventListener('scroll', () => {
-        requestAnimationFrame(updateWires);
-    });
-
-    // 初始调用一次
-    setTimeout(updateWires, 1000);
-</script>
 </body>
 </html>
