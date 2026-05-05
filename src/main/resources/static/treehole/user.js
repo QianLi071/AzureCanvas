@@ -26,7 +26,7 @@ window.UserModule = (function () {
 
   async function fetchCurrentUser() {
     try {
-      const res = await fetch("/api/users/me", { credentials: "include" });
+      const res = await fetch("https://api.szsummer.com/api/users/me", { credentials: "include" });
       if (res.ok) {
         const u = await res.json();
 

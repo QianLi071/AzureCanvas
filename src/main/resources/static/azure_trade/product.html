@@ -426,7 +426,7 @@
 
     async function loadProductDetail(itemId) {
         try {
-            var response = await fetch('/api/market/items/' + itemId, {
+            var response = await fetch('https://api.szsummer.com/api/market/items/' + itemId, {
                 method: 'GET',
                 credentials: 'include'
             });

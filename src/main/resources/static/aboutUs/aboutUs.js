@@ -1,17 +1,13 @@
 import * as THREE from 'three';
 
 // --- 配置与数据 ---
-const TEAM_DATA = [
-    { name: "Alpha", position: "Lead Architect", bio: "Focuses on scalable cloud solutions and core engine performance optimization.", color: "#FF00FF" },
-    { name: "Beta", position: "Frontend Master", bio: "Crafting immersive user experiences with cutting-edge CSS and Three.js.", color: "#00FFFF" },
-    { name: "Gamma", position: "Data Scientist", bio: "Turning complex data into actionable insights through advanced ML models.", color: "#FFD700" },
-    { name: "Delta", position: "Security Expert", bio: "Ensuring the integrity and safety of the AzureCanvas ecosystem.", color: "#FF6A00" },
-    { name: "Epsilon", position: "Product Visionary", bio: "Bridging the gap between technology and user needs with innovative design.", color: "#00CFFF" }
-];
+
 
 class ImmersiveAbout {
     constructor() {
         this.container = document.getElementById('webgl-container');
+        this.overlay = document.getElementById('transition-overlay');
+        this.isTransitioning = false;
         this.initLenis();
         this.initThree();
         this.addLights();
@@ -124,76 +120,6 @@ class ImmersiveAbout {
         });
     }
 
-    createCards() {
-        this.cards = [];
-        TEAM_DATA.forEach((data, i) => {
-            const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 720;
-            const ctx = canvas.getContext('2d');
-
-            // 绘制卡牌背景
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.8)';
-            ctx.roundRect(0, 0, 512, 720, 40);
-            ctx.fill();
-            ctx.strokeStyle = data.color;
-            ctx.lineWidth = 4;
-            ctx.stroke();
-
-            // 绘制文本
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 60px Inter';
-            ctx.fillText(data.name, 50, 450);
-            ctx.fillStyle = data.color;
-            ctx.font = '40px Inter';
-            ctx.fillText(data.position, 50, 520);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.font = '24px Inter';
-            const words = data.bio.split(' ');
-            let line = '';
-            let y = 580;
-            words.forEach(word => {
-                if ((line + word).length > 30) {
-                    ctx.fillText(line, 50, y);
-                    line = word + ' ';
-                    y += 35;
-                } else {
-                    line += word + ' ';
-                }
-            });
-            ctx.fillText(line, 50, y);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const geometry = new THREE.PlaneGeometry(3.5, 5);
-            const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
-            const card = new THREE.Mesh(geometry, material);
-
-            // 初始位置：屏幕外
-            card.position.set(i % 2 === 0 ? -15 : 15, 0, -10);
-            card.rotation.set(Math.random(), Math.random(), Math.random());
-            card.visible = false;
-
-            this.scene.add(card);
-            this.cards.push(card);
-
-            // GSAP 动画：飞入、停留、飞出
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: ".scroll-spacer",
-                    start: `${(i / 5) * 100}% top`,
-                    end: `${((i + 1) / 5) * 100}% top`,
-                    scrub: 1,
-                    onToggle: self => card.visible = self.isActive
-                }
-            });
-
-            tl.to(card.position, { x: i % 2 === 0 ? -4 : 4, y: 0, z: 0, ease: "none" })
-              .to(card.rotation, { x: 0, y: i % 2 === 0 ? 0.3 : -0.3, z: 0, ease: "none" }, 0)
-              .to(card.position, { x: i % 2 === 0 ? -20 : 20, y: 5, z: -10, ease: "none" }, 0.7)
-              .to(card.rotation, { x: Math.random() * 2, y: Math.random() * 2, z: Math.random() * 2, ease: "none" }, 0.7);
-        });
-    }
-
     createParticles() {
         const count = 2000;
         const positions = new Float32Array(count * 3);
@@ -265,6 +191,20 @@ class ImmersiveAbout {
         window.addEventListener('mousemove', (e) => {
             this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // 点击卡牌交互
+        const raycaster = new THREE.Raycaster();
+        window.addEventListener('click', (e) => {
+            if (this.isTransitioning) return;
+
+            raycaster.setFromCamera(this.mouse, this.camera);
+            const intersects = raycaster.intersectObjects(this.cards);
+
+            if (intersects.length > 0) {
+                const selectedCard = intersects[0].object;
+                this.handleCardClick(selectedCard);
+            }
         });
     }
 

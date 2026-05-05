@@ -373,7 +373,7 @@ updateDropdownCounts();
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const response = await fetch('/api/users/me', {
+        const response = await fetch('https://api.szsummer.com/api/users/me', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
@@ -460,13 +460,13 @@ const submit_logic = function () {
         const canInspect = document.getElementById('canInspect').checked;
 
         if (!title || !category || !description || isNaN(price) || isNaN(condition)) {
-            ('请填写所有必填项！', 'warning');
+            window.notify.show.show('请填写所有必填项！', 'warning');
             return;
         }
 
         try {
 
-            var createRes = await fetch('/api/market/items', {
+            var createRes = await fetch('https://api.szsummer.com/api/market/items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -498,7 +498,7 @@ const submit_logic = function () {
                     formData.append('files', f);
                 });
 
-                var uploadRes = await fetch('/api/v1/images/upload', {
+                var uploadRes = await fetch('https://api.szsummer.com/api/v1/images/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -513,7 +513,7 @@ const submit_logic = function () {
 
                 var imageUuids = await uploadRes.json();
 
-                var bindRes = await fetch('/api/market/item/' + itemId + '/images', {
+                var bindRes = await fetch('https://api.szsummer.com/api/market/item/' + itemId + '/images', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',

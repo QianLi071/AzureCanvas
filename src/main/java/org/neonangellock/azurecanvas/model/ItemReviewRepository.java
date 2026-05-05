@@ -1,4 +1,4 @@
-package org.neonangellock.azurecanvas.repository;
+package org.neonangellock.azurecanvas.model;
 
 import org.neonangellock.azurecanvas.model.ItemReview;
 import org.neonangellock.azurecanvas.model.User;

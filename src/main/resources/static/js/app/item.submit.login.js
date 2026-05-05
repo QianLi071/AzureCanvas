@@ -33,7 +33,7 @@ export const submit_login = function () {
         }
 
         try {
-            const response = await fetch('/api/market/items', {
+            const response = await fetch('https://api.szsummer.com/api/market/items', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

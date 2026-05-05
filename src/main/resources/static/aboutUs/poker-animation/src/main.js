@@ -1,6 +1,6 @@
 import { __toESM } from "../_virtual/_rolldown/runtime.js";
 /* empty css            */
-import { AmbientLight,Clock, Color, DirectionalLight, PerspectiveCamera, Scene } from "three";
+import { AmbientLight,Clock, Color, DirectionalLight, PerspectiveCamera, Scene, Vector2 } from "three";
 import { WebGLRenderer } from "../node_modules/three/build/three.module.js";
 import { require_matter } from "../node_modules/matter-js/build/matter.js";
 import { gsapWithCSS } from "../node_modules/gsap/index.js";
@@ -8,6 +8,11 @@ import { generateFullDeck } from "./config/cardConfig.js";
 import { getPerformanceConfig } from "./utils/performance.js";
 import { CardDeck } from "./core/cardDeck.js";
 import { ScrollAnimation } from "./core/scrollAnimation.js";
+
+// 导入后处理模块（用于 UnrealBloom 光晕效果）
+import { EffectComposer } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 //#region src/main.js
 var import_matter = /* @__PURE__ */ __toESM(require_matter(), 1);
@@ -31,7 +36,30 @@ async function startAnimation() {
 	const engine = import_matter.default.Engine.create();
 // 初始化卡牌逻辑
 	const cardDeck = new CardDeck(scene, camera, engine);
+	
+	// 预加载团队成员头像
+	await cardDeck.preloadTeamAvatars();
+	
 	cardDeck.initCards(deckData);
+    
+    // 设置后处理管线（UnrealBloom 光晕效果）
+    const composer = new EffectComposer(renderer);
+    
+    // 基础渲染通道
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    
+    // UnrealBloomPass 光晕效果
+    const bloomPass = new UnrealBloomPass(
+        new Vector2(window.innerWidth, window.innerHeight),
+        0.0,     // strength（初始为0，由 cardDeck 动态控制）
+        0.4,     // radius
+        0.85     // threshold
+    );
+    composer.addPass(bloomPass);
+    
+    // 将 bloomPass 引用传递给 cardDeck 以便动态控制
+    cardDeck.setBloomPass(bloomPass);
     
     // 全量切换至 CSS Scroll-Driven Animation (SDA) 驱动，移除旧的 ScrollAnimation 类初始化
 	// new ScrollAnimation().init(cardDeck);
@@ -52,13 +80,14 @@ async function startAnimation() {
 		const dt = clock.getDelta();
 		cardDeck.updateIdleAnimation(dt);
 		
-		renderer.render(scene, camera);
+		composer.render(); // 使用后处理管线渲染（包含 bloom 效果）
 	}
 	animate();
 	window.addEventListener("resize", () => {
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
 		renderer.setSize(window.innerWidth, window.innerHeight);
+		composer.setSize(window.innerWidth, window.innerHeight); // 同步更新后处理管线
 	});
 
     // 原始测试按钮逻辑已保留但建议仅用于本地调试[cite: 6]

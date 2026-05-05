@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 显示加载状态
             grid.innerHTML = '<div class="text-center py-12 text-gray-400">搜索中...</div>';
 
-            fetch('http://localhost:8088/api/market/search/es?keyword=' + encodeURIComponent(keyword))
+            fetch('https://api.szsummer.com/api/market/search/es?keyword=' + encodeURIComponent(keyword))
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
                     console.log('ES API返回数据:', data);

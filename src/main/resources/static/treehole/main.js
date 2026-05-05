@@ -339,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const body = { content: text };
       if (replyingTo && replyingTo.id) body.parentId = parseInt(replyingTo.id) || null;
-      const res = await fetch("/api/treeholes/posts/" + currentPostId + "/comments", {
+      const res = await fetch("https://api.szsummer.com/api/treeholes/posts/" + currentPostId + "/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

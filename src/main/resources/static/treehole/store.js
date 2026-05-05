@@ -149,13 +149,13 @@ window.Store = (function () {
   /** 从 API 获取我的关注列表 */
   async function fetchFollowingFromApi() {
     try {
-      const res = await fetch("/api/users/me", { credentials: "include" });
+      const res = await fetch("https://api.szsummer.com/api/users/me", { credentials: "include" });
       if (!res.ok) return [];
       const user = await res.json();
       const userId = user.userId || user.id;
       if (!userId) return [];
 
-      const followRes = await fetch(`/api/users/${userId}/following`, { credentials: "include" });
+      const followRes = await fetch(`https://api.szsummer.com/api/users/${userId}/following`, { credentials: "include" });
       if (!followRes.ok) return [];
       const followingList = await followRes.json();
 

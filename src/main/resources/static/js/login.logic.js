@@ -81,7 +81,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         submitBtn.innerText = 'AUTHENTICATING...';
 
         try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('https://api.szsummer.com/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
         submitBtn.innerText = 'CREATING ACCOUNT...';
 
         try {
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch('https://api.szsummer.com/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
