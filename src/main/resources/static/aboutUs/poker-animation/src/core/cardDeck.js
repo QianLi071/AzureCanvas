@@ -644,14 +644,14 @@ var CardDeck = class {
             if (progress < cycleStart) {
                 card.position.set(restX, restY, restZ);
                 card.scale.set(restScale, restScale, restScale);
-                card.rotation.set(Math.PI / 2, 0, restRotZ);
+                card.rotation.set(Math.PI / 2, Math.PI, restRotZ); // 确保在背景时已经是正面
                 card.renderOrder = 0;
                 card.visible = true;
                 
             } else if (progress >= cycleEnd) {
                 card.position.set(restX, restY, restZ);
                 card.scale.set(restScale, restScale, restScale);
-                card.rotation.set(Math.PI / 2, 0, restRotZ);
+                card.rotation.set(Math.PI / 2, Math.PI, restRotZ); // 确保在背景时已经是正面
                 card.renderOrder = 0;
                 card.visible = true;
                 
@@ -683,7 +683,8 @@ var CardDeck = class {
                 card.scale.set(currentScale, currentScale, currentScale);
                 
                 card.rotation.x = Math.PI / 2;
-                card.rotation.y = eased * Math.PI;
+                // 翻转逻辑：基于 Math.PI (正面) 进行翻转动画，而不是从 0 开始
+                card.rotation.y = Math.PI + (eased * Math.PI); 
                 card.rotation.z = MathUtils.lerp(restRotZ, 0, eased);
                 
                 // 动态渲染层级
@@ -784,17 +785,11 @@ var CardDeck = class {
             card.position.set(currentX, currentY, currentZ);
             card.scale.set(currentScale, currentScale, currentScale);
             
-            // 平滑翻面：从背面 (y=0) 过渡到正面 (y=PI)
-            const flipProgress = adjustedProgress < 0.3 
-                ? adjustedProgress / 0.3  // 前30%快速翻面
-                : 1;
-            
-            const flipEase = flipProgress < 0.5 
-                ? 4 * flipProgress * flipProgress * flipProgress 
-                : 1 - Math.pow(-2 * flipProgress + 2, 3) / 2;
-                
+            // --- 修复跳转逻辑 ---
+            // 直接锁定为正面 (Math.PI)，因为从 4a 阶段开始它们已经是正面了
+            // 这样可以彻底消除因重新计算进度导致的“跳回背面”问题
             card.rotation.x = Math.PI / 2;
-            card.rotation.y = flipEase * Math.PI; // 0 → PI 平滑过渡
+            card.rotation.y = Math.PI; 
             card.rotation.z = currentRotZ;
             
             // 动态渲染层级（逐渐降低）
@@ -811,10 +806,10 @@ var CardDeck = class {
         if (!this.isIdleAnimationEnabled) return;
         this.idleTime += dt;
         this.mainCards.forEach((card, i) => {
-            // 幅度减小到 0.03，仅修改 y 坐标
+            // 计算正弦波偏移量
             const wave = Math.sin(this.idleTime * 1.5 + i * 0.8) * 0.03;
-            card.position.y = (i * 0.05) + wave; 
-            // 移除旋转扰动
+            // 修复：基于卡牌当前位置进行微调，而不是覆盖它
+            card.position.y += wave; 
         });
     }
 
