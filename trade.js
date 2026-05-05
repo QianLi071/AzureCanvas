@@ -1,0 +1,1094 @@
+// ========== 商品数据（2x3 紧凑卡片） ==========
+
+let loggedIn = true;
+
+var
+ cards = [
+    { id: '001', title: '教材捡漏',  desc: '正版教材低至1折',  price: '¥5',    original: '¥50',  emoji: '📚', cat: '教材/考研/资料', gradient: 'from-green-300 to-emerald-500'},
+ 
+    { id: '002', title: '手机数码',  desc: '热门3C装备轻松入', price: '¥120',  original: '¥599', emoji: '🎧', cat: '手机/数码/电脑', gradient: 'from-sky-300 to-blue-500'},
+ 
+    { id: '003', title: '潮玩手办',  desc: '热门IP手办随手入', price: '¥29',   original: '¥89',  emoji: '🧸', cat: '游戏/卡券/潮玩', gradient: 'from-pink-300 to-rose-500'},
+ 
+    { id: '004', title: '省钱卡券',  desc: '吃喝玩乐放心购',  price: '¥1.5',  original: '¥15',  emoji: '🎟️', cat: '游戏/卡券/潮玩', gradient: 'from-amber-300 to-yellow-500'},
+ 
+    { id: '005', title: '运动户外',  desc: '球拍器材超值转',  price: '¥35',   original: '¥199', emoji: '🏸', cat: '服饰/箱包/运动', gradient: 'from-violet-300 to-purple-500'},
+ 
+    { id: '006', title: '生活日用',  desc: '宿舍好物便宜出',  price: '¥8',    original: '¥45',  emoji: '🪴', cat: '家具/家电/日用', gradient: 'from-orange-300 to-red-400'}
+ 
+];
+
+// ========== DOM 引用 ==========
+var searchInput    = document.querySelector('header input[type="text"]');
+var searchBtn      = document.querySelector('header button');
+var hotTags        = document.querySelectorAll('.hot-tags a');
+var categoryItems  = document.querySelectorAll('.category-list li');
+var cardGrid       = document.getElementById('card-grid');
+var recommendGrid  = document.getElementById('recommend-grid');
+var detailModal    = document.getElementById('detail-modal');
+var publishModal   = document.getElementById('publish-modal');
+var publishForm    = document.getElementById('publish-form');
+var toastEl        = document.getElementById('toast');
+
+// ========== API 商品列表分页状态 ==========
+var apiState = {
+    page: 1,
+    limit: 20,
+    isLoading: false,
+    hasMore: true,
+    items: [],
+    currentCategory: null,
+    currentSearch: null,
+    infiniteScrollSetup: false
+};
+
+// ========== 随机渐变背景池 ==========
+var gradientPool = [
+    'from-rose-200 to-pink-300', 'from-sky-200 to-blue-300',
+    'from-amber-200 to-orange-300', 'from-emerald-200 to-green-300',
+    'from-violet-200 to-purple-300', 'from-cyan-200 to-teal-300',
+    'from-red-200 to-rose-300', 'from-indigo-200 to-blue-300',
+    'from-lime-200 to-green-300', 'from-fuchsia-200 to-pink-300',
+    'from-pink-200 to-rose-300', 'from-teal-200 to-cyan-300',
+    'from-purple-200 to-violet-300', 'from-orange-200 to-amber-300'
+];
+
+function getRandomGradient() {
+    return gradientPool[Math.floor(Math.random() * gradientPool.length)];
+}
+
+// ========== 从 API 获取商品列表 ==========
+async function fetchItemsFromApi(page, category, search) {
+    if (apiState.isLoading) return { items: [], hasMore: false };
+    apiState.isLoading = true;
+    
+    try {
+        var params = new URLSearchParams({
+            page: page,
+            limit: apiState.limit
+        });
+        if (category) params.set('category', category);
+        if (search) params.set('search', search);
+        
+        var response = await fetch('/api/market/items?' + params.toString(), {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('API request failed');
+        
+        var items = await response.json();
+        apiState.hasMore = items.length >= apiState.limit;
+        apiState.isLoading = false;
+        return { items: items, hasMore: apiState.hasMore };
+    } catch (error) {
+        console.error('获取商品列表失败:', error);
+        apiState.isLoading = false;
+        return { items: [], hasMore: false };
+    }
+}
+
+// ========== 创建商品卡片元素 ==========
+function createApiCard(item, index) {
+    var card = document.createElement('div');
+    card.className = 'trade-api-card';
+    card.style.animationDelay = (index % apiState.limit) * 50 + 'ms';
+    
+    var gradient = getRandomGradient();
+    var rawCoverUrl = item.images && item.images.length > 0 ? item.images[0] : null;
+    var coverUrl = rawCoverUrl ? (rawCoverUrl.startsWith('http') || rawCoverUrl.startsWith('/') ? rawCoverUrl : '/resources/' + rawCoverUrl) : null;
+    var itemId = item.itemId || item.id;
+    
+    var imageHtml;
+    if (coverUrl) {
+        imageHtml = 
+            '<div class="card-image-wrapper bg-gradient-to-br ' + gradient + '">' +
+                '<img class="card-cover" data-src="' + coverUrl + '" alt="' + item.title + '">' +
+            '</div>';
+    } else {
+        var emoji = item.emoji || '📦';
+        imageHtml = 
+            '<div class="card-image-wrapper bg-gradient-to-br ' + gradient + ' flex items-center justify-center text-6xl">' +
+                emoji +
+            '</div>';
+    }
+    
+    var sellerInitial = (item.sellerUsername || '匿').charAt(0).toUpperCase();
+    var price = typeof item.price === 'number' ? '¥' + item.price.toFixed(2) : '¥' + item.price;
+    var wants = item.wants || Math.floor(Math.random() * 100) + 1;
+    
+    card.innerHTML = imageHtml +
+        '<div class="p-3 flex flex-col flex-1">' +
+            '<p class="text-sm text-gray-800 leading-snug line-clamp-2 font-medium">' + item.title + '</p>' +
+            '<div class="mt-auto pt-2">' +
+                '<div class="flex items-center justify-between">' +
+                    '<span class="trade-price text-base">' + price + '</span>' +
+                    '<span class="text-xs text-gray-400">' + wants + '人想要</span>' +
+                '</div>' +
+                '<div class="flex items-center mt-2 space-x-1.5">' +
+                    '<div class="w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-[10px] text-purple-600 font-bold">' + sellerInitial + '</div>' +
+                    '<span class="text-xs text-gray-500">' + (item.sellerUsername || '匿名用户') + '</span>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    
+    card.addEventListener('click', function() {
+        window.location.href = 'product.html?id=' + itemId;
+    });
+    
+    if (coverUrl) {
+        var img = card.querySelector('.card-cover');
+        var wrapper = card.querySelector('.card-image-wrapper');
+        var tempImg = new Image();
+        tempImg.onload = function() {
+            img.src = coverUrl;
+            img.classList.add('loaded');
+            wrapper.classList.add('image-loaded');
+        };
+        tempImg.onerror = function() {
+            wrapper.classList.add('image-loaded');
+        };
+        tempImg.src = coverUrl;
+    }
+    
+    return card;
+}
+
+// ========== 渲染 API 商品列表 ==========
+function renderApiItems(items, append) {
+    if (!append) {
+        recommendGrid.innerHTML = '';
+    }
+    
+    items.forEach(function(item, index) {
+        var card = createApiCard(item, append ? apiState.items.length + index : index);
+        recommendGrid.appendChild(card);
+    });
+}
+
+// ========== 加载更多商品 ==========
+async function loadMoreItems() {
+    if (apiState.isLoading || !apiState.hasMore) return;
+
+    var loadingIndicator = document.getElementById('loading-indicator');
+    if (!loadingIndicator) {
+        loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'loading-indicator';
+        loadingIndicator.className = 'loading-indicator';
+        loadingIndicator.innerHTML = '<div class="loading-spinner"></div>';
+        recommendGrid.parentElement.appendChild(loadingIndicator);
+    }
+    loadingIndicator.style.display = 'flex';
+
+    var result = await fetchItemsFromApi(apiState.page, apiState.currentCategory, apiState.currentSearch);
+
+    loadingIndicator.style.display = 'none';
+
+    if (result.items.length > 0) {
+        if (apiState.page === 1) {
+            apiState.items = result.items;
+        } else {
+            apiState.items = apiState.items.concat(result.items);
+        }
+        renderApiItems(result.items, apiState.page > 1);
+        apiState.page++;
+    }
+
+    // API returned empty on first page - fall back to seed data
+    if (apiState.page === 1 && result.items.length === 0) {
+        console.log('[Fallback] API returned empty, using local seed data');
+        renderRecommend(null);
+    }
+
+    if (!result.hasMore) {
+        showFeedEndMessage();
+    }
+}
+
+// ========== 显示已加载完毕消息 ==========
+function showFeedEndMessage() {
+    var endMsg = document.getElementById('feed-end-message');
+    if (!endMsg) {
+        endMsg = document.createElement('div');
+        endMsg.id = 'feed-end-message';
+        endMsg.className = 'feed-end-message';
+        endMsg.textContent = '— 已经到底了 —';
+        recommendGrid.parentElement.appendChild(endMsg);
+    }
+    endMsg.style.display = 'block';
+}
+
+// ========== 无限滚动检测 ==========
+var scrollObserver = null;
+
+function setupInfiniteScroll() {
+    if (apiState.infiniteScrollSetup) {
+        var sentinel = document.getElementById('scroll-sentinel');
+        if (sentinel && scrollObserver) {
+            scrollObserver.observe(sentinel);
+        }
+        return;
+    }
+    
+    apiState.infiniteScrollSetup = true;
+    
+    scrollObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting && apiState.hasMore && !apiState.isLoading) {
+                loadMoreItems();
+            }
+        });
+    }, {
+        rootMargin: '100px'
+    });
+    
+    var sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) {
+        scrollObserver.observe(sentinel);
+    } else {
+        var newSentinel = document.createElement('div');
+        newSentinel.id = 'scroll-sentinel';
+        newSentinel.style.height = '1px';
+        newSentinel.style.width = '100%';
+        recommendGrid.parentElement.appendChild(newSentinel);
+        scrollObserver.observe(newSentinel);
+    }
+}
+
+// ========== 初始化 API 商品列表 ==========
+async function initApiItems(category, search) {
+    apiState.page = 1;
+    apiState.hasMore = true;
+    apiState.items = [];
+    apiState.currentCategory = category || null;
+    apiState.currentSearch = search || null;
+
+    var endMsg = document.getElementById('feed-end-message');
+    if (endMsg) endMsg.style.display = 'none';
+
+    await loadMoreItems();
+    setupInfiniteScroll();
+}
+
+// ========== Toast 提示 ==========
+function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.remove('opacity-0', '-translate-y-4');
+    toastEl.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(function () {
+        toastEl.classList.remove('opacity-100', 'translate-y-0');
+        toastEl.classList.add('opacity-0', '-translate-y-4');
+    }, 2000);
+    window.notify.show.show(msg);
+}
+
+// ========== 渲染紧凑卡片（2x3网格 - 无数字版） ==========
+function renderCards(list) {
+    cardGrid.innerHTML = '';
+    list.forEach(function (c) {
+        var div = document.createElement('div');
+        div.className = 'trade-product-card bg-gradient-to-br ' + c.gradient + ' rounded-xl p-4 cursor-pointer hover:scale-[1.02] transition-transform';
+        // 在这里我把原本底部的价格 div 整个删掉了
+        div.innerHTML =
+            '<div class="text-3xl mb-2">' + c.emoji + '</div>' +
+            '<h3 class="text-white text-sm font-black leading-tight">' + c.title + '</h3>' +
+            '<p class="text-white/70 text-[11px] mt-0.5">' + c.desc + '</p>';
+            
+        div.addEventListener('click', function () {
+            window.location.href = 'search.html?cat=' + encodeURIComponent(c.cat);
+        });
+        cardGrid.appendChild(div);
+    });
+}
+
+// ========== ES 搜索 API ==========
+async function searchItemsES(keyword, page, limit) {
+    try {
+        var params = new URLSearchParams({ keyword: keyword, page: page || 1, limit: limit || 20 });
+        var response = await fetch('/api/market/search/es?' + params.toString(), {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('ES search failed');
+        return await response.json();
+    } catch (error) {
+        console.warn('[ES Search] 搜索失败，跳转本地搜索:', error);
+        return null;
+    }
+}
+
+// ========== 搜索 → 跳转 search.html ==========
+function doSearch() {
+    var keyword = searchInput.value.trim();
+    if (keyword) {
+        window.location.href = 'search.html?keyword=' + encodeURIComponent(keyword);
+    }
+}
+
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') doSearch();
+});
+
+// ========== 热搜标签 → 跳转 search.html ==========
+hotTags.forEach(function (tag) {
+    tag.addEventListener('click', function (e) {
+        e.preventDefault();
+        var kw = tag.textContent.trim();
+        window.location.href = 'search.html?keyword=' + encodeURIComponent(kw);
+    });
+});
+
+// ========== 分类筛选 → 跳转搜索页 ==========
+categoryItems.forEach(function (li) {
+    li.addEventListener('click', function (e) {
+        if (e.target.closest('a[href*="search.html"]')) return;
+        if (e.target.closest('.group > div')) return;
+        var cat = li.getAttribute('data-cat');
+        if (cat) window.location.href = 'search.html?cat=' + encodeURIComponent(cat);
+    });
+});
+
+function clearCategoryActive() {}
+
+// ========== 推荐流：动态渲染 ==========
+function getAllSeeds() {
+    var all = [];
+    var keys = Object.keys(searchSeeds);
+    for (var i = 0; i < keys.length; i++) {
+        all = all.concat(searchSeeds[keys[i]]);
+    }
+    return all;
+}
+
+function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+}
+
+function renderRecommend(seedFilter) {
+    recommendGrid.innerHTML = '';
+
+    var fixedCard = document.createElement('div');
+    fixedCard.className = 'trade-recommend-card';
+    fixedCard.style.breakInside = 'avoid';
+    fixedCard.style.marginBottom = '1rem';
+    fixedCard.innerHTML =
+        '<div class="h-44 overflow-hidden"><img src="images/shanhuadi.jpg" class="w-full h-full object-cover" alt="演出票务"></div>' +
+        '<div class="p-3 flex flex-col flex-1">' +
+            '<div class="mb-1"><span class="trade-badge trade-badge--hot">演出票务</span> <span class="trade-badge trade-badge--fresh">内场票</span></div>' +
+            '<p class="text-sm text-gray-800 leading-snug line-clamp-2">原价出 山花地 孙睿扬 王宁 内场svip全票 序号前100进场确认</p>' +
+            '<div class="mt-auto pt-2">' +
+                '<div class="flex items-center justify-between">' +
+                    '<span class="trade-price text-base">¥361</span>' +
+                    '<span class="text-xs text-gray-400">5人想要</span>' +
+                '</div>' +
+                '<div class="flex items-center mt-2 space-x-1.5">' +
+                    '<div class="w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-[10px] text-purple-600 font-bold">票</div>' +
+                    '<span class="text-xs text-gray-500">票务小铺</span>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    fixedCard.addEventListener('click', function () {
+        window.location.href = 'product.html?fixed=1';
+    });
+    recommendGrid.appendChild(fixedCard);
+
+    var pool = seedFilter ? seedFilter : getAllSeeds();
+    var picked = shuffle(pool).slice(0, 8);
+    picked.forEach(function (seed) {
+        var item = makeItem(seed);
+        var bg = colors[Math.floor(Math.random() * colors.length)];
+        var h = heights[Math.floor(Math.random() * heights.length)];
+        var tagHtml = item.tags.map(function (t) {
+            if (t === '包邮') return '<span class="trade-badge trade-badge--free">' + t + '</span>';
+            if (t === '全新') return '<span class="trade-badge trade-badge--fresh">' + t + '</span>';
+            return '<span class="trade-badge trade-badge--hot">' + t + '</span>';
+        }).join(' ');
+
+        var card = document.createElement('div');
+        card.className = 'trade-recommend-card';
+        card.style.breakInside = 'avoid';
+        card.style.marginBottom = '1rem';
+        card.innerHTML =
+            '<div class="' + h + ' bg-gradient-to-br ' + bg + ' flex items-center justify-center text-6xl">' + item.emoji + '</div>' +
+            '<div class="p-3 flex flex-col flex-1">' +
+                (tagHtml ? '<div class="mb-1">' + tagHtml + '</div>' : '') +
+                '<p class="text-sm text-gray-800 leading-snug line-clamp-2">' + item.title + '</p>' +
+                '<div class="mt-auto pt-2">' +
+                    '<div class="flex items-center justify-between">' +
+                        '<span class="trade-price text-base">¥' + item.price + '</span>' +
+                        '<span class="text-xs text-gray-400">' + item.wants + '人想要</span>' +
+                    '</div>' +
+                    '<div class="flex items-center mt-2 space-x-1.5">' +
+                        '<div class="w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-[10px] text-purple-600 font-bold">' + item.seller.charAt(0) + '</div>' +
+                        '<span class="text-xs text-gray-500">' + item.seller + '</span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        card.addEventListener('click', function () {
+            sessionStorage.setItem('viewProduct', JSON.stringify(item));
+            window.location.href = 'product.html?id=' + item.id;
+        });
+        recommendGrid.appendChild(card);
+    });
+}
+
+// ========== 推荐流标签切换 ==========
+var tabSeedMap = {
+    '猜你喜欢': null,
+    '个人闲置': null,
+    '数码设备': categoryMap['手机/数码/电脑'],
+    '教材资料': categoryMap['教材/考研/资料'],
+    '吉他乐器': categoryMap['乐器/文具/手工'],
+    '摄影摄像': ['微单相机','单反相机'],
+    '运动户外': categoryMap['服饰/箱包/运动'],
+    '女装穿搭': ['连衣裙','T恤','卫衣','外套','牛仔裤'],
+    '居家好物': categoryMap['家具/家电/日用']
+};
+
+document.querySelectorAll('.recommend-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+        // 1. 重置所有标签的样式（移除紫色渐变和白字，恢复未选中时的白底灰字）
+        document.querySelectorAll('.recommend-tab').forEach(function (t) {
+            t.style.background = '';
+            t.classList.remove('text-white', 'font-bold', 'bg-gradient-to-br', 'from-purple-500', 'to-purple-600');
+            t.classList.add('bg-white', 'text-gray-600');
+        });
+
+        // 2. 为当前点击的标签添加主题配套的紫色渐变
+        tab.classList.remove('bg-white', 'text-gray-600');
+        tab.classList.add('text-white', 'font-bold', 'bg-gradient-to-br', 'from-purple-500', 'to-purple-600');
+        // (注：这里删除了原本写死黄色的 tab.style.background)
+
+        var label = tab.textContent.trim();
+
+        // "猜你喜欢" 使用 API 获取真实商品数据
+        if (label === '猜你喜欢') {
+            // 重置无限滚动状态以便重新初始化
+            apiState.infiniteScrollSetup = false;
+            initApiItems(null, null);
+            return;
+        }
+
+        // 其他标签使用本地模拟数据
+        var subKeys = tabSeedMap[label];
+        var pool = null;
+        if (subKeys) {
+            pool = [];
+            subKeys.forEach(function (k) {
+                if (searchSeeds[k]) pool = pool.concat(searchSeeds[k]);
+            });
+            if (pool.length === 0) pool = null;
+        }
+        // 关闭无限滚动，使用模拟数据渲染
+        if (scrollObserver) {
+            scrollObserver.disconnect();
+        }
+        var sentinel = document.getElementById('scroll-sentinel');
+        if (sentinel) sentinel.remove();
+        var endMsg = document.getElementById('feed-end-message');
+        if (endMsg) endMsg.style.display = 'none';
+        renderRecommend(pool);
+    });
+});
+
+// ========== 卡片详情弹窗 ==========
+function openModal(card) {
+
+    var banner = document.getElementById('modal-banner');
+    banner.className = 'h-48 flex items-center justify-center text-6xl bg-gradient-to-br ' + (card.gradient || 'from-purple-300 to-purple-500');
+    banner.textContent = card.emoji;
+    document.getElementById('modal-title').textContent = card.title;
+    document.getElementById('modal-desc').textContent = card.desc;
+    document.getElementById('modal-price').textContent = card.price;
+    document.getElementById('modal-original').textContent = card.original;
+    detailModal.classList.remove('hidden');
+    detailModal.classList.add('flex');
+}
+
+function closeModal() {
+    detailModal.classList.add('hidden');
+    detailModal.classList.remove('flex');
+}
+
+detailModal.addEventListener('click', function (e) {
+    if (e.target === detailModal) closeModal();
+});
+
+// ========== 发布弹窗 ==========
+function openPublish() {
+    if (!loggedIn){
+        window.location.href = '/login/index.html?redirect=/azure_trade/trade';
+    }
+    publishModal.classList.remove('hidden');
+    publishModal.classList.add('flex');
+    submit_logic();
+}
+
+function closePublish() {
+    publishModal.classList.add('hidden');
+    publishModal.classList.remove('flex');
+    publishForm.reset();
+}
+
+publishModal.addEventListener('click', function (e) {
+    if (e.target === publishModal) closePublish();
+});
+
+var selectedImageFiles = [];
+
+(function () {
+    var fileInput = document.getElementById('publish-images');
+    var preview = document.getElementById('image-preview');
+    if (!fileInput || !preview) return;
+
+    fileInput.addEventListener('change', function () {
+        var newFiles = Array.from(fileInput.files);
+        selectedImageFiles = selectedImageFiles.concat(newFiles).slice(0, 9);
+
+        var dt = new DataTransfer();
+        selectedImageFiles.forEach(function (f) { dt.items.add(f); });
+        fileInput.files = dt.files;
+
+        preview.innerHTML = '';
+        selectedImageFiles.forEach(function (file, index) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'w-20 h-20 rounded-lg bg-gray-100 overflow-hidden relative group';
+                wrapper.innerHTML =
+                    '<img src="' + e.target.result + '" class="w-full h-full object-cover">' +
+                    '<button type="button" data-index="' + index + '" class="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">&times;</button>';
+                preview.appendChild(wrapper);
+
+                wrapper.querySelector('button').addEventListener('click', function () {
+                    var idx = parseInt(this.getAttribute('data-index'));
+                    selectedImageFiles.splice(idx, 1);
+                    var dt2 = new DataTransfer();
+                    selectedImageFiles.forEach(function (f) { dt2.items.add(f); });
+                    fileInput.files = dt2.files;
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+})();
+
+// ========== 发布表单：描述字数统计 ==========
+(function () {
+    var desc = document.getElementById('publish-desc');
+    var count = document.getElementById('desc-count');
+    if (desc && count) {
+        desc.addEventListener('input', function () {
+            count.textContent = desc.value.length;
+        });
+    }
+})();
+
+// ========== 发布表单：图片预览 ==========
+// (function () {
+//     var fileInput = document.getElementById('publish-images');
+//     var preview = document.getElementById('image-preview');
+//     if (!fileInput || !preview) return;
+//     fileInput.addEventListener('change', function () {
+//         preview.innerHTML = '';
+//         Array.from(fileInput.files).slice(0, 9).forEach(function (file) {
+//             var reader = new FileReader();
+//             reader.onload = function (e) {
+//                 var img = document.createElement('div');
+//                 img.className = 'w-20 h-20 rounded-lg bg-gray-100 overflow-hidden';
+//                 img.innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+//                 preview.appendChild(img);
+//             };
+//             reader.readAsDataURL(file);
+//         });
+//     });
+// })();
+
+// 绑定所有「发布闲置」按钮
+document.querySelectorAll('button').forEach(function (btn) {
+    if (btn.textContent.indexOf('发布闲置') !== -1 || btn.textContent.indexOf('发闲置') !== -1) {
+        btn.addEventListener('click', openPublish);
+    }
+});
+
+// ========== ESC 关闭弹窗 ==========
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeModal(); closePublish();
+        var dd = document.getElementById('user-dropdown');
+        var ar = document.getElementById('avatar-arrow');
+        if (dd && !dd.classList.contains('hidden')) {
+            dd.classList.add('hidden');
+            ar && ar.classList.remove('rotate-180');
+        }
+    }
+});
+
+// ========== 用户头像下拉面板 ==========
+(function () {
+    var avatarBtn = document.getElementById('user-avatar-btn');
+    var dropdown  = document.getElementById('user-dropdown');
+    var arrow     = document.getElementById('avatar-arrow');
+    var logoutBtn = document.getElementById('logout-btn');
+    if (!avatarBtn || !dropdown) return;
+
+    avatarBtn.addEventListener('click', function (e) {
+        if (!loggedIn){
+            window.location.href = '/login/index.html?redirect=/azure_trade/trade';
+        }
+        e.stopPropagation();
+        var isOpen = !dropdown.classList.contains('hidden');
+        if (isOpen) {
+            dropdown.classList.add('hidden');
+            arrow && arrow.classList.remove('rotate-180');
+        } else {
+            dropdown.classList.remove('hidden');
+            arrow && arrow.classList.add('rotate-180');
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!dropdown.classList.contains('hidden') && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            arrow && arrow.classList.remove('rotate-180');
+        }
+    });
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () { showToast('已退出登录'); });
+    }
+
+    dropdown.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            if (a.getAttribute('href') === '#') {
+                e.preventDefault();
+                var label = a.querySelector('.text-gray-700');
+                if (label) showToast(label.textContent + ' - 功能开发中');
+            }
+        });
+    });
+})();
+
+// ========== 实时统计数字 ==========
+function updateDropdownCounts() {
+    var published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+    var postsCount = published.length;
+
+    var dropdownPosts = document.getElementById('dropdown-posts');
+    if (dropdownPosts) dropdownPosts.textContent = postsCount;
+}
+
+// ========== 初始化渲染 ==========
+renderCards(cards);
+
+// 默认使用 API 获取真实商品数据
+// initApiItems 会自动设置无限滚动
+initApiItems(null, null);
+
+updateDropdownCounts();
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/users/me', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const user = await response.json();
+
+            // 保存完整用户数据到 localStorage（供 profile 等页面使用）
+            var existing = {};
+            try { existing = JSON.parse(localStorage.getItem('userProfile') || '{}'); } catch(e) {}
+            Object.keys(user).forEach(function(k) { existing[k] = user[k]; });
+            localStorage.setItem('userProfile', JSON.stringify(existing));
+
+            // 更新头像和用户名
+            const headerAvatar = document.getElementById('header-avatar');
+            const headerUsername = document.getElementById('header-username');
+            const dropdownAvatar = document.getElementById('dropdown-avatar');
+            const dropdownUsername = document.getElementById('dropdown-username');
+
+            const username = user.username || user.nickname || '用户';
+            const firstChar = username.charAt(0).toUpperCase();
+
+            if (headerUsername) headerUsername.textContent = username;
+            if (dropdownUsername) dropdownUsername.textContent = username;
+
+            if (user.avatar) {
+                const avatarUrl = user.avatar.startsWith('http') ? user.avatar : `/resources/${user.avatar}`;
+                if (headerAvatar) {
+                    headerAvatar.innerHTML = `<img src="${avatarUrl}" alt="${user.nickname}" class="w-10 h-10 rounded-full">`;
+                    headerAvatar.className = 'w-10 h-10 rounded-full overflow-hidden';
+                }
+                if (dropdownAvatar) {
+                    dropdownAvatar.innerHTML = '<img src="' + avatarUrl + '" class="w-14 h-14 rounded-full object-cover" onerror="this.parentElement.textContent=\'' + firstChar + '\'">';
+                    dropdownAvatar.className = 'w-14 h-14 rounded-full overflow-hidden shadow-md';
+                }
+            } else {
+                if (headerAvatar) headerAvatar.textContent = firstChar;
+                if (dropdownAvatar) dropdownAvatar.textContent = firstChar;
+            }
+
+            // 更新侧边栏徽章
+            const badgeSell = document.getElementById('badge-sell');
+            const badgeBuy = document.getElementById('badge-buy');
+            const badgeFav = document.getElementById('badge-fav');
+
+            if (badgeSell) badgeSell.textContent = user.sell || 0;
+            if (badgeBuy) badgeBuy.textContent = user.buy || 0;
+            if (badgeFav) badgeFav.textContent = user.favorites || 0;
+
+            // 更新下拉面板：粉丝/关注
+            const dropdownFollowers = document.getElementById('dropdown-followers');
+            const dropdownFollowing = document.getElementById('dropdown-following');
+            if (dropdownFollowers) dropdownFollowers.textContent = user.followers || 0;
+            if (dropdownFollowing) dropdownFollowing.textContent = user.followings || 0;
+
+            // 更新下拉菜单：发布/买到/卖出/收藏数量
+            const dropdownPosts = document.getElementById('dropdown-posts');
+            const dropdownBuy = document.getElementById('dropdown-buy');
+            const dropdownSell = document.getElementById('dropdown-sell');
+            const dropdownFav = document.getElementById('dropdown-fav');
+            if (dropdownPosts) dropdownPosts.textContent = user.posts || 0;
+            if (dropdownBuy) dropdownBuy.textContent = user.buy || 0;
+            if (dropdownSell) dropdownSell.textContent = user.sell || 0;
+            if (dropdownFav) dropdownFav.textContent = user.favorites || 0;
+
+            loggedIn = true;
+        } else {
+            if (response.status === 401) {
+                loggedIn = false;
+                // window.location.href = '/login?redirect=/azure_trade/trade';
+            }
+        }
+    } catch (error) {
+        console.error("获取用户信息失败:", error);
+    }
+});
+
+
+// ========== 辅助函数：延迟与重试机制 ==========
+/** @typedef {Object} RetryOptions
+ * @property {number} [maxRetries] - 最大重试次数
+ * @property {number} [interval] - 重试间隔(ms)
+ */
+
+/**
+ * 延迟执行函数
+ * @param {number} ms - 延迟毫秒数
+ * @returns {Promise<void>}
+ */
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * 带重试机制的图片关联请求
+ * @param {string} itemId - 商品ID
+ * @param {string[]} imageUuids - 图片UUID列表
+ * @param {number} [maxRetries=3] - 最大重试次数
+ * @param {number} [interval=2000] - 重试间隔(ms)
+ * @returns {Promise<boolean>} 是否关联成功
+ */
+const associateImagesWithRetry = async (itemId, imageUuids, maxRetries = 3, interval = 2000) => {
+    let lastError = null;
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            if (i > 0) {
+                console.log(`[Retry] 正在进行第 ${i} 次图片关联重试...`);
+                await sleep(interval);
+            }
+            
+            const res = await fetch(`/api/market/item/${itemId}/images`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ images: imageUuids })
+            });
+            
+            if (res.ok) return true;
+            lastError = `HTTP ${res.status}`;
+        } catch (err) {
+            lastError = err.message;
+        }
+    }
+    throw new Error(`图片关联失败 (已重试 ${maxRetries} 次): ${lastError}`);
+};
+
+const submit_logic = function () {
+    const form = document.getElementById('publish-form');
+    if (form.dataset.bound === "true") return;
+    form.dataset.bound = "true";
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn.innerHTML;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. 开启遮罩并禁用按钮
+        const overlay = document.createElement('div');
+        overlay.className = 'processing-overlay';
+        document.body.appendChild(overlay);
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        submitBtn.innerHTML = `
+            <span class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                处理中...
+            </span>
+        `;
+
+        function resetBtn() {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = originalBtnContent;
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }
+
+        const title = document.getElementById('itemTitle').value;
+        const category = document.getElementById('itemCategory').value;
+        const description = document.getElementById('itemDescription').value;
+        const price = parseFloat(document.getElementById('itemPrice').value);
+        const condition = parseInt(document.getElementById('itemCondition').value);
+        const location = document.getElementById('itemLocation').value;
+
+        const latVal = document.getElementById('itemLat').value;
+        const lngVal = document.getElementById('itemLng').value;
+        const lat = latVal ? parseFloat(latVal) : null;
+        const lng = lngVal ? parseFloat(lngVal) : null;
+
+        const isUrgent = document.getElementById('isUrgent').checked;
+        const isShippingFree = document.getElementById('isShippingFree').checked;
+        const canInspect = document.getElementById('canInspect').checked;
+
+        if (!title || !category || !description || isNaN(price) || isNaN(condition)) {
+            window.notify && window.notify.show.show('请填写所有必填项！', 'warning');
+            resetBtn();
+            return;
+        }
+
+        try {
+            let imageUuids = [];
+            // 1. 如果有图片，先上传图片获取 UUIDs
+            if (selectedImageFiles.length > 0) {
+                const imageData = new FormData();
+                selectedImageFiles.forEach(f => imageData.append('files', f));
+
+                const uploadRes = await fetch('/api/v1/images/upload', {
+                    method: 'POST',
+                    body: imageData
+                });
+
+                if (!uploadRes.ok) {
+                    throw new Error('图片上传失败，请重试');
+                }
+                imageUuids = await uploadRes.json();
+                window.notify && window.notify.show.show('图片上传成功!', 'success');
+            }
+
+            // 2. 创建商品
+            const itemRes = await fetch('/api/market/items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    title, category, description, price, condition, location,
+                    lat, lng, isUrgent, isShippingFree, canInspect
+                })
+            });
+
+            if (!itemRes.ok) {
+                const errorData = await itemRes.json().catch(() => ({}));
+                if (itemRes.status === 401) {
+                    showToast('请先登录');
+                    window.location.href = '/login?redirect=/azure_trade/trade';
+                    return;
+                }
+                throw new Error(errorData.message || '商品发布失败');
+            }
+
+            const itemData = await itemRes.json();
+            const uploadedItemId = itemData.itemId;
+
+            // 🌟 核心需求：在创建商品与关联图片之间添加延迟机制 🌟
+            if (imageUuids.length > 0 && uploadedItemId) {
+                console.log('[Delay] 商品已创建，等待 1s 以确保后端数据同步...');
+                await sleep(1000); // 默认延迟 1s
+
+                try {
+                    // 使用带重试机制的关联函数
+                    await associateImagesWithRetry(uploadedItemId, imageUuids);
+                } catch (bindErr) {
+                    console.error('图片关联最终失败:', bindErr);
+                    // 提供手动重试或其他处理方式的提示
+                    window.notify && window.notify.show.show('商品已上架，但图片同步失败，请在详情页手动重试', 'warning');
+                }
+            }
+
+            // 成功处理
+            console.log('商品上架成功！');
+            showToast('发布成功！商品已上架');
+            closePublish();
+            form.reset();
+            
+            // 重置状态
+            document.getElementById('itemLat').value = '';
+            document.getElementById('itemLng').value = '';
+            selectedImageFiles = [];
+            const preview = document.getElementById('image-preview');
+            if (preview) preview.innerHTML = '';
+            
+            // 更新本地存储
+            const published = JSON.parse(localStorage.getItem('publishedItems') || '[]');
+            published.unshift({
+                id: uploadedItemId || Date.now().toString(),
+                title, category, description, price, condition, location,
+                createdAt: new Date().toISOString(),
+                status: 'available'
+            });
+            localStorage.setItem('publishedItems', JSON.stringify(published));
+            updateDropdownCounts();
+
+        } catch (error) {
+            console.error('Error submitting item:', error);
+            showToast(error.message || '上架失败，请重试', 'error');
+        } finally {
+            resetBtn();
+        }
+    });
+}
+
+// ========== MarketController API 工具函数 ==========
+
+/**
+ * 收藏商品
+ * @param {string} itemId
+ * @returns {Promise<boolean>}
+ */
+async function favoriteItem(itemId) {
+    try {
+        var response = await fetch('/api/market/items/favorite?itemId=' + encodeURIComponent(itemId), {
+            method: 'POST',
+            credentials: 'include'
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('收藏失败:', error);
+        return false;
+    }
+}
+
+/**
+ * 获取当前用户收藏列表
+ * @returns {Promise<Array>}
+ */
+async function getFavoriteItems() {
+    try {
+        var response = await fetch('/api/market/items/favorites', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (error) {
+        console.error('获取收藏列表失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 获取所有商品分类
+ * @returns {Promise<Array>}
+ */
+async function getCategories() {
+    try {
+        var response = await fetch('/api/market/categories', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (error) {
+        console.error('获取分类失败:', error);
+        return [];
+    }
+}
+
+/**
+ * 联系卖家
+ * @param {string} sellerId
+ * @param {string} message
+ * @param {string} itemId
+ * @returns {Promise<Object|null>}
+ */
+async function contactSeller(sellerId, message, itemId) {
+    try {
+        var response = await fetch('/api/market/' + encodeURIComponent(sellerId) + '/contact', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message, itemId: itemId })
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error('联系卖家失败:', error);
+        return null;
+    }
+}
+
+/**
+ * 删除商品
+ * @param {string} itemId
+ * @returns {Promise<boolean>}
+ */
+async function deleteItem(itemId) {
+    try {
+        var response = await fetch('/api/market/items/' + encodeURIComponent(itemId), {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('删除商品失败:', error);
+        return false;
+    }
+}
+
+/**
+ * 获取当前用户的商品列表
+ * @param {string} [status]
+ * @param {number} [page]
+ * @param {number} [limit]
+ * @returns {Promise<Array>}
+ */
+async function getMyItems(status, page, limit) {
+    try {
+        var params = new URLSearchParams();
+        if (status) params.set('status', status);
+        if (page) params.set('page', page);
+        if (limit) params.set('limit', limit);
+        var response = await fetch('/api/market/users/me/items?' + params.toString(), {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) return [];
+        return await response.json();
+    } catch (error) {
+        console.error('获取我的商品失败:', error);
+        return [];
+    }
+}
