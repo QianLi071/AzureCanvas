@@ -16,6 +16,13 @@
         }
     </script>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 70px;
+            overflow: hidden;
+            font-family: 'Aeonik', sans-serif;
+        }
         /* --- CSS Scroll-Driven Animation 变量驱动 --- */
         @property --poker-progress {
             syntax: '<number>';
@@ -645,8 +652,10 @@ addEventListeners() {
     });
 
     const handleMove = (e) => {
-        const x = e.clientX || (e.touches && e.touches[0].clientX);
-        const y = e.clientY || (e.touches && e.touches[0].clientY);
+        const x = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+        const y = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+
+        if (x === undefined || y === undefined) return;
 
         const rect = this.canvas.getBoundingClientRect();
         const newMouseX = (x - rect.left) / rect.width;
