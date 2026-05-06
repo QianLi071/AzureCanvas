@@ -56,6 +56,10 @@
             </div>
         </div>
         <div class="nav-right">
+            <!-- 新增的 About 按钮 -->
+    <div class="nav-item" id="aboutBtn">
+        <i class="fas fa-info-circle"></i> 关于我们
+    </div>
             <div class="nav-item"><i class="fas fa-search"></i> 搜索</div>
             <div class="nav-item" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i> 夜间模式</div>
             <div class="nav-item"><i class="fas fa-bell"></i> 消息</div>
@@ -205,6 +209,13 @@
                 });
             }
         });
+
+                // 在 DOMContentLoaded 监听器内添加以下代码
+                document.getElementById('aboutBtn').addEventListener('click', function() {
+    // 根据路径：src\main\resources\static\aboutUs\index.html
+    // 从根目录 index.html 跳转到关于我们页面的 index.html
+    window.location.href = './aboutUs/index.html';
+});
     </script>
     <script src="js/security.util.js"></script>
 
