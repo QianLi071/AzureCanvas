@@ -178,8 +178,23 @@
         .canvas-container {
             margin: 0 auto;
             width: 100%;
-            background: #002c91;
+            
+            /* 1. 绑定动画 */
+        animation: bg-color-change linear;
+    
+        /* 2. 设置动画的时间轴为：当前元素进入视口到离开视口的过程 */
+        animation-timeline: view();
+    
+        /* 3. 调整变色的范围（可选）：比如从元素进入 20% 开始到 80% 结束 */
+        animation-range: entry 20% exit 80%;
         }
+
+        @keyframes bg-color-change {
+        0%   { background-color: #2f11ef; } /* 刚开始看到这个区域 */
+        50%  { background-color: #0e5beb; } /* 滚动到中间 */
+        100% { background-color: #0e83cc; } /* 彻底滑过后 */
+        }
+
         svg {
             display: block;
             width: 100%;
