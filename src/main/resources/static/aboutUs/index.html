@@ -178,8 +178,23 @@
         .canvas-container {
             margin: 0 auto;
             width: 100%;
-            background: #002c91;
+            
+            /* 1. 绑定动画 */
+        animation: bg-color-change linear;
+    
+        /* 2. 设置动画的时间轴为：当前元素进入视口到离开视口的过程 */
+        animation-timeline: view();
+    
+        /* 3. 调整变色的范围（可选）：比如从元素进入 20% 开始到 80% 结束 */
+        animation-range: entry 20% exit 80%;
         }
+
+        @keyframes bg-color-change {
+        0%   { background-color: #2f11ef; } /* 刚开始看到这个区域 */
+        50%  { background-color: #0e5beb; } /* 滚动到中间 */
+        100% { background-color: #0e83cc; } /* 彻底滑过后 */
+        }
+
         svg {
             display: block;
             width: 100%;
@@ -223,30 +238,30 @@
             right: 15%;
             top: 15%;
             text-align: right;
-            max-width: 400px;
+            max-width: 800px;
         }
         .title-right-1 .title-line {
-            font-size: clamp(20px, 4vw, 36px);
+            font-size: clamp(100px, 4vw, 36px);
         }
         
         .title-left-1 {
             left: 10%;
             top: 45%;
             text-align: left;
-            max-width: 400px;
+            max-width: 800px;
         }
         .title-left-1 .title-line {
-            font-size: clamp(20px, 4vw, 36px);
+            font-size: clamp(100px, 4vw, 36px);
         }
         
         .title-right-2 {
             right: 15%;
             top: 75%;
             text-align: right;
-            max-width: 400px;
+            max-width: 800px;
         }
         .title-right-2 .title-line {
-            font-size: clamp(20px, 4vw, 36px);
+            font-size: clamp(100px, 4vw, 36px);
         }
         .spacer {
             height: 100vh;
@@ -372,13 +387,12 @@
         </svg>
         
         <div class="spiral-title title-right-1" data-title-index="1">
-            <span class="title-line">Redefining</span>
             <span class="title-line">Step into the Infinite</span>
             <span class="sub-title">踏入无限</span>
         </div>
         <div class="spiral-title title-left-1" data-title-index="2">
-            <span class="title-line">Explore the Uncharted World</span>
-            <span class="sub-title">探索未知的世界</span>
+            <span class="title-line">Everything is possible</span>
+            <span class="sub-title">万事皆有可能</span>
         </div>
         <div class="spiral-title title-right-2" data-title-index="3">
             <span class="title-line">Journey into the Azure</span>
