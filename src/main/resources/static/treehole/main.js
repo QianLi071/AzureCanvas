@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== 0. 进入动画（仅首次访问显示）+ 欢迎弹窗 =====
   const splash = document.getElementById("splashScreen");
   const welcomeModal = document.getElementById("welcomeModal");
-  const isFirstVisit = true;//!localStorage.getItem("th_visited");
+  const isFirstVisit = !localStorage.getItem("th_visited");
 
   if (!isFirstVisit) {
     // 非首次：直接隐藏 splash，不播放动画
