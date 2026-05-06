@@ -1128,9 +1128,10 @@ new FluidSimulation('fluid-canvas');
     path.style.strokeDashoffset = pathLength;
 
     const scrollProgressToDrawProgress = (scrollProgress) => {
-        if (scrollProgress < 0.3) return scrollProgress / 0.3 * 0.2;
-        if (scrollProgress < 0.5) return 0.2 + (scrollProgress - 0.3) / 0.2 * 0.6;
-        return 0.8 + (scrollProgress - 0.5) / 0.5 * 0.2;
+        // 修改了阈值，使动画在更短的滚动距离内完成
+        if (scrollProgress < 0.2) return scrollProgress / 0.2 * 0.3; // 前 20% 滚动完成 30% 路径
+        if (scrollProgress < 0.4) return 0.3 + (scrollProgress - 0.2) / 0.2 * 0.6; // 再 20% 滚动完成剩下 60%
+        return 0.9 + (scrollProgress - 0.4) / 0.6 * 0.1; // 最后 60% 滚动只处理收尾
     };
 
     ScrollTrigger.create({
